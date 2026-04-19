@@ -63,6 +63,9 @@ canvas{border-radius:6px;display:block;max-width:100%;height:auto;}
 .canvas-wrap{position:relative;}
 #align-toast{position:absolute;top:8px;left:50%;transform:translateX(-50%);background:rgba(5,150,105,0.93);color:#fff;border-radius:7px;padding:5px 14px;font-size:12px;font-weight:500;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity 0.3s;z-index:20;}
 #align-toast.show{opacity:1;}
+.sky-schematic{margin:6px 0 8px;border:0.5px solid var(--color-border-tertiary);border-radius:8px;background:var(--color-background-secondary);padding:8px;}
+.sky-schematic svg{display:block;width:100%;height:auto;}
+.sky-schematic figcaption{font-size:10px;color:var(--color-text-secondary);line-height:1.5;margin-top:6px;}
 .info-strip{display:flex;gap:5px;flex-wrap:wrap;margin:4px 0;}
 .ibadge{font-size:10px;padding:2px 7px;border-radius:4px;font-weight:500;}
 .ibadge.sun{background:#FEF3C7;color:#92400E;}
@@ -93,7 +96,7 @@ button.rst-btn:hover{background:var(--color-background-secondary);}
 .phase-name{font-size:10px;color:var(--color-text-tertiary);}
 .phase-name.active{color:var(--color-text-primary);font-weight:500;}
 .hint{font-size:10px;color:var(--color-text-tertiary);font-style:italic;margin:2px 0 4px;}
-#guide-panel{padding:14px 4px;overflow-y:auto;max-height:900px;}
+#guide-panel,#learn-panel{padding:14px 4px;}
 .guide-section{margin-bottom:18px;}
 .guide-section h3{font-size:13px;font-weight:500;color:var(--color-text-primary);margin-bottom:8px;padding-bottom:4px;border-bottom:0.5px solid var(--color-border-tertiary);}
 .guide-section p,.guide-section li{font-size:12px;color:var(--color-text-secondary);line-height:1.7;margin-bottom:5px;}
@@ -137,7 +140,7 @@ button.rst-btn:hover{background:var(--color-background-secondary);}
   #top-c{width:100%;max-width:620px;margin-left:auto;margin-right:auto;}
   .legend-row{justify-content:center;}
   .guide-row{grid-template-columns:1fr;}
-  #guide-panel{padding:14px 12px;max-height:none;}
+  #guide-panel,#learn-panel{padding:14px 12px;}
 }
 @media (max-width:380px){
   .stat-grid{grid-template-columns:1fr;}
@@ -168,6 +171,7 @@ button.rst-btn:hover{background:var(--color-background-secondary);}
 <div class="top-tabs">
   <button class="top-tab active" onclick="showTab('exp')">Experiment</button>
   <button class="top-tab" onclick="showTab('guide')">Guide</button>
+  <button class="top-tab" onclick="showTab('learn')">Polarized light</button>
 </div>
 
 <div id="exp-panel" class="panel-content active">
@@ -207,6 +211,32 @@ button.rst-btn:hover{background:var(--color-background-secondary);}
     <div class="divider"></div>
     <div class="info-strip" id="info-strip"></div>
     <div id="status-txt"></div>
+    <figure class="sky-schematic" aria-labelledby="sky-schematic-caption">
+      <svg viewBox="0 0 320 178" role="img" aria-label="Schematic sky dome showing the Sun, solar meridian, anti-solar meridian, and 90 degree polarization band">
+        <defs>
+          <marker id="arrowhead" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+            <path d="M0,0 L6,3 L0,6 Z" fill="#64748B"></path>
+          </marker>
+        </defs>
+        <path d="M20 150 A140 110 0 0 1 300 150" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="2"></path>
+        <path d="M60 150 A100 78 0 0 1 260 150" fill="none" stroke="#DDE5EF" stroke-width="1"></path>
+        <path d="M100 150 A60 48 0 0 1 220 150" fill="none" stroke="#DDE5EF" stroke-width="1"></path>
+        <path d="M76 40 Q152 92 244 150" fill="none" stroke="#DC2626" stroke-width="2" stroke-dasharray="6 4"></path>
+        <path d="M246 36 Q168 92 86 150" fill="none" stroke="#8B5CF6" stroke-width="2" stroke-dasharray="6 4"></path>
+        <path d="M36 118 C88 86 136 72 184 76 C224 80 258 95 286 116" fill="none" stroke="#2563EB" stroke-width="2"></path>
+        <circle cx="78" cy="114" r="7" fill="#FDE047" stroke="#D97706" stroke-width="1.5"></circle>
+        <circle cx="160" cy="150" r="4" fill="#475569"></circle>
+        <text x="78" y="102" text-anchor="middle" font-size="10" fill="#92400E" font-weight="700">Sun</text>
+        <text x="18" y="40" font-size="10" fill="#991B1B">Solar meridian</text>
+        <text x="230" y="30" font-size="10" fill="#6D28D9">Anti-solar meridian</text>
+        <text x="202" y="67" font-size="10" fill="#1D4ED8">90° high-polarization band</text>
+        <text x="133" y="102" font-size="10" fill="#475569">E-vectors follow the band</text>
+        <line x1="118" y1="98" x2="160" y2="80" stroke="#64748B" stroke-width="1" marker-end="url(#arrowhead)"></line>
+        <text x="160" y="164" text-anchor="middle" font-size="10" fill="#475569">Observer</text>
+        <text x="255" y="154" text-anchor="middle" font-size="10" fill="#64748B">Horizon</text>
+      </svg>
+      <figcaption id="sky-schematic-caption">The solar meridian and anti-solar meridian rotate as the Sun moves across the Phoenix sky. The strongest polarization tends to lie in a broad band about 90° from the Sun, while local e-vectors remain perpendicular to the scattering plane.</figcaption>
+    </figure>
     <div class="canvas-wrap">
       <canvas id="sky-c" width="310" height="310" style="cursor:grab;"></canvas>
       <div id="align-toast">Filter near center alignment</div>
@@ -361,6 +391,40 @@ button.rst-btn:hover{background:var(--color-background-secondary);}
   </div>
 
 </div>
+
+<div id="learn-panel" class="panel-content">
+
+  <div class="guide-section">
+    <h3>What polarized skylight means</h3>
+    <p>Sunlight reaching the top of the atmosphere is effectively unpolarized. After that light is <strong>Rayleigh scattered</strong> by air molecules, the scattered light becomes partially linearly polarized. At each point in the sky, one electric-field orientation dominates. That dominant orientation is called the <strong>e-vector orientation</strong> or <strong>angle of polarization</strong>.</p>
+    <p>The e-vector is perpendicular to the <strong>scattering plane</strong>, the plane defined by the observer, the Sun, and the point in the sky being viewed. In this simulator, the short blue bars show that local e-vector orientation across the sky dome.</p>
+  </div>
+
+  <div class="guide-section">
+    <h3>Why the pattern is tied to the Sun</h3>
+    <p>The skylight polarization pattern is not centered on the nest, the feeder, or the observer's walking direction. It is set by the solar geometry. As the Sun changes azimuth and elevation, the scattering angle to every point in the sky changes, and the polarization field changes with it.</p>
+    <p>In a single-scattering Rayleigh model, the <strong>degree of linear polarization</strong> is lowest near the Sun and anti-Sun and is strongest in a broad band about <strong>90° from the Sun</strong>. That is why the pattern is often described as a sky-wide compass cue rather than a single arrow.</p>
+  </div>
+
+  <div class="guide-section">
+    <h3>How the filter changes what the ant sees</h3>
+    <p>A linear polarizing filter transmits one preferred e-vector orientation and attenuates the orthogonal one. In the lab setup represented here, the filter is placed over the ant at the feeder. The purple slit pattern shows the filter's transmission axis. Rotating the filter rotates the transmitted e-vector field that reaches the ant's dorsal rim area.</p>
+    <p>Because the ambient sky pattern varies across space, a finite circular filter cannot match every surrounding ambient e-vector perfectly at once. The important teaching comparison is the local relationship between the filter transmission axis and the ambient e-vector field in the immediate neighborhood of the feeder.</p>
+  </div>
+
+  <div class="guide-section">
+    <h3>What happens at sunset, twilight, and night</h3>
+    <p>After sunset, the Sun is below the horizon, but the upper atmosphere is still illuminated for a while. During <strong>civil</strong>, <strong>nautical</strong>, and <strong>astronomical twilight</strong>, a polarization pattern can still remain visible, although the sky gets darker and the signal generally becomes weaker and noisier than it is in full daylight.</p>
+    <p>At true night, when the Sun is well below the horizon, solar skylight polarization largely disappears. A similar but much weaker pattern can be produced by <strong>moonlight</strong> under clear conditions, because moonlight is reflected sunlight and is scattered by the atmosphere in the same general way. In practice, nighttime polarization cues are far weaker than daytime or twilight solar cues.</p>
+  </div>
+
+  <div class="guide-section">
+    <h3>Why ants can use it</h3>
+    <p>Many insects, including desert ants, have a specialized dorsal rim area in the compound eye with photoreceptors tuned to polarization. Those receptors are sensitive to e-vector orientation rather than only brightness. Combined with time compensation and other navigational cues, the sky polarization pattern can provide a stable celestial reference frame for path integration.</p>
+    <p>That is why a rotated filter can produce a predictable heading error: if the ant interprets the filtered e-vector field as the real sky compass, its calculated homeward direction rotates by the same angular manipulation.</p>
+  </div>
+
+</div>
 </div>
 
 <script>
@@ -467,9 +531,10 @@ function currentPhoenixParts(){
 })();
 
 function showTab(t){
-  document.querySelectorAll('.top-tab').forEach((b,i)=>b.classList.toggle('active',i===(t==='exp'?0:1)));
+  document.querySelectorAll('.top-tab').forEach((b,i)=>b.classList.toggle('active',(t==='exp'&&i===0)||(t==='guide'&&i===1)||(t==='learn'&&i===2)));
   document.getElementById('exp-panel').classList.toggle('active',t==='exp');
   document.getElementById('guide-panel').classList.toggle('active',t==='guide');
+  document.getElementById('learn-panel').classList.toggle('active',t==='learn');
 }
 function d2r(d){return d*Math.PI/180;}
 function r2d(r){return r*180/Math.PI;}
@@ -602,23 +667,35 @@ function localPolAngle(sx,sy,sunAz,sunEl){
 }
 
 function drawFilterSlits(ctx,cx,cy,r,angle,alpha){
-  const ca=Math.cos(angle),sa=Math.sin(angle),len=10;
-  for(let ox=-r+6;ox<=r-6;ox+=10){
-    for(let oy=-r+6;oy<=r-6;oy+=10){
-      if(Math.sqrt(ox*ox+oy*oy)>r-6)continue;
-      const x=cx+ox*ca-oy*sa,y=cy+ox*sa+oy*ca;
-      ctx.save();ctx.lineCap='round';ctx.globalAlpha=alpha;
-      ctx.strokeStyle='rgba(255,255,255,0.9)';ctx.lineWidth=4;
-      ctx.beginPath();ctx.moveTo(x-ca*len/2,y-sa*len/2);ctx.lineTo(x+ca*len/2,y+sa*len/2);ctx.stroke();
-      ctx.strokeStyle='#6D28D9';ctx.lineWidth=2.2;
-      ctx.beginPath();ctx.moveTo(x-ca*len/2,y-sa*len/2);ctx.lineTo(x+ca*len/2,y+sa*len/2);ctx.stroke();ctx.restore();
-    }
+  const ca=Math.cos(angle),sa=Math.sin(angle),lineHalf=r*1.45;
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(cx,cy,r,0,Math.PI*2);
+  ctx.clip();
+  ctx.lineCap='round';
+  ctx.globalAlpha=alpha;
+  for(let offset=-r*1.2;offset<=r*1.2;offset+=10){
+    const x=cx+offset*(-sa),y=cy+offset*(ca);
+    ctx.strokeStyle='rgba(255,255,255,0.9)';
+    ctx.lineWidth=4;
+    ctx.beginPath();
+    ctx.moveTo(x-ca*lineHalf,y-sa*lineHalf);
+    ctx.lineTo(x+ca*lineHalf,y+sa*lineHalf);
+    ctx.stroke();
+    ctx.strokeStyle='#6D28D9';
+    ctx.lineWidth=2.2;
+    ctx.beginPath();
+    ctx.moveTo(x-ca*lineHalf,y-sa*lineHalf);
+    ctx.lineTo(x+ca*lineHalf,y+sa*lineHalf);
+    ctx.stroke();
   }
+  ctx.restore();
 }
 
 function drawSky(v){
   const{sunAz,sunEl,filtInit,filtOp}=v;
   const bh=sunEl<0,tw=sunEl>=-18&&sunEl<0;
+  const darkSky=sunEl<5;
   document.getElementById('below-h').style.display=(bh&&curMode==='datetime')?'block':'none';
   sctx.clearRect(0,0,SW,SH);
   // Sky gradient
@@ -635,17 +712,25 @@ function drawSky(v){
   // Elevation rings
   [30,60].forEach(el=>{
     const pr=SR*(1-el/90);sctx.beginPath();sctx.arc(SCX,SCY,pr,0,Math.PI*2);
-    sctx.strokeStyle=bh?'rgba(180,210,255,0.15)':'rgba(30,80,160,0.15)';sctx.lineWidth=0.75;sctx.stroke();
-    sctx.fillStyle=bh?'rgba(180,210,255,0.5)':'rgba(20,60,130,0.45)';
+    sctx.strokeStyle=bh?'rgba(210,230,255,0.32)':'rgba(30,80,160,0.15)';sctx.lineWidth=darkSky?1:0.75;sctx.stroke();
+    sctx.fillStyle=bh?'rgba(235,245,255,0.88)':'rgba(20,60,130,0.45)';
     sctx.font='9px var(--font-sans,sans-serif)';sctx.textAlign='left';sctx.textBaseline='middle';
     sctx.fillText(el+'°',SCX+pr+3,SCY);
   });
+  sctx.save();
+  sctx.font='9px var(--font-sans,sans-serif)';
+  sctx.fillStyle=bh?'rgba(235,245,255,0.9)':'rgba(20,60,130,0.55)';
+  sctx.textAlign='left';
+  sctx.textBaseline='alphabetic';
+  sctx.fillText('30° elevation',SCX+SR*(1-30/90)+14,SCY-8);
+  sctx.fillText('60° elevation',SCX+SR*(1-60/90)+14,SCY-8);
+  sctx.restore();
   // E-vector ticks
   {
     const night=sunEl<-18;
     const ea=sunEl>=0?0.75:night?0.42:Math.max(0.5,0.78*(1+sunEl/24));
-    const ec=bh?'#F8FAFC':'#1D4ED8';
-    const endColor=bh?'#BAE6FD':'#93C5FD';
+    const ec=bh?'#FFFFFF':'#1D4ED8';
+    const endColor=bh?'#D7F0FF':'#93C5FD';
     for(let px=-SR+8;px<=SR-8;px+=28){
       for(let py=-SR+8;py<=SR-8;py+=28){
         const dist=Math.sqrt(px*px+py*py);if(dist>SR-12)continue;
@@ -653,10 +738,10 @@ function drawSky(v){
         const pol=localPolData(x,y,sunAz,sunEl);
         if(pol.dolp<0.02)continue;
         const lp=pol.angle,len=11,ca=Math.cos(lp),sa=Math.sin(lp);
-        const localAlpha=ea*(0.2+0.8*pol.dolp);
-        sctx.save();sctx.strokeStyle=ec;sctx.lineWidth=2;sctx.lineCap='round';sctx.globalAlpha=localAlpha;
+        const localAlpha=ea*(0.2+0.8*pol.dolp)*(bh?1.18:1);
+        sctx.save();sctx.strokeStyle=ec;sctx.lineWidth=bh?2.3:2;sctx.lineCap='round';sctx.globalAlpha=Math.min(1,localAlpha);
         sctx.beginPath();sctx.moveTo(x-ca*len/2,y-sa*len/2);sctx.lineTo(x+ca*len/2,y+sa*len/2);sctx.stroke();
-        sctx.globalAlpha=localAlpha*0.58;sctx.strokeStyle=endColor;sctx.lineWidth=0.8;
+        sctx.globalAlpha=Math.min(1,localAlpha*0.7);sctx.strokeStyle=endColor;sctx.lineWidth=bh?1.1:0.8;
         sctx.beginPath();sctx.arc(x-ca*len/2,y-sa*len/2,1.4,0,Math.PI*2);sctx.stroke();
         sctx.beginPath();sctx.arc(x+ca*len/2,y+sa*len/2,1.4,0,Math.PI*2);sctx.stroke();
         sctx.restore();
@@ -665,20 +750,36 @@ function drawSky(v){
     // Solar meridian
     const sp2=azElToSkyXY(sunAz,Math.max(0,sunEl));
     const asp=azElToSkyXY((sunAz+180)%360,0);
-    sctx.save();sctx.setLineDash([5,3]);sctx.strokeStyle=bh?'#FCA5A5':'#DC2626';sctx.lineWidth=1.5;sctx.globalAlpha=bh?0.8:0.7;
+    sctx.save();sctx.setLineDash([5,3]);sctx.strokeStyle=bh?'#FECACA':'#DC2626';sctx.lineWidth=bh?1.8:1.5;sctx.globalAlpha=bh?0.95:0.7;
     sctx.beginPath();sctx.moveTo(sp2.x,sp2.y);sctx.lineTo(SCX,SCY);sctx.lineTo(asp.x,asp.y);sctx.stroke();sctx.restore();
+    sctx.save();
+    sctx.font='9px var(--font-sans,sans-serif)';
+    sctx.fillStyle=bh?'rgba(254,202,202,0.95)':'rgba(185,28,28,0.75)';
+    sctx.textAlign='center';
+    sctx.textBaseline='bottom';
+    sctx.fillText('Solar meridian',SCX,SCY-6);
+    sctx.textBaseline='top';
+    sctx.fillText('Anti-solar point',asp.x,asp.y+8);
+    sctx.restore();
   }
   // Cardinals
   ['N','E','S','W'].forEach((lbl,i)=>{
     const a=d2r(i*90-90),ox=SCX+(SR+13)*Math.cos(a),oy=SCY+(SR+13)*Math.sin(a);
     sctx.save();sctx.font='bold 11px var(--font-sans,sans-serif)';sctx.textAlign='center';sctx.textBaseline='middle';
     const tw2=sctx.measureText(lbl).width+8;
-    sctx.fillStyle='#1E3A8A';sctx.globalAlpha=0.85;
+    sctx.fillStyle=bh?'rgba(225,235,255,0.88)':'#1E3A8A';sctx.globalAlpha=0.9;
     sctx.beginPath();if(sctx.roundRect)sctx.roundRect(ox-tw2/2,oy-8,tw2,16,3);else sctx.rect(ox-tw2/2,oy-8,tw2,16);sctx.fill();
-    sctx.globalAlpha=1;sctx.fillStyle='#E0F2FF';sctx.fillText(lbl,ox,oy);sctx.restore();
+    sctx.globalAlpha=1;sctx.fillStyle=bh?'#0F172A':'#E0F2FF';sctx.fillText(lbl,ox,oy);sctx.restore();
   });
+  sctx.save();
+  sctx.font='9px var(--font-sans,sans-serif)';
+  sctx.fillStyle=bh?'rgba(235,245,255,0.9)':'rgba(20,60,130,0.55)';
+  sctx.textAlign='center';
+  sctx.textBaseline='top';
+  sctx.fillText('Azimuth around rim',SCX,SCY+SR+18);
+  sctx.restore();
   // Trail between nest and feeder
-  sctx.save();sctx.setLineDash([4,3]);sctx.strokeStyle='rgba(5,150,105,0.45)';sctx.lineWidth=1.2;sctx.globalAlpha=0.7;
+  sctx.save();sctx.setLineDash([4,3]);sctx.strokeStyle=bh?'rgba(167,243,208,0.82)':'rgba(5,150,105,0.45)';sctx.lineWidth=bh?1.5:1.2;sctx.globalAlpha=bh?0.9:0.7;
   sctx.beginPath();sctx.moveTo(skyNestX,skyNestY);sctx.lineTo(skyFeedX,skyFeedY);sctx.stroke();sctx.restore();
   // Sun
   if(sunEl>=0){
@@ -698,25 +799,25 @@ function drawSky(v){
   const filtPol=lp+d2r(filtInit);
   const isAligned=Math.abs(filtInit)<=1;
   const fR=32;
-  sctx.save();sctx.globalAlpha=0.14;sctx.fillStyle='#7C3AED';sctx.beginPath();sctx.arc(skyFeedX,skyFeedY,fR,0,Math.PI*2);sctx.fill();sctx.restore();
-  drawFilterSlits(sctx,skyFeedX,skyFeedY,fR,filtPol,Math.min(1,filtOp+0.15));
-  sctx.save();sctx.globalAlpha=0.8;sctx.strokeStyle=isAligned?'#059669':'#6D28D9';sctx.lineWidth=isAligned?2.5:1.5;sctx.setLineDash([4,2]);
+  sctx.save();sctx.globalAlpha=bh?0.24:0.14;sctx.fillStyle='#7C3AED';sctx.beginPath();sctx.arc(skyFeedX,skyFeedY,fR,0,Math.PI*2);sctx.fill();sctx.restore();
+  drawFilterSlits(sctx,skyFeedX,skyFeedY,fR,filtPol,Math.min(1,filtOp+(bh?0.28:0.15)));
+  sctx.save();sctx.globalAlpha=bh?0.95:0.8;sctx.strokeStyle=isAligned?'#34D399':'#C4B5FD';sctx.lineWidth=isAligned?(bh?3:2.5):(bh?2.1:1.5);sctx.setLineDash([4,2]);
   sctx.beginPath();sctx.arc(skyFeedX,skyFeedY,fR,0,Math.PI*2);sctx.stroke();sctx.restore();
-  if(isAligned){sctx.save();sctx.globalAlpha=0.22;sctx.strokeStyle='#10B981';sctx.lineWidth=4;sctx.beginPath();sctx.arc(skyFeedX,skyFeedY,fR+3,0,Math.PI*2);sctx.stroke();sctx.restore();}
+  if(isAligned){sctx.save();sctx.globalAlpha=bh?0.34:0.22;sctx.strokeStyle='#10B981';sctx.lineWidth=bh?5:4;sctx.beginPath();sctx.arc(skyFeedX,skyFeedY,fR+3,0,Math.PI*2);sctx.stroke();sctx.restore();}
   // Ambient E-vec at feeder
   const ll=22,ca=Math.cos(lp),sa=Math.sin(lp);
-  sctx.save();sctx.strokeStyle='#1D4ED8';sctx.lineWidth=2.5;sctx.lineCap='round';sctx.globalAlpha=0.9;
+  sctx.save();sctx.strokeStyle=bh?'#E0F2FE':'#1D4ED8';sctx.lineWidth=bh?3:2.5;sctx.lineCap='round';sctx.globalAlpha=1;
   sctx.beginPath();sctx.moveTo(skyFeedX-ca*ll,skyFeedY-sa*ll);sctx.lineTo(skyFeedX+ca*ll,skyFeedY+sa*ll);sctx.stroke();sctx.restore();
   if(!isAligned){
     const cf2=Math.cos(filtPol),sf2=Math.sin(filtPol);
-    sctx.save();sctx.strokeStyle='#7C3AED';sctx.lineWidth=2.5;sctx.lineCap='round';sctx.globalAlpha=filtOp;
+    sctx.save();sctx.strokeStyle=bh?'#DDD6FE':'#7C3AED';sctx.lineWidth=bh?3:2.5;sctx.lineCap='round';sctx.globalAlpha=Math.min(1,filtOp+(bh?0.18:0));
     sctx.beginPath();sctx.moveTo(skyFeedX-cf2*ll,skyFeedY-sf2*ll);sctx.lineTo(skyFeedX+cf2*ll,skyFeedY+sf2*ll);sctx.stroke();sctx.restore();
   }
   // Feeder dot
-  sctx.beginPath();sctx.arc(skyFeedX,skyFeedY,7,0,Math.PI*2);sctx.fillStyle='#059669';sctx.globalAlpha=1;sctx.fill();sctx.strokeStyle='#fff';sctx.lineWidth=2;sctx.stroke();
+  sctx.beginPath();sctx.arc(skyFeedX,skyFeedY,7,0,Math.PI*2);sctx.fillStyle='#059669';sctx.globalAlpha=1;sctx.fill();sctx.strokeStyle=bh?'#EFFFF8':'#fff';sctx.lineWidth=bh?2.5:2;sctx.stroke();
   sctx.font='bold 9px var(--font-sans,sans-serif)';sctx.fillStyle='#064E3B';sctx.textAlign='center';sctx.textBaseline='top';sctx.fillText('Feeder',skyFeedX,skyFeedY+9);
   // Nest dot — drawn on top
-  sctx.beginPath();sctx.arc(skyNestX,skyNestY,8,0,Math.PI*2);sctx.fillStyle='#1E3A8A';sctx.globalAlpha=1;sctx.fill();sctx.strokeStyle='#fff';sctx.lineWidth=2;sctx.stroke();
+  sctx.beginPath();sctx.arc(skyNestX,skyNestY,8,0,Math.PI*2);sctx.fillStyle='#1E3A8A';sctx.globalAlpha=1;sctx.fill();sctx.strokeStyle=bh?'#F8FBFF':'#fff';sctx.lineWidth=bh?2.5:2;sctx.stroke();
   sctx.font='bold 9px var(--font-sans,sans-serif)';sctx.fillStyle='#1E3A8A';sctx.textAlign='center';sctx.textBaseline='top';sctx.fillText('Nest',skyNestX,skyNestY+10);
   // Toast
   const toast=document.getElementById('align-toast');
