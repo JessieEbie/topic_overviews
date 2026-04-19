@@ -1,0 +1,567 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GC-MS Cuticular Compound Lab</title>
+<meta name="description" content="Interactive GC-MS review tool for annotating ant cuticular hydrocarbons, methyl-branched alkanes, alkenes, esters, and related compounds.">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --font:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  --bg:#F6F8F9;
+  --paper:#FFFFFF;
+  --ink:#14212B;
+  --muted:#50616F;
+  --soft:#758594;
+  --line:#D8E0E6;
+  --line-strong:#B8C4CC;
+  --green:#177E63;
+  --blue:#1D5E9E;
+  --red:#A23A32;
+  --gold:#A66A12;
+  --cyan:#0F7C8D;
+  --lav:#6856A6;
+  --wash:#EAF3EF;
+  --bluewash:#EAF1F8;
+  --redwash:#F8EDEC;
+  --goldwash:#FAF2E5;
+}
+html{min-height:100%;background:var(--bg);}
+body{min-height:100%;font-family:var(--font);background:var(--bg);color:var(--ink);line-height:1.5;}
+button,input,select,textarea{font:inherit;}
+button{cursor:pointer;}
+.site-header{position:sticky;top:0;z-index:40;background:rgba(246,248,249,0.94);border-bottom:1px solid var(--line);backdrop-filter:blur(14px);}
+.site-header-inner{width:min(1260px,100%);margin:0 auto;padding:14px clamp(14px,3vw,28px);display:flex;justify-content:space-between;gap:18px;align-items:flex-start;}
+.eyebrow{font-size:11px;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;color:var(--green);}
+h1{font-size:clamp(21px,2.5vw,32px);line-height:1.05;letter-spacing:0;font-weight:780;}
+.intro{max-width:610px;color:var(--muted);font-size:13px;text-align:right;margin-top:2px;}
+.return-link{display:inline-flex;margin-top:8px;border:1px solid var(--line-strong);border-radius:6px;padding:5px 9px;color:var(--blue);font-size:12px;font-weight:700;text-decoration:none;background:#fff;}
+.return-link:hover,.return-link:focus-visible{border-color:var(--blue);background:var(--bluewash);}
+main{width:min(1260px,100%);margin:0 auto;padding:14px clamp(8px,2vw,28px) 34px;}
+.lab{background:#fff;border:1px solid var(--line);border-radius:8px;overflow:hidden;box-shadow:0 16px 40px rgba(20,33,43,0.08);}
+.tabs{display:flex;border-bottom:1px solid var(--line);background:#fff;}
+.tab{border:0;background:transparent;padding:10px 18px;font-size:13px;font-weight:750;color:var(--muted);border-bottom:2px solid transparent;}
+.tab.active{color:var(--ink);border-color:var(--green);}
+.panel{display:none;}
+.panel.active{display:block;}
+.workspace{display:grid;grid-template-columns:minmax(280px,0.9fr) minmax(360px,1.25fr) minmax(270px,0.72fr);min-height:690px;}
+.pane{padding:14px;border-right:1px solid var(--line);}
+.pane:last-child{border-right:0;}
+.pane-title{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:10px;}
+.pane-title h2{font-size:14px;line-height:1.15;font-weight:780;}
+.small-note{font-size:11px;color:var(--soft);}
+.controls{display:grid;gap:8px;margin-bottom:12px;}
+.control-row{display:grid;grid-template-columns:96px 1fr;gap:8px;align-items:center;}
+.control-row label{font-size:11px;font-weight:750;color:var(--muted);}
+.control-row input,.control-row select{min-width:0;border:1px solid var(--line-strong);border-radius:6px;padding:6px 8px;background:#fff;color:var(--ink);font-size:12px;}
+.file-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:9px 0;}
+.file-row input{max-width:260px;font-size:12px;}
+.btn{border:1px solid var(--line-strong);border-radius:6px;background:#fff;color:var(--ink);padding:7px 10px;font-size:12px;font-weight:750;}
+.btn:hover,.btn:focus-visible{border-color:var(--blue);background:var(--bluewash);}
+.btn.primary{background:var(--green);border-color:var(--green);color:#fff;}
+.btn.primary:hover,.btn.primary:focus-visible{background:#10684F;}
+.visual-card{border:1px solid var(--line);border-radius:8px;background:#FBFCFD;overflow:hidden;}
+.context-strip{display:grid;grid-template-columns:82px 1fr;gap:12px;align-items:center;padding:10px;border-bottom:1px solid var(--line);}
+.context-strip img{width:82px;height:62px;object-fit:cover;border-radius:6px;border:1px solid var(--line);}
+.context-strip p{font-size:12px;color:var(--muted);line-height:1.55;}
+canvas{display:block;width:100%;height:auto;background:#fff;}
+.chart-shell{position:relative;border-top:1px solid var(--line);}
+.chart-label{position:absolute;left:10px;top:8px;font-size:10px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:var(--soft);pointer-events:none;}
+.peak-table{border-top:1px solid var(--line);max-height:458px;overflow:auto;}
+table{width:100%;border-collapse:collapse;}
+th,td{padding:8px 7px;border-bottom:1px solid var(--line);font-size:12px;text-align:left;vertical-align:top;}
+th{position:sticky;top:0;background:#F7F9FA;color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:0.07em;z-index:2;}
+tr{cursor:pointer;}
+tr:hover{background:#F4F8F5;}
+tr.selected{background:#EAF3EF;}
+.tag{display:inline-flex;align-items:center;border-radius:5px;padding:2px 6px;font-size:10px;font-weight:800;white-space:nowrap;}
+.tag.hc{background:var(--wash);color:var(--green);}
+.tag.alkene{background:var(--bluewash);color:var(--blue);}
+.tag.ester{background:var(--goldwash);color:var(--gold);}
+.tag.unknown{background:#EEF1F3;color:var(--muted);}
+.tag.other{background:#F0EEF8;color:var(--lav);}
+.selected-peak{display:grid;grid-template-columns:1fr 135px;gap:10px;align-items:start;margin-bottom:10px;}
+.selected-peak h2{font-size:clamp(22px,3.2vw,36px);line-height:1.02;font-weight:790;letter-spacing:0;}
+.selected-peak p{font-size:13px;color:var(--muted);margin-top:7px;}
+.score-box{border:1px solid var(--line);border-radius:8px;padding:10px;background:#FBFCFD;}
+.score-number{font-size:32px;line-height:1;font-weight:800;color:var(--green);}
+.score-box span{display:block;font-size:11px;color:var(--muted);margin-top:3px;}
+.candidate-list{display:grid;gap:9px;margin-top:10px;}
+.candidate{border:1px solid var(--line);border-left:4px solid var(--green);border-radius:8px;padding:10px;background:#fff;}
+.candidate h3{font-size:14px;line-height:1.2;margin-bottom:6px;}
+.candidate p,.candidate li{font-size:12px;color:var(--muted);line-height:1.55;}
+.candidate ul{padding-left:17px;margin-top:5px;}
+.candidate.warn{border-left-color:var(--gold);}
+.candidate.bad{border-left-color:var(--red);}
+.annotation{display:grid;gap:8px;margin-top:12px;border-top:1px solid var(--line);padding-top:12px;}
+.annotation label{font-size:11px;font-weight:800;color:var(--muted);}
+.annotation select,.annotation textarea{width:100%;border:1px solid var(--line-strong);border-radius:6px;padding:7px 8px;font-size:12px;}
+.annotation textarea{min-height:82px;resize:vertical;}
+.export-box{border:1px solid var(--line);border-radius:8px;padding:10px;background:#FBFCFD;margin-top:12px;}
+.export-box h3{font-size:13px;margin-bottom:5px;}
+.export-box p{font-size:12px;color:var(--muted);}
+.guide-layout,.pipeline-layout{display:grid;grid-template-columns:minmax(260px,0.85fr) minmax(420px,1.35fr);gap:0;}
+.side-band{padding:18px;border-right:1px solid var(--line);background:#FBFCFD;}
+.side-band h2{font-size:clamp(24px,3.5vw,42px);line-height:1.02;font-weight:790;}
+.side-band p{font-size:13px;color:var(--muted);line-height:1.7;margin-top:11px;}
+.guide-content,.pipeline-content{padding:18px;display:grid;gap:12px;}
+.guide-card,.pipeline-card{border:1px solid var(--line);border-radius:8px;padding:13px;background:#fff;}
+.guide-card h3,.pipeline-card h3{font-size:16px;margin-bottom:8px;}
+.guide-card p,.guide-card li,.pipeline-card p,.pipeline-card li{font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:5px;}
+.guide-card ul,.pipeline-card ul{padding-left:18px;}
+.guide-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;}
+.mini{padding:10px;border-radius:8px;background:#F6F8F9;border:1px solid var(--line);}
+.mini strong{display:block;font-size:12px;margin-bottom:4px;}
+.mini span{display:block;font-size:12px;color:var(--muted);line-height:1.55;}
+.pipeline-step{display:grid;grid-template-columns:32px 1fr;gap:10px;align-items:start;padding:10px 0;border-top:1px solid var(--line);}
+.pipeline-step:first-of-type{border-top:0;}
+.num{display:flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:6px;background:var(--green);color:#fff;font-size:12px;font-weight:800;}
+.drop-zone{border:1px dashed var(--line-strong);border-radius:8px;padding:14px;background:#F7FAF9;}
+.code-box{white-space:pre-wrap;background:#14212B;color:#EDF5F2;border-radius:8px;padding:12px;font-size:12px;line-height:1.55;overflow:auto;}
+.status{min-height:18px;font-size:12px;color:var(--muted);}
+@media (max-width:1050px){
+  .workspace{grid-template-columns:1fr 1fr;}
+  .pane.results{grid-column:1/-1;border-top:1px solid var(--line);}
+  .pane:nth-child(2){border-right:0;}
+}
+@media (max-width:760px){
+  .site-header{position:static;}
+  .site-header-inner{flex-direction:column;padding:16px 14px;}
+  .intro{text-align:left;}
+  main{padding:8px 0 22px;}
+  .lab{border-left:0;border-right:0;border-radius:0;box-shadow:none;}
+  .tabs{overflow:auto;}
+  .tab{flex:0 0 auto;padding:11px 14px;}
+  .workspace,.guide-layout,.pipeline-layout{grid-template-columns:1fr;}
+  .pane{border-right:0;border-bottom:1px solid var(--line);}
+  .selected-peak{grid-template-columns:1fr;}
+  .side-band{border-right:0;border-bottom:1px solid var(--line);}
+  .guide-grid{grid-template-columns:1fr;}
+  .context-strip{grid-template-columns:1fr;}
+  .context-strip img{width:100%;height:120px;}
+  th,td{font-size:11px;padding:7px 5px;}
+}
+</style>
+</head>
+<body>
+<header class="site-header">
+  <div class="site-header-inner">
+    <div>
+      <div class="eyebrow">Interactive lab</div>
+      <h1>GC-MS Cuticular Compound Lab</h1>
+    </div>
+    <div>
+      <p class="intro">Review ant cuticle peaks, compare spectra, assign compound classes, and keep the reasoning visible while you work.</p>
+      <a class="return-link" href="index.html">Return to list</a>
+    </div>
+  </div>
+</header>
+
+<main>
+<div class="lab">
+  <div class="tabs" role="tablist" aria-label="GC-MS workspace tabs">
+    <button class="tab active" data-tab="review">Review peaks</button>
+    <button class="tab" data-tab="pipeline">Build pipeline</button>
+    <button class="tab" data-tab="guide">Pattern guide</button>
+  </div>
+
+  <section class="panel active" id="review-panel">
+    <div class="workspace">
+      <aside class="pane">
+        <div class="pane-title">
+          <h2>Sample and peaks</h2>
+          <span class="small-note" id="sample-count">Demo data</span>
+        </div>
+        <div class="visual-card">
+          <div class="context-strip">
+            <img alt="Ant cuticle close-up" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 220 150'%3E%3Crect width='220' height='150' fill='%2314212b'/%3E%3Cg fill='none' stroke='%23d7b36a' stroke-width='5' stroke-linecap='round'%3E%3Cpath d='M41 108c36-44 76-63 139-60'/%3E%3Cpath d='M63 101c24 7 49 7 75-1' opacity='.7'/%3E%3Cpath d='M91 60c17 16 33 31 48 46' opacity='.7'/%3E%3Cpath d='M145 47c12 19 22 40 30 63' opacity='.55'/%3E%3C/g%3E%3Cg fill='%23f3f0e5'%3E%3Cellipse cx='66' cy='92' rx='32' ry='22' transform='rotate(-22 66 92)'/%3E%3Cellipse cx='111' cy='73' rx='36' ry='25' transform='rotate(-11 111 73)'/%3E%3Cellipse cx='158' cy='63' rx='27' ry='19' transform='rotate(7 158 63)'/%3E%3Ccircle cx='187' cy='58' r='15'/%3E%3C/g%3E%3Cg stroke='%2314212b' stroke-width='3' stroke-linecap='round'%3E%3Cpath d='M178 52l26-20M180 63l31 9M190 55l20-1'/%3E%3C/g%3E%3Cg fill='%23177e63' opacity='.9'%3E%3Ccircle cx='78' cy='87' r='3'/%3E%3Ccircle cx='104' cy='67' r='2.4'/%3E%3Ccircle cx='132' cy='70' r='2.7'/%3E%3C/g%3E%3C/svg%3E">
+            <p>Cuticular profiles often have many similar hydrocarbon peaks. Treat the match score as a starting point, then check retention behavior, diagnostic ions, standards, and biological context.</p>
+          </div>
+          <div class="chart-shell">
+            <span class="chart-label">Total ion chromatogram</span>
+            <canvas id="tic" width="760" height="250"></canvas>
+          </div>
+        </div>
+        <div class="file-row">
+          <input id="file-input" type="file" accept=".csv,.tsv,.txt">
+          <button class="btn" id="load-demo">Reload demo</button>
+        </div>
+        <div class="controls">
+          <div class="control-row">
+            <label for="filter">Filter</label>
+            <input id="filter" type="search" placeholder="alkane, ester, C29, unknown">
+          </div>
+          <div class="control-row">
+            <label for="class-filter">Class</label>
+            <select id="class-filter">
+              <option value="">All classes</option>
+              <option>alkane</option>
+              <option>methyl-branched alkane</option>
+              <option>alkene</option>
+              <option>ester</option>
+              <option>other</option>
+              <option>unknown</option>
+            </select>
+          </div>
+        </div>
+        <div class="peak-table">
+          <table>
+            <thead><tr><th>RT</th><th>Peak</th><th>Class</th><th>Confidence</th></tr></thead>
+            <tbody id="peak-rows"></tbody>
+          </table>
+        </div>
+      </aside>
+
+      <section class="pane">
+        <div class="selected-peak">
+          <div>
+            <div class="small-note" id="peak-subtitle">Peak review</div>
+            <h2 id="peak-title">Select a peak</h2>
+            <p id="peak-description">Click a chromatogram peak or a table row to inspect the spectrum and candidate interpretations.</p>
+          </div>
+          <div class="score-box">
+            <div class="score-number" id="match-score">--</div>
+            <span>working confidence</span>
+          </div>
+        </div>
+        <div class="visual-card">
+          <div class="chart-shell">
+            <span class="chart-label">Mass spectrum</span>
+            <canvas id="spectrum" width="760" height="300"></canvas>
+          </div>
+        </div>
+        <div class="candidate-list" id="candidate-list"></div>
+      </section>
+
+      <aside class="pane results">
+        <div class="pane-title">
+          <h2>Annotation</h2>
+          <span class="small-note">local session</span>
+        </div>
+        <div class="annotation">
+          <label for="assigned-name">Assigned compound</label>
+          <input id="assigned-name" type="text" placeholder="e.g., 3-methylheptacosane">
+          <label for="assigned-class">Compound class</label>
+          <select id="assigned-class">
+            <option>unknown</option>
+            <option>alkane</option>
+            <option>methyl-branched alkane</option>
+            <option>alkene</option>
+            <option>ester</option>
+            <option>alcohol</option>
+            <option>ketone/aldehyde</option>
+            <option>contaminant</option>
+            <option>other</option>
+          </select>
+          <label for="confidence">Confidence</label>
+          <select id="confidence">
+            <option>unreviewed</option>
+            <option>tentative class</option>
+            <option>tentative compound</option>
+            <option>probable compound</option>
+            <option>confirmed with standard</option>
+          </select>
+          <label for="notes">Reasoning notes</label>
+          <textarea id="notes" placeholder="Record ions, RI, library hit, standard, or why this remains unresolved."></textarea>
+          <button class="btn primary" id="save-annotation">Save annotation</button>
+          <div class="status" id="save-status"></div>
+        </div>
+        <div class="export-box">
+          <h3>Export table</h3>
+          <p>Download the reviewed peak list with assignments, confidence, and notes.</p>
+          <div class="file-row">
+            <button class="btn" id="export-csv">Download CSV</button>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <section class="panel" id="pipeline-panel">
+    <div class="pipeline-layout">
+      <aside class="side-band">
+        <h2>From raw run to reviewed table.</h2>
+        <p>This part keeps the processing plan next to the interface. With Agilent data, start with MassHunter or ChemStation exports now, then add raw `.D` conversion and deconvolution when you are ready.</p>
+        <div class="drop-zone">
+          <p><strong>Accepted in this prototype:</strong> CSV or TSV tables with columns like retention time, area, name, formula, class, and spectrum.</p>
+        </div>
+      </aside>
+      <div class="pipeline-content">
+        <section class="pipeline-card">
+          <h3>Agilent options</h3>
+          <div class="pipeline-step"><span class="num">1</span><div><strong>Quick report export.</strong><p>Export a compound, peak, or library-search report from MassHunter or ChemStation as CSV, TXT, or XLSX. This is the easiest way to start reviewing peaks in the interface.</p></div></div>
+          <div class="pipeline-step"><span class="num">2</span><div><strong>Spectrum-rich export.</strong><p>If your Agilent report can include major ions, apex spectra, match score, formula, library name, and retention time, export those too. This gives the guide enough evidence to explain class patterns.</p></div></div>
+          <div class="pipeline-step"><span class="num">3</span><div><strong>Raw `.D` conversion.</strong><p>For full processing outside Agilent, convert the Agilent `.D` data folder to an open format such as mzML or NetCDF. That unlocks automated chromatogram reading, peak picking, and deconvolution.</p></div></div>
+          <div class="pipeline-step"><span class="num">4</span><div><strong>Retention-index workflow.</strong><p>Run an alkane ladder and calculate retention indices. RI patterns are especially helpful for long-chain alkanes, methyl-branched alkanes, alkenes, and esters.</p></div></div>
+          <div class="pipeline-step"><span class="num">5</span><div><strong>Review and annotate.</strong><p>Use the chromatogram, spectrum, class guide, and notes to decide whether a peak is a class-level call, a tentative compound, or confirmed.</p></div></div>
+        </section>
+        <section class="pipeline-card">
+          <h3>What to export from Agilent first</h3>
+          <ul>
+            <li><strong>Required:</strong> retention time, peak area or height, and candidate compound name.</li>
+            <li><strong>Very helpful:</strong> library match score, formula, CAS/library ID, and major ions or apex spectrum.</li>
+            <li><strong>Best for cuticle work:</strong> retention index, alkane ladder run, sample ID, and notes about blanks or contaminants.</li>
+          </ul>
+        </section>
+        <section class="pipeline-card">
+          <h3>CSV shape this tool understands</h3>
+          <p>Column names are flexible. These examples are recognized: <strong>rt</strong>, <strong>retention_time</strong>, <strong>area</strong>, <strong>intensity</strong>, <strong>name</strong>, <strong>formula</strong>, <strong>class</strong>, <strong>match</strong>, <strong>spectrum</strong>.</p>
+          <p>The spectrum column can look like this:</p>
+          <div class="code-box">57:100 71:66 85:42 99:24 113:12 408:7</div>
+        </section>
+        <section class="pipeline-card">
+          <h3>Future processing script</h3>
+          <p>When you have example raw files, we can add a real pipeline folder for conversion, deconvolution, spectral search, retention-index calculation, and table export. A starter command might eventually look like:</p>
+          <div class="code-box">gcms-cuticle-pipeline process sample.mzML --library cuticle_library.msp --alkane-ladder ladder.csv --out reviewed_input.csv</div>
+        </section>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel" id="guide-panel">
+    <div class="guide-layout">
+      <aside class="side-band">
+        <h2>What patterns are saying.</h2>
+        <p>The guide is intentionally written for review work: not a perfect identification oracle, but a set of clues that helps you explain why a peak looks like an alkane, branched alkane, alkene, ester, or something else.</p>
+      </aside>
+      <div class="guide-content">
+        <section class="guide-card">
+          <h3>Cuticular hydrocarbons first</h3>
+          <p>Ant cuticles are often dominated by long-chain hydrocarbons. Many peaks form homologous series, so a compound call should usually combine the spectrum, retention time, retention index, and neighboring peaks.</p>
+          <div class="guide-grid">
+            <div class="mini"><strong>n-Alkanes</strong><span>Strong alkyl fragments such as m/z 57, 71, 85, 99. Molecular ion may be weak but helps estimate carbon number.</span></div>
+            <div class="mini"><strong>Methyl-branched alkanes</strong><span>Still hydrocarbon-like, but branch cleavage can enhance diagnostic fragments. Exact branch position is hard without standards or special methods.</span></div>
+            <div class="mini"><strong>Alkenes</strong><span>Often stronger m/z 55, 69, 83, 97 series. Double-bond position usually needs derivatization such as DMDS or standards.</span></div>
+            <div class="mini"><strong>Esters</strong><span>Look for oxygen-containing behavior, McLafferty ions such as m/z 74 for methyl esters, and acylium fragments such as m/z 43.</span></div>
+          </div>
+        </section>
+        <section class="guide-card">
+          <h3>How to avoid over-calling</h3>
+          <ul>
+            <li><strong>Class-level ID:</strong> enough evidence for hydrocarbon, alkene, ester, or contaminant, but not enough for exact structure.</li>
+            <li><strong>Tentative compound:</strong> library hit and retention behavior agree, but no authentic standard.</li>
+            <li><strong>Probable compound:</strong> high-quality spectrum, plausible RI, expected homologous context, and no stronger alternative.</li>
+            <li><strong>Confirmed:</strong> authentic standard or independent structural confirmation.</li>
+          </ul>
+        </section>
+        <section class="guide-card">
+          <h3>Practical clue table</h3>
+          <div class="guide-grid">
+            <div class="mini"><strong>Odd/even chain series</strong><span>Cuticular hydrocarbons often show repeating peaks spaced by one CH2 unit. Repeating RI spacing supports homologous assignments.</span></div>
+            <div class="mini"><strong>Weak molecular ion</strong><span>Common in long alkanes. A weak high-mass ion can still anchor carbon number if the spectrum is clean.</span></div>
+            <div class="mini"><strong>Oxygenated peaks</strong><span>Esters, alcohols, ketones, and aldehydes may have stronger polar fragments and different retention behavior from hydrocarbons of similar mass.</span></div>
+            <div class="mini"><strong>Coelution</strong><span>A mixed spectrum can imitate “other things I don’t know.” If ions do not rise and fall together, deconvolution or manual extraction may be needed.</span></div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </section>
+</div>
+</main>
+
+<script>
+const demoPeaks=[
+  {id:"P01",rt:12.42,area:180000,name:"n-Pentacosane",formula:"C25H52",class:"alkane",match:86,spectrum:"57:100 71:71 85:52 99:31 113:19 127:13 352:8",notes:"Hydrocarbon fragment series; weak molecular ion fits C25 alkane."},
+  {id:"P02",rt:14.06,area:260000,name:"11-Methylheptacosane",formula:"C28H58",class:"methyl-branched alkane",match:78,spectrum:"57:94 71:100 85:62 99:35 183:22 197:18 394:5",notes:"Branched alkane candidate; branch position remains tentative without standard."},
+  {id:"P03",rt:15.18,area:220000,name:"Heptacosene",formula:"C27H54",class:"alkene",match:74,spectrum:"55:100 69:73 83:54 97:41 111:24 378:10",notes:"Alkene-like allylic fragments; double-bond position unresolved."},
+  {id:"P04",rt:16.7,area:510000,name:"n-Heptacosane",formula:"C27H56",class:"alkane",match:90,spectrum:"57:100 71:73 85:48 99:28 113:18 380:7",notes:"Strong hydrocarbon series; homologous context supports n-alkane."},
+  {id:"P05",rt:18.25,area:310000,name:"Methyl octadecanoate",formula:"C19H38O2",class:"ester",match:82,spectrum:"74:100 87:42 43:67 55:35 143:20 298:14",notes:"m/z 74 supports fatty acid methyl ester pattern."},
+  {id:"P06",rt:20.14,area:430000,name:"3-Methylnonacosane",formula:"C30H62",class:"methyl-branched alkane",match:71,spectrum:"57:100 71:79 85:46 113:38 127:22 211:18 422:4",notes:"Methyl-branched hydrocarbon likely; exact isomer needs RI/standard."},
+  {id:"P07",rt:21.46,area:195000,name:"Unknown oxygenated",formula:"",class:"other",match:48,spectrum:"43:100 58:64 72:45 86:22 114:15 282:7",notes:"Carbonyl-like fragments possible; low confidence."},
+  {id:"P08",rt:23.02,area:590000,name:"n-Hentriacontane",formula:"C31H64",class:"alkane",match:88,spectrum:"57:100 71:68 85:49 99:29 113:18 436:6",notes:"Long-chain alkane pattern."}
+];
+let peaks=demoPeaks.map(p=>({...p,annotation:{name:p.name,class:p.class,confidence:p.match>84?"probable compound":"tentative compound",notes:p.notes}}));
+let selectedId=peaks[0].id;
+const tic=document.getElementById("tic");
+const ticCtx=tic.getContext("2d");
+const spec=document.getElementById("spectrum");
+const specCtx=spec.getContext("2d");
+const classMap={"alkane":"hc","methyl-branched alkane":"hc","alkene":"alkene","ester":"ester","unknown":"unknown","other":"other","alcohol":"other","ketone/aldehyde":"other","contaminant":"unknown"};
+
+function parseSpectrum(text){
+  if(!text)return[];
+  return String(text).split(/[;\s,]+/).map(pair=>{
+    const bits=pair.split(/[:=]/);
+    return {mz:Number(bits[0]),intensity:Number(bits[1])};
+  }).filter(p=>Number.isFinite(p.mz)&&Number.isFinite(p.intensity));
+}
+function inferClass(peak){
+  const s=parseSpectrum(peak.spectrum);
+  const has=mz=>s.some(p=>Math.abs(p.mz-mz)<=1&&p.intensity>25);
+  if(has(74)&&has(43))return"ester";
+  if(has(55)&&has(69))return"alkene";
+  if(has(57)&&has(71)&&has(85))return peak.name&&/methyl|branched/i.test(peak.name)?"methyl-branched alkane":"alkane";
+  if(has(43)&&has(58))return"other";
+  return peak.class||"unknown";
+}
+function candidatesFor(peak){
+  const cls=inferClass(peak);
+  const s=parseSpectrum(peak.spectrum);
+  const highMz=s.reduce((a,p)=>p.intensity>3&&p.mz>a?p.mz:a,0);
+  const base=s.reduce((a,p)=>p.intensity>a.intensity?p:a,{mz:0,intensity:0});
+  const items=[];
+  if(cls==="alkane"){
+    items.push({tone:"",title:"Long-chain alkane",body:`Base ion m/z ${base.mz} and the 57/71/85/99 series are consistent with saturated hydrocarbon fragmentation. A weak ion near m/z ${highMz||"the molecular region"} can help estimate carbon number.`,points:["Check retention index against an alkane ladder.","Look for neighboring homologs spaced by one CH2 unit.","A library name is tentative until RI or standard agrees."]});
+  }else if(cls==="methyl-branched alkane"){
+    items.push({tone:"warn",title:"Methyl-branched alkane",body:"The spectrum is hydrocarbon-like, but enhanced branch-cleavage fragments suggest an isomeric methyl branch. GC-MS often cannot uniquely place the branch by library score alone.",points:["Compare RI to known methyl-branched standards.","Do not over-call branch position without support.","Report as methyl-branched alkane if the exact isomer remains ambiguous."]});
+  }else if(cls==="alkene"){
+    items.push({tone:"warn",title:"Alkene",body:"The 55/69/83/97-style allylic fragment series supports unsaturation. The double-bond position is usually not secure from an underivatized EI spectrum.",points:["Use DMDS derivatization or standards for double-bond position.","Check whether the molecular ion fits one fewer H2 than the alkane.","Confirm the peak is not a coeluting mixture."]});
+  }else if(cls==="ester"){
+    items.push({tone:"",title:"Ester or fatty acid methyl ester",body:"m/z 74 with oxygenated fragments is a classic clue for methyl esters. Other esters may show related rearrangement or acylium ions.",points:["Look for m/z 43 acylium and oxygenated fragment patterns.","Compare retention against fatty acid methyl ester references.","Watch for sample-prep artifacts if methylation was used."]});
+  }else{
+    items.push({tone:"bad",title:"Unresolved or oxygenated compound",body:"The spectrum does not cleanly match a cuticular hydrocarbon pattern. It may be oxygenated, a contaminant, or a mixed/coeluting peak.",points:["Inspect extracted ions for coelution.","Search against a broader library.","Keep the annotation conservative until the pattern is clearer."]});
+  }
+  items.push({tone:"",title:"Current library/table call",body:`${peak.name||"No name supplied"}${peak.formula?` (${peak.formula})`:""} with match score ${peak.match||"--"}.`,points:[peak.notes||"Add notes as you review this peak."]});
+  return items;
+}
+function drawAxes(ctx,w,h,pad){
+  ctx.clearRect(0,0,w,h);
+  ctx.fillStyle="#fff";ctx.fillRect(0,0,w,h);
+  ctx.strokeStyle="#D8E0E6";ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(pad,h-pad);ctx.lineTo(w-pad,h-pad);ctx.lineTo(w-pad,pad);ctx.stroke();
+  ctx.fillStyle="#758594";ctx.font="12px Inter, sans-serif";
+}
+function drawTic(){
+  const w=tic.width,h=tic.height,p=34;
+  drawAxes(ticCtx,w,h,p);
+  const minRt=Math.min(...peaks.map(x=>x.rt))-0.8;
+  const maxRt=Math.max(...peaks.map(x=>x.rt))+0.8;
+  const maxArea=Math.max(...peaks.map(x=>x.area));
+  const xFor=rt=>p+(rt-minRt)/(maxRt-minRt)*(w-p*2);
+  const yFor=a=>h-p-(a/maxArea)*(h-p*2);
+  ticCtx.strokeStyle="#177E63";ticCtx.lineWidth=2;
+  ticCtx.beginPath();ticCtx.moveTo(p,yFor(0));
+  peaks.forEach(peak=>{
+    const x=xFor(peak.rt), y=yFor(peak.area);
+    ticCtx.lineTo(x-12,h-p);
+    ticCtx.quadraticCurveTo(x-6,y+24,x,y);
+    ticCtx.quadraticCurveTo(x+6,y+24,x+12,h-p);
+  });
+  ticCtx.stroke();
+  peaks.forEach(peak=>{
+    const x=xFor(peak.rt), y=yFor(peak.area);
+    ticCtx.fillStyle=peak.id===selectedId?"#A23A32":"#14212B";
+    ticCtx.beginPath();ticCtx.arc(x,y,5,0,Math.PI*2);ticCtx.fill();
+    ticCtx.fillStyle="#50616F";ticCtx.fillText(peak.id,x-8,y-10);
+  });
+  ticCtx.fillStyle="#758594";
+  ticCtx.fillText(`${minRt.toFixed(1)} min`,p,h-9);
+  ticCtx.fillText(`${maxRt.toFixed(1)} min`,w-p-48,h-9);
+}
+function drawSpectrum(peak){
+  const w=spec.width,h=spec.height,p=36;
+  drawAxes(specCtx,w,h,p);
+  const s=parseSpectrum(peak.spectrum);
+  const maxMz=Math.max(120,...s.map(x=>x.mz))+20;
+  const maxI=Math.max(100,...s.map(x=>x.intensity));
+  specCtx.strokeStyle="#1D5E9E";specCtx.lineWidth=2;
+  s.forEach(ion=>{
+    const x=p+(ion.mz/maxMz)*(w-p*2);
+    const y=h-p-(ion.intensity/maxI)*(h-p*2);
+    specCtx.beginPath();specCtx.moveTo(x,h-p);specCtx.lineTo(x,y);specCtx.stroke();
+    if(ion.intensity>35){
+      specCtx.fillStyle="#14212B";specCtx.font="11px Inter, sans-serif";
+      specCtx.fillText(String(Math.round(ion.mz)),x-8,y-6);
+    }
+  });
+  specCtx.fillStyle="#758594";
+  specCtx.fillText("m/z",w-p-18,h-10);
+  specCtx.fillText("relative abundance",p,18);
+}
+function renderRows(){
+  const q=document.getElementById("filter").value.trim().toLowerCase();
+  const cls=document.getElementById("class-filter").value;
+  const rows=document.getElementById("peak-rows");
+  rows.innerHTML="";
+  peaks.filter(p=>{
+    const hay=[p.id,p.rt,p.name,p.formula,p.class,p.annotation?.name,p.annotation?.class].join(" ").toLowerCase();
+    return (!q||hay.includes(q))&&(!cls||p.class===cls||p.annotation?.class===cls);
+  }).forEach(peak=>{
+    const ann=peak.annotation||{};
+    const tr=document.createElement("tr");
+    tr.className=peak.id===selectedId?"selected":"";
+    tr.innerHTML=`<td>${peak.rt.toFixed(2)}</td><td><strong>${peak.id}</strong><br>${ann.name||peak.name||"Unknown"}</td><td><span class="tag ${classMap[ann.class||peak.class]||"unknown"}">${ann.class||peak.class||"unknown"}</span></td><td>${ann.confidence||peak.match||"unreviewed"}</td>`;
+    tr.addEventListener("click",()=>selectPeak(peak.id));
+    rows.appendChild(tr);
+  });
+  document.getElementById("sample-count").textContent=`${peaks.length} peaks`;
+}
+function renderSelected(){
+  const peak=peaks.find(p=>p.id===selectedId)||peaks[0];
+  if(!peak)return;
+  selectedId=peak.id;
+  document.getElementById("peak-subtitle").textContent=`${peak.id} at ${peak.rt.toFixed(2)} min`;
+  document.getElementById("peak-title").textContent=peak.annotation?.name||peak.name||"Unknown peak";
+  document.getElementById("peak-description").textContent=`${peak.formula||"Formula not supplied"} · ${peak.area.toLocaleString()} area · ${peak.annotation?.class||peak.class||inferClass(peak)}`;
+  document.getElementById("match-score").textContent=peak.match?String(peak.match):"--";
+  document.getElementById("assigned-name").value=peak.annotation?.name||peak.name||"";
+  document.getElementById("assigned-class").value=peak.annotation?.class||peak.class||"unknown";
+  document.getElementById("confidence").value=peak.annotation?.confidence||"unreviewed";
+  document.getElementById("notes").value=peak.annotation?.notes||peak.notes||"";
+  const list=document.getElementById("candidate-list");
+  list.innerHTML="";
+  candidatesFor(peak).forEach(c=>{
+    const el=document.createElement("article");
+    el.className=`candidate ${c.tone}`;
+    el.innerHTML=`<h3>${c.title}</h3><p>${c.body}</p><ul>${c.points.map(x=>`<li>${x}</li>`).join("")}</ul>`;
+    list.appendChild(el);
+  });
+  drawTic();drawSpectrum(peak);renderRows();
+}
+function selectPeak(id){selectedId=id;renderSelected();}
+function parseDelimited(text){
+  const lines=text.trim().split(/\r?\n/).filter(Boolean);
+  if(!lines.length)return[];
+  const delim=lines[0].includes("\t")?"\t":",";
+  const headers=lines[0].split(delim).map(h=>h.trim().toLowerCase());
+  const at=names=>names.map(n=>headers.indexOf(n)).find(i=>i>=0);
+  const idx={rt:at(["rt","retention_time","retention time","time"]),area:at(["area","intensity","height","abundance"]),name:at(["name","compound","candidate"]),formula:at(["formula"]),class:at(["class","compound_class","type"]),match:at(["match","score","similarity"]),spectrum:at(["spectrum","ions","mass_spectrum"]),notes:at(["notes","comment"])};
+  return lines.slice(1).map((line,i)=>{
+    const cells=line.split(delim).map(c=>c.trim());
+    const get=k=>idx[k]!==undefined&&idx[k]>=0?cells[idx[k]]:"";
+    const peak={id:`P${String(i+1).padStart(2,"0")}`,rt:Number(get("rt"))||i+1,area:Number(get("area"))||100000,name:get("name")||"Unknown",formula:get("formula"),class:get("class")||"unknown",match:Number(get("match"))||0,spectrum:get("spectrum")||"",notes:get("notes")};
+    if(!peak.spectrum)peak.spectrum="57:100 71:60 85:35";
+    peak.annotation={name:peak.name,class:peak.class,confidence:peak.match>80?"tentative compound":"unreviewed",notes:peak.notes};
+    return peak;
+  });
+}
+function downloadCsv(){
+  const headers=["id","rt","area","source_name","formula","source_class","match","assigned_name","assigned_class","confidence","notes"];
+  const esc=v=>`"${String(v??"").replaceAll('"','""')}"`;
+  const rows=peaks.map(p=>[p.id,p.rt,p.area,p.name,p.formula,p.class,p.match,p.annotation?.name,p.annotation?.class,p.annotation?.confidence,p.annotation?.notes].map(esc).join(","));
+  const blob=new Blob([[headers.join(","),...rows].join("\n")],{type:"text/csv"});
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="gcms_cuticle_annotations.csv";a.click();URL.revokeObjectURL(a.href);
+}
+document.querySelectorAll(".tab").forEach(tab=>tab.addEventListener("click",()=>{
+  document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+  document.querySelectorAll(".panel").forEach(p=>p.classList.remove("active"));
+  tab.classList.add("active");
+  document.getElementById(`${tab.dataset.tab}-panel`).classList.add("active");
+}));
+tic.addEventListener("click",event=>{
+  const rect=tic.getBoundingClientRect();
+  const x=(event.clientX-rect.left)*(tic.width/rect.width);
+  const minRt=Math.min(...peaks.map(p=>p.rt))-0.8,maxRt=Math.max(...peaks.map(p=>p.rt))+0.8,pad=34;
+  const rt=minRt+((x-pad)/(tic.width-pad*2))*(maxRt-minRt);
+  const nearest=peaks.reduce((best,p)=>Math.abs(p.rt-rt)<Math.abs(best.rt-rt)?p:best,peaks[0]);
+  selectPeak(nearest.id);
+});
+document.getElementById("filter").addEventListener("input",renderRows);
+document.getElementById("class-filter").addEventListener("change",renderRows);
+document.getElementById("load-demo").addEventListener("click",()=>{peaks=demoPeaks.map(p=>({...p,annotation:{name:p.name,class:p.class,confidence:p.match>84?"probable compound":"tentative compound",notes:p.notes}}));selectedId=peaks[0].id;renderSelected();});
+document.getElementById("file-input").addEventListener("change",event=>{
+  const file=event.target.files[0];if(!file)return;
+  file.text().then(text=>{peaks=parseDelimited(text);selectedId=peaks[0]?.id;renderSelected();});
+});
+document.getElementById("save-annotation").addEventListener("click",()=>{
+  const peak=peaks.find(p=>p.id===selectedId);if(!peak)return;
+  peak.annotation={name:document.getElementById("assigned-name").value,class:document.getElementById("assigned-class").value,confidence:document.getElementById("confidence").value,notes:document.getElementById("notes").value};
+  document.getElementById("save-status").textContent="Saved for this browser session.";
+  renderSelected();
+});
+document.getElementById("export-csv").addEventListener("click",downloadCsv);
+renderSelected();
+</script>
+</body>
+</html>
