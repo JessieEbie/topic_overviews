@@ -106,6 +106,10 @@ button.rst-btn:hover{background:var(--color-background-secondary);}
 .gcard{background:var(--color-background-secondary);border-radius:8px;padding:10px 12px;}
 .gcard .gtitle{font-size:11px;font-weight:500;color:var(--color-text-primary);margin-bottom:5px;}
 .gcard p{font-size:11px;color:var(--color-text-secondary);line-height:1.6;margin:0;}
+.diagram-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;}
+.diagram-card{background:var(--color-background-secondary);border-radius:8px;padding:10px 12px;}
+.diagram-card svg{display:block;width:100%;height:auto;border-radius:6px;background:#fff;border:0.5px solid var(--color-border-tertiary);}
+.diagram-card figcaption{font-size:11px;color:var(--color-text-secondary);line-height:1.6;margin-top:6px;}
 .gbadge{display:inline-block;padding:1px 7px;border-radius:4px;font-size:10px;font-weight:500;margin-right:3px;vertical-align:middle;}
 .gbadge.blue{background:#DBEAFE;color:#1E40AF;}
 .gbadge.green{background:#D1FAE5;color:#065F46;}
@@ -144,6 +148,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,canvas:focus-visib
   #top-c{width:100%;max-width:620px;margin-left:auto;margin-right:auto;}
   .legend-row{justify-content:center;}
   .guide-row{grid-template-columns:1fr;}
+  .diagram-grid{grid-template-columns:1fr;}
   #guide-panel,#learn-panel{padding:14px 12px;}
 }
 @media (max-width:380px){
@@ -246,11 +251,13 @@ button:focus-visible,input:focus-visible,select:focus-visible,canvas:focus-visib
     <div class="exp-input-box">
       <div class="slabel" style="margin-top:0;">Experiment parameters</div>
       <div class="crow"><label for="e-filt-rot">Filter rotation during trial</label><input type="range" id="e-filt-rot" min="-45" max="45" value="45" step="1" oninput="syncExp()"><span class="val" id="e-filt-rot-v">+45°</span></div>
+      <div class="crow"><label for="e-land-rot">Landscape rotation during trial</label><input type="range" id="e-land-rot" min="-180" max="180" value="0" step="1" oninput="syncExp()"><span class="val" id="e-land-rot-v">0°</span></div>
+      <div class="crow"><label for="e-show-landscape">Landscape visualization</label><input type="checkbox" id="e-show-landscape" onchange="syncExp()"><span class="val">Show</span></div>
       <div class="crow"><label for="e-uses-pol">Compass cue model</label>
         <select id="e-uses-pol" onchange="syncExp()">
           <option value="1">Polarization only</option>
-          <option value="0.5">Polarization + landscape (equal weight)</option>
           <option value="0">Landscape only</option>
+          <option value="0.5">Mixed cue</option>
         </select>
       </div>
       <div class="crow">
@@ -262,6 +269,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,canvas:focus-visib
     <div class="stat-grid">
       <div class="scard"><div class="sl">Feeder azimuth</div><div class="sv" id="ic-faz">—</div></div>
       <div class="scard"><div class="sl">Filter rotated by</div><div class="sv" id="ic-frot">+45°</div></div>
+      <div class="scard"><div class="sl">Landscape rotated by</div><div class="sv" id="ic-lrot">0°</div></div>
       <div class="scard"><div class="sl">Predicted shift</div><div class="sv" id="ic-err" style="color:#DC2626;">45°</div></div>
     </div>
     <div class="phase-indicator" aria-hidden="true">
@@ -292,6 +300,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,canvas:focus-visib
     <p>This tool simulates a polarized light manipulation experiment based on Freas et al. (2019, <em>Journal of Comparative Physiology A</em>). A linear polarizing filter is placed over a foraging ant at a feeder and rotated while she feeds. The strongest prediction in the simulator is the <strong>polarization-only</strong> case, where the ant's home vector is rotated by the same total filter-angle manipulation. Because desert ants can also use landscape information, the app also offers a blended cue-conflict prediction instead of assuming polarization always dominates.</p>
     <p>The tool has two windows side by side. Window 1 is the sky dome — the view looking straight up from the ground. Window 2 is a top-down ground view showing the ant's movement. Both windows are linked: dragging the nest or feeder in Window 1 updates Window 2 automatically.</p>
     <p>Use the app for <strong>geometric experimental predictions</strong> under clear-sky Phoenix conditions, not as a full behavioral model. The sky polarization field is modeled with a Rayleigh-style single-scattering approximation, and the cue-conflict prediction depends on the polarization-versus-landscape weighting model you choose.</p>
+    <p>Although the simulator can be used more generally to think about cue conflict between polarized light and landscape information, its teaching notes and biological framing are designed mainly around <strong>Temnothorax rugatulus</strong> and related ant navigation questions.</p>
   </div>
 
   <div class="guide-section">
@@ -303,6 +312,8 @@ button:focus-visible,input:focus-visible,select:focus-visible,canvas:focus-visib
       <li>Check the E-vector tick marks (blue lines) in and around the filter circle to see what polarization angle the ant will perceive at the feeder location.</li>
       <li>Adjust the <strong>initial filter angle</strong> slider if you want the filter pre-rotated. At 0° the filter is near center alignment with the feeder's ambient E-vector — a green glow marks the control condition while the surrounding vectors show how close the whole filter field gets.</li>
       <li>In Window 2, set the <strong>filter rotation during trial</strong> — this is the angle the filter will rotate while the ant feeds. Freas et al. used ±45°.</li>
+      <li>Set <strong>landscape rotation during trial</strong> if you want to model an artificial terrestrial panorama rotated relative to the true homeward direction.</li>
+      <li>Turn on <strong>landscape visualization</strong> if you want to see a cardboard-tube-style panorama ring around the feeder and watch it rotate during the manipulation.</li>
       <li>Choose a <strong>compass cue model</strong> and set the animation speed.</li>
       <li>Click <strong>Run experiment</strong> to watch the full trial: outbound walk → feeding pause → filter rotation → exit on error heading.</li>
       <li>Use <strong>Reset</strong> to clear the trails and run again with different settings.</li>
@@ -347,8 +358,16 @@ button:focus-visible,input:focus-visible,select:focus-visible,canvas:focus-visib
         <p>The number of degrees the filter physically rotates while the ant is feeding at the feeder. This is the core experimental manipulation. +45° rotates clockwise, −45° counterclockwise. In the polarization-only model, the ant's predicted home direction shifts by the total filter angle acting at the feeder. In the blended model, the shift is smaller because landscape information and polarization are averaged. Freas et al. used ±45° rotations in their manipulations.</p>
       </div>
       <div class="gcard">
+        <div class="gtitle"><span class="gbadge brown">Landscape rotation during trial (−180° to +180°)</span></div>
+        <p>Use this to model an artificial terrestrial panorama rotated relative to the ant's normal learned surroundings. In the landscape-only model, this rotation fully determines the predicted homeward shift. In the blended model, it competes with the manipulated polarization cue.</p>
+      </div>
+      <div class="gcard">
+        <div class="gtitle"><span class="gbadge brown">Landscape visualization</span></div>
+        <p>This optional bonus overlay draws a simple artificial panorama ring around the feeder, like a printed cardboard cylinder. When turned on, the ring rotates during the trial so you can visualize the terrestrial cue moving while the ant remains at the feeder.</p>
+      </div>
+      <div class="gcard">
         <div class="gtitle">Compass cue model</div>
-        <p><strong>Polarization only</strong> shows the idealized case where the manipulated polarization cue fully determines the homeward heading. <strong>Polarization + landscape (equal weight)</strong> shows a cue-conflict compromise in which the ant combines the rotated polarization cue with learned terrestrial panorama cues. <strong>Landscape only</strong> is the null case where the polarizer has no directional effect and the ant exits on the correct homeward course.</p>
+        <p><strong>Polarization only</strong> shows the idealized case where the manipulated polarization cue fully determines the homeward heading. <strong>Landscape only</strong> shows the complementary case where the terrestrial panorama fully determines the homeward heading. <strong>Mixed cue</strong> shows a cue-conflict compromise in which the ant combines the rotated polarization cue with learned terrestrial panorama cues.</p>
       </div>
       <div class="gcard">
         <div class="gtitle">Animation speed</div>
@@ -408,13 +427,79 @@ button:focus-visible,input:focus-visible,select:focus-visible,canvas:focus-visib
   <div class="guide-section">
     <h3>What happens at sunset, twilight, and night</h3>
     <p>After sunset, the Sun is below the horizon, but the upper atmosphere is still illuminated for a while. During <strong>civil</strong>, <strong>nautical</strong>, and <strong>astronomical twilight</strong>, a polarization pattern can still remain visible, although the sky gets darker and the signal generally becomes weaker and noisier than it is in full daylight.</p>
-    <p>At true night, when the Sun is well below the horizon, solar skylight polarization largely disappears. A similar but much weaker pattern can be produced by <strong>moonlight</strong> under clear conditions, because moonlight is reflected sunlight and is scattered by the atmosphere in the same general way. In practice, nighttime polarization cues are far weaker than daytime or twilight solar cues.</p>
+    <p>At true night, when the Sun is well below the horizon, solar skylight polarization largely disappears. A similar but much weaker pattern can be produced by <strong>moonlight</strong> under clear conditions, because moonlight is reflected sunlight and is scattered by the atmosphere in the same general way. In practice, nighttime polarization cues are far weaker than daytime or twilight solar cues. This simulator is intended mainly for daytime and twilight <strong>solar</strong> polarization, not as a quantitative moonlight model.</p>
   </div>
 
   <div class="guide-section">
     <h3>Why ants can use it</h3>
-    <p>Many insects, including desert ants, have a specialized dorsal rim area in the compound eye with photoreceptors tuned to polarization. Those receptors are sensitive to e-vector orientation rather than only brightness. Combined with time compensation and other navigational cues, the sky polarization pattern can provide a stable celestial reference frame for path integration.</p>
+    <p>Many insects, including desert ants, have a specialized <strong>dorsal rim area</strong> in the compound eye with photoreceptors tuned to polarization. Those receptors are sensitive to e-vector orientation rather than only brightness. In the insect brain, polarization-sensitive pathways converge on the <strong>central complex</strong>, which is strongly implicated in celestial compass coding and path-integration-related directional processing.</p>
+    <p>For the species modeled here, <strong>Temnothorax rugatulus</strong>, eye anatomy has been described in detail and the published figures include a <strong>dorsal rim area</strong>, so it is reasonable to say that this ant possesses the peripheral visual specializations expected for polarization sensitivity. What is less certain is how strongly this species relies on skylight polarization in the exact way desert ants such as <em>Cataglyphis</em> do, so the simulator should still be read as a mechanistic hypothesis tool rather than a species-complete neural model.</p>
     <p>That is why a rotated filter can produce a predictable heading error: if the ant interprets the filtered e-vector field as a compass cue, its calculated homeward direction shifts toward the manipulated polarization direction. How large that shift is depends on how strongly the ant weights polarization relative to other available cues, including landscape information.</p>
+    <div class="diagram-grid">
+      <figure class="diagram-card">
+        <svg viewBox="0 0 320 200" aria-label="Simplified ant eye diagram with dorsal rim area highlighted">
+          <rect x="0" y="0" width="320" height="200" fill="#FFFFFF"/>
+          <ellipse cx="145" cy="104" rx="92" ry="64" fill="#F8FAFC" stroke="#94A3B8" stroke-width="2"/>
+          <path d="M88 60 Q145 16 202 60 L202 77 Q145 40 88 77 Z" fill="#DBEAFE" stroke="#2563EB" stroke-width="2"/>
+          <text x="145" y="35" text-anchor="middle" font-size="14" font-weight="700" fill="#1D4ED8">Dorsal rim area</text>
+          <line x1="145" y1="40" x2="145" y2="58" stroke="#1D4ED8" stroke-width="1.5"/>
+          <g stroke="#CBD5E1" stroke-width="1.4">
+            <circle cx="105" cy="90" r="10"/><circle cx="128" cy="86" r="10"/><circle cx="151" cy="84" r="10"/><circle cx="174" cy="86" r="10"/><circle cx="197" cy="91" r="10"/>
+            <circle cx="97" cy="114" r="10"/><circle cx="120" cy="109" r="10"/><circle cx="143" cy="106" r="10"/><circle cx="166" cy="108" r="10"/><circle cx="189" cy="113" r="10"/>
+            <circle cx="106" cy="137" r="10"/><circle cx="129" cy="132" r="10"/><circle cx="152" cy="130" r="10"/><circle cx="175" cy="132" r="10"/><circle cx="198" cy="137" r="10"/>
+          </g>
+          <g stroke="#7C3AED" stroke-width="2.2" stroke-linecap="round">
+            <line x1="97" y1="68" x2="113" y2="60"/><line x1="120" y1="64" x2="136" y2="56"/><line x1="143" y1="62" x2="159" y2="54"/><line x1="166" y1="64" x2="182" y2="56"/><line x1="189" y1="68" x2="205" y2="60"/>
+          </g>
+          <text x="245" y="108" font-size="13" font-weight="700" fill="#102033">Eye facets</text>
+          <text x="245" y="126" font-size="12" fill="#475569">Upper edge specialized</text>
+          <text x="245" y="142" font-size="12" fill="#475569">for skylight polarization</text>
+          <line x1="214" y1="98" x2="240" y2="104" stroke="#64748B" stroke-width="1.4"/>
+        </svg>
+        <figcaption>The dorsal rim area is a small specialized strip at the top of the compound eye. Its ommatidia are adapted for polarization vision rather than ordinary spatial detail.</figcaption>
+      </figure>
+      <figure class="diagram-card">
+        <svg viewBox="0 0 320 200" aria-label="Simplified insect brain pathway from dorsal rim area to central complex and mushroom bodies">
+          <rect x="0" y="0" width="320" height="200" fill="#FFFFFF"/>
+          <circle cx="64" cy="100" r="28" fill="#DBEAFE" stroke="#2563EB" stroke-width="2"/>
+          <text x="64" y="94" text-anchor="middle" font-size="12" font-weight="700" fill="#1E3A8A">Dorsal rim</text>
+          <text x="64" y="110" text-anchor="middle" font-size="12" font-weight="700" fill="#1E3A8A">area</text>
+          <rect x="126" y="64" width="68" height="38" rx="8" fill="#F3E8FF" stroke="#7C3AED" stroke-width="2"/>
+          <text x="160" y="87" text-anchor="middle" font-size="12" font-weight="700" fill="#6D28D9">Optic lobe</text>
+          <rect x="126" y="116" width="68" height="38" rx="8" fill="#FEF3C7" stroke="#D97706" stroke-width="2"/>
+          <text x="160" y="139" text-anchor="middle" font-size="12" font-weight="700" fill="#92400E">Anterior</text>
+          <text x="160" y="152" text-anchor="middle" font-size="12" font-weight="700" fill="#92400E">optic tubercle</text>
+          <rect x="228" y="54" width="58" height="44" rx="8" fill="#DCFCE7" stroke="#16A34A" stroke-width="2"/>
+          <text x="257" y="80" text-anchor="middle" font-size="12" font-weight="700" fill="#166534">Central</text>
+          <text x="257" y="93" text-anchor="middle" font-size="12" font-weight="700" fill="#166534">complex</text>
+          <rect x="220" y="116" width="74" height="40" rx="8" fill="#FEE2E2" stroke="#DC2626" stroke-width="2"/>
+          <text x="257" y="139" text-anchor="middle" font-size="12" font-weight="700" fill="#991B1B">Mushroom</text>
+          <text x="257" y="152" text-anchor="middle" font-size="12" font-weight="700" fill="#991B1B">bodies</text>
+          <g stroke="#475569" stroke-width="2.2" fill="none" marker-end="url(#arrow)">
+            <path d="M92 90 C104 86 112 84 126 83"/>
+            <path d="M92 110 C104 118 112 124 126 132"/>
+            <path d="M194 83 C206 78 214 75 228 76"/>
+            <path d="M194 132 C206 132 214 134 220 136"/>
+          </g>
+          <defs>
+            <marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+              <path d="M0,0 L0,6 L6,3 z" fill="#475569"/>
+            </marker>
+          </defs>
+          <text x="257" y="28" text-anchor="middle" font-size="13" font-weight="700" fill="#102033">Sky compass and view memory</text>
+          <text x="257" y="172" text-anchor="middle" font-size="11" fill="#475569">Central complex: heading / compass</text>
+          <text x="257" y="186" text-anchor="middle" font-size="11" fill="#475569">Mushroom bodies: learned scene memory</text>
+        </svg>
+        <figcaption>A simplified pathway view: polarization-sensitive input from the dorsal rim area feeds sky-compass processing, while learned landscape information is more strongly associated with mushroom-body-dependent visual memory.</figcaption>
+      </figure>
+    </div>
+  </div>
+
+  <div class="guide-section">
+    <h3>Landscape navigation and the ant brain</h3>
+    <p>For learned visual navigation, the current evidence points less to a cortex-like map and more to interactions between the insect <strong>optic lobes</strong>, <strong>mushroom bodies</strong>, and <strong>central complex</strong>. Ants are thought to use stored panoramic scene memories to judge whether a current view is familiar and whether it is aligned with a learned route or nest direction.</p>
+    <p>The term <strong>retinocortical map</strong> is usually not used for ants, because they do not have a cortex. Some visual pathways in insects are retinotopically organized at early stages such as the optic lobes, but the navigation literature for ants more often discusses <strong>view-based memory</strong>, <strong>mushroom-body-dependent visual learning</strong>, and <strong>central-complex heading computation</strong>. So if you want a teaching section beyond polarized light, the most accurate framing would be something like <strong>Landscape navigation and scene memory</strong>, not retinocortical mapping.</p>
+    <p>One species-specific caution: a commonly cited visual-surround rotation study was originally published under <em>Temnothorax rugatulus</em> but was later corrected to <em>Temnothorax curvispinosus</em>. So it is fair to say that <strong>Temnothorax ants</strong> and ants more broadly can use landscape information, but that particular experiment should not be used as direct rugatulus-specific evidence.</p>
   </div>
 
 </div>
@@ -464,7 +549,7 @@ let skyKeyboardTarget='nest';
 let A={phase:'idle',antX:0,antY:0,antAngle:0,phaseT:0,
   filtCurrentAngle:0,filtEndAngle:0,correctExitAngle:0,actualExitAngle:0,
   trailOut:[],trailErr:[],raf:null,lastTs:null,speedMult:1,polWeight:1,
-  restX:0,restY:0,outAngle:0,exitTravel:140};
+  restX:0,restY:0,outAngle:0,exitTravel:140,landCurrentAngle:0,landEndAngle:0};
 
 function formatHourLabel(hr){
   if(hr===0)return '12 AM';
@@ -608,7 +693,13 @@ function getV(){
 }
 function getEP(){
   const si=+document.getElementById('e-speed').value;
-  return{filtRot:+document.getElementById('e-filt-rot').value,speedMult:SPEED_MAP[si],polWeight:+document.getElementById('e-uses-pol').value};
+  return{
+    filtRot:+document.getElementById('e-filt-rot').value,
+    landRot:+document.getElementById('e-land-rot').value,
+    showLandscape:document.getElementById('e-show-landscape').checked,
+    speedMult:SPEED_MAP[si],
+    polWeight:+document.getElementById('e-uses-pol').value
+  };
 }
 
 // Convert sky canvas coords → sky-relative azimuth & elevation
@@ -680,11 +771,12 @@ function setMode(m){
 function syncExp(){
   const ep=getEP(),si=+document.getElementById('e-speed').value;
   document.getElementById('e-filt-rot-v').textContent=(ep.filtRot>=0?'+':'')+ep.filtRot+'°';
+  document.getElementById('e-land-rot-v').textContent=(ep.landRot>=0?'+':'')+ep.landRot+'°';
   document.getElementById('e-speed-v').textContent=SPEED_LABELS[si];
   document.getElementById('ic-frot').textContent=(ep.filtRot>=0?'+':'')+ep.filtRot+'°';
-  const predictedShift=Math.abs(totalFilterShiftDeg(ep.filtRot)*ep.polWeight);
-  document.getElementById('ic-err').textContent=predictedShift.toFixed(predictedShift%1?1:0)+'°';
+  document.getElementById('ic-lrot').textContent=(ep.landRot>=0?'+':'')+ep.landRot+'°';
   document.getElementById('e-filt-rot').setAttribute('aria-valuetext',(ep.filtRot>=0?'+':'')+ep.filtRot+' degrees');
+  document.getElementById('e-land-rot').setAttribute('aria-valuetext',(ep.landRot>=0?'+':'')+ep.landRot+' degrees');
   document.getElementById('e-speed').setAttribute('aria-valuetext',SPEED_LABELS[si]+' speed');
   if(A.phase==='idle'||A.phase==='done')drawTopScene();
 }
@@ -708,8 +800,10 @@ function updateScreenReaderText(v=getV()){
   const dx=ft.x-nt.x,dy=ft.y-nt.y;
   const outAngle=Math.atan2(dy,dx);
   const correctHome=(r2d(outAngle+Math.PI)+360)%360;
-  const shiftedHome=correctHome+totalFilterShiftDeg(A.phase==='idle'||A.phase==='done'?ep.filtRot:A.filtCurrentAngle);
-  const actualHome=(r2d(blendHeadingAngles(d2r(correctHome),d2r(shiftedHome),ep.polWeight))+360)%360;
+  const polShift=totalFilterShiftDeg(A.phase==='idle'||A.phase==='done'?ep.filtRot:A.filtCurrentAngle);
+  const landscapeHome=correctHome+ep.landRot;
+  const polarizationHome=correctHome+polShift;
+  const actualHome=(r2d(blendCueHeadings(d2r(landscapeHome),d2r(polarizationHome),ep.polWeight))+360)%360;
   document.getElementById('top-c-summary').textContent=
     `Top-down experiment view. Nest and feeder stay centered in this panel while preserving their relative spacing and heading from the dome. Feeder azimuth is ${derivedAzimuth().toFixed(0)} degrees. Correct homeward heading is ${correctHome.toFixed(0)} degrees. Predicted exit heading is ${actualHome.toFixed(0)} degrees. Current animation phase: ${document.getElementById('phase-lbl').textContent}.`;
   const startDeg=(((ambientDeg+v.filtInit)%180)+180)%180;
@@ -810,10 +904,10 @@ function shortestAngleDelta(from,to){
   return normalizeAngle(to-from);
 }
 
-function blendHeadingAngles(baseAngle,shiftedAngle,polWeight){
-  if(polWeight<=0)return baseAngle;
-  if(polWeight>=1)return shiftedAngle;
-  return normalizeAngle(baseAngle+shortestAngleDelta(baseAngle,shiftedAngle)*polWeight);
+function blendCueHeadings(landscapeAngle,polarizationAngle,polWeight){
+  if(polWeight<=0)return landscapeAngle;
+  if(polWeight>=1)return polarizationAngle;
+  return normalizeAngle(landscapeAngle+shortestAngleDelta(landscapeAngle,polarizationAngle)*polWeight);
 }
 
 function totalFilterShiftDeg(currentRotationDeg){
@@ -843,6 +937,58 @@ function drawFilterSlits(ctx,cx,cy,r,angle,alpha){
     ctx.lineTo(x+ca*lineHalf,y+sa*lineHalf);
     ctx.stroke();
   }
+  ctx.restore();
+}
+
+function drawLandscapeRing(ctx,cx,cy,angleDeg,alpha=1){
+  const innerR=42,outerR=60,angle=d2r(angleDeg);
+  ctx.save();
+  ctx.translate(cx,cy);
+  ctx.rotate(angle);
+  ctx.globalAlpha=alpha;
+
+  ctx.beginPath();
+  ctx.arc(0,0,outerR,0,Math.PI*2);
+  ctx.arc(0,0,innerR,0,Math.PI*2,true);
+  ctx.closePath();
+  ctx.fillStyle='rgba(180, 128, 74, 0.16)';
+  ctx.fill();
+
+  ctx.strokeStyle='rgba(146, 98, 52, 0.55)';
+  ctx.lineWidth=1.3;
+  ctx.beginPath();ctx.arc(0,0,outerR,0,Math.PI*2);ctx.stroke();
+  ctx.beginPath();ctx.arc(0,0,innerR,0,Math.PI*2);ctx.stroke();
+
+  for(let i=0;i<18;i++){
+    const a=(i/18)*Math.PI*2;
+    const x1=Math.cos(a)*(innerR+2),y1=Math.sin(a)*(innerR+2);
+    const x2=Math.cos(a)*(outerR-3),y2=Math.sin(a)*(outerR-3);
+    ctx.strokeStyle=i%2===0?'rgba(111,78,55,0.65)':'rgba(205,170,125,0.65)';
+    ctx.lineWidth=3.2;
+    ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();
+  }
+
+  const peaks=[-0.45,-0.15,0.12,0.42];
+  ctx.strokeStyle='rgba(55,65,81,0.85)';
+  ctx.lineWidth=1.7;
+  ctx.beginPath();
+  peaks.forEach((p,i)=>{
+    const a=p*Math.PI;
+    const baseR=(innerR+outerR)*0.5;
+    const tipR=outerR+6+(i%2)*4;
+    const bx=Math.cos(a)*baseR,by=Math.sin(a)*baseR;
+    const tx=Math.cos(a)*tipR,ty=Math.sin(a)*tipR;
+    if(i===0)ctx.moveTo(bx,by);
+    ctx.lineTo(tx,ty);
+    ctx.lineTo(Math.cos(a+0.18)*baseR,Math.sin(a+0.18)*baseR);
+  });
+  ctx.stroke();
+
+  ctx.fillStyle='rgba(55,65,81,0.9)';
+  ctx.font='600 9px var(--font-sans,sans-serif)';
+  ctx.textAlign='center';
+  ctx.textBaseline='middle';
+  ctx.fillText('Landscape',0,-(outerR+10));
   ctx.restore();
 }
 
@@ -1165,9 +1311,13 @@ function drawSky(v){
     strips=`<span class="ibadge loc">Phoenix MST</span> ${mo2[mm-1]} ${document.getElementById('dt-day').value} ${document.getElementById('dt-year').value} ${hs}:${String(mn2).padStart(2,'0')}${ap}&nbsp;`+strips;
   }
   document.getElementById('info-strip').innerHTML=strips+`<span class="ibadge pol">E-vec at feeder ~${Math.round(lpolDeg)}°</span>&nbsp;<span class="ibadge filt">Filter E-vec ~${Math.round(filtPolDeg)}°</span>`;
+  const epNow=getEP();
   const totalShiftNow=totalFilterShiftDeg(0);
-  const predictedNow=totalShiftNow*getEP().polWeight;
-  document.getElementById('status-txt').innerHTML=isAligned?'<span style="color:#059669;font-weight:500">Filter near center alignment — compare the full filter area visually</span>':`Filter shifted <strong>${(totalShiftNow>=0?'+':'')+totalShiftNow}°</strong> — current predicted compass shift: <strong>${(predictedNow>=0?'+':'')+predictedNow.toFixed(Math.abs(predictedNow)%1?1:0)}°</strong>`;
+  const predictedNow=blendCueHeadings(d2r(epNow.landRot),d2r(totalShiftNow),epNow.polWeight);
+  const predictedDegNow=r2d(predictedNow);
+  document.getElementById('status-txt').innerHTML=isAligned
+    ? '<span style="color:#059669;font-weight:500">Filter near center alignment — compare the full filter area visually</span>'
+    : `Filter shifted <strong>${(totalShiftNow>=0?'+':'')+totalShiftNow}°</strong>; landscape shifted <strong>${(epNow.landRot>=0?'+':'')+epNow.landRot}°</strong> — current predicted compass shift: <strong>${(predictedDegNow>=0?'+':'')+predictedDegNow.toFixed(Math.abs(predictedDegNow)%1?1:0)}°</strong>`;
   document.getElementById('ic-faz').textContent=Math.round(feedAzDerived)+'°';
 }
 
@@ -1179,8 +1329,12 @@ function drawTopScene(){
   const outAngle=Math.atan2(dy,dx);
   const correctHome=outAngle+Math.PI;
   const totalShift=d2r(totalFilterShiftDeg(A.phase==='idle'||A.phase==='done'?ep.filtRot:A.filtCurrentAngle));
-  const shiftedHome=correctHome+totalShift;
-  const actualHome=blendHeadingAngles(correctHome,shiftedHome,ep.polWeight);
+  const currentLandDeg=(A.phase==='idle'||A.phase==='done')?ep.landRot:A.landCurrentAngle;
+  const polarizationHome=correctHome+totalShift;
+  const landscapeHome=correctHome+d2r(currentLandDeg);
+  const actualHome=blendCueHeadings(landscapeHome,polarizationHome,ep.polWeight);
+  const predictedShiftDeg=r2d(shortestAngleDelta(correctHome,actualHome));
+  document.getElementById('ic-err').textContent=(predictedShiftDeg>=0?'+':'')+predictedShiftDeg.toFixed(Math.abs(predictedShiftDeg)%1?1:0)+'°';
   const correctLineLen=Math.max(45,Math.min(170,distanceToBounds(ft.x,ft.y,correctHome,18)-8));
 
   tctx.clearRect(0,0,TCW,TCH);
@@ -1191,6 +1345,18 @@ function drawTopScene(){
   for(let y=0;y<=TCH;y+=30){tctx.beginPath();tctx.moveTo(0,y);tctx.lineTo(TCW,y);tctx.stroke();}
   tctx.restore();
   drawTopCompass(TCW-40,40,20);
+  if(ep.showLandscape){
+    drawLandscapeRing(tctx,ft.x,ft.y,currentLandDeg,0.95);
+    if(A.phase==='rotating'&&Math.abs(A.landCurrentAngle)>0.5){
+      tctx.save();
+      tctx.font='bold 10px var(--font-sans,sans-serif)';
+      tctx.fillStyle='rgba(120,53,15,0.95)';
+      tctx.textAlign='center';
+      tctx.textBaseline='bottom';
+      tctx.fillText((A.landCurrentAngle>=0?'+':'')+Math.round(A.landCurrentAngle)+'°',ft.x,ft.y-66);
+      tctx.restore();
+    }
+  }
   // Correct home ref line
   tctx.save();tctx.setLineDash([4,4]);tctx.strokeStyle='rgba(5,150,105,0.35)';tctx.lineWidth=1;
   tctx.beginPath();tctx.moveTo(ft.x,ft.y);tctx.lineTo(ft.x+correctLineLen*Math.cos(correctHome),ft.y+correctLineLen*Math.sin(correctHome));tctx.stroke();tctx.restore();
@@ -1328,14 +1494,16 @@ function startAnim(){
   const layout=getTopLayout(),nt=layout.nest,ft=layout.feed;
   const dx=ft.x-nt.x,dy=ft.y-nt.y,outAngle=Math.atan2(dy,dx);
   const correctHome=outAngle+Math.PI;
-  const shiftedHome=correctHome+d2r(totalFilterShiftDeg(ep.filtRot));
-  const actualHome=blendHeadingAngles(correctHome,shiftedHome,ep.polWeight);
+  const polarizationHome=correctHome+d2r(totalFilterShiftDeg(ep.filtRot));
+  const landscapeHome=correctHome+d2r(ep.landRot);
+  const actualHome=blendCueHeadings(landscapeHome,polarizationHome,ep.polWeight);
   const restX=ft.x-ANT_HEAD*Math.cos(outAngle),restY=ft.y-ANT_HEAD*Math.sin(outAngle);
   const exitTravel=Math.max(55,Math.min(165,distanceToBounds(ft.x,ft.y,actualHome,18)-ANT_HEAD-6));
   A={phase:'outbound',antX:nt.x,antY:nt.y,antAngle:outAngle,phaseT:0,
     filtCurrentAngle:0,filtEndAngle:ep.filtRot,correctExitAngle:correctHome,actualExitAngle:actualHome,
     trailOut:[{x:nt.x,y:nt.y}],trailErr:[],raf:null,lastTs:null,
-    speedMult:ep.speedMult,polWeight:ep.polWeight,restX,restY,outAngle,exitTravel};
+    speedMult:ep.speedMult,polWeight:ep.polWeight,restX,restY,outAngle,exitTravel,
+    landCurrentAngle:0,landEndAngle:ep.landRot};
   document.getElementById('btn-go').disabled=true;
   setPhaseUI('outbound');
   if(A.raf)cancelAnimationFrame(A.raf);
@@ -1360,10 +1528,11 @@ function animLoop(ts){
   }else if(A.phase==='rotating'){
     const pg=Math.min(A.phaseT/BASE_DUR.rotating,1),ea=ease(pg);
     A.filtCurrentAngle=A.filtEndAngle*ea;
+    A.landCurrentAngle=A.landEndAngle*ea;
     A.antX=A.restX;
     A.antY=A.restY;
     A.antAngle=A.outAngle;
-    if(pg>=1){A.filtCurrentAngle=A.filtEndAngle;A.phase='exit';A.phaseT=0;A.trailErr=[{x:ft.x,y:ft.y}];setPhaseUI('exit');}
+    if(pg>=1){A.filtCurrentAngle=A.filtEndAngle;A.landCurrentAngle=A.landEndAngle;A.phase='exit';A.phaseT=0;A.trailErr=[{x:ft.x,y:ft.y}];setPhaseUI('exit');}
   }else if(A.phase==='exit'){
     const pg=Math.min(A.phaseT/BASE_DUR.exit,1),ea=ease(pg),exitDist=(A.exitTravel||140)*ea;
     A.antX=ft.x+(exitDist-ANT_HEAD)*Math.cos(A.actualExitAngle);A.antY=ft.y+(exitDist-ANT_HEAD)*Math.sin(A.actualExitAngle);
@@ -1376,7 +1545,7 @@ function animLoop(ts){
 
 function resetAnim(){
   if(A.raf)cancelAnimationFrame(A.raf);
-  A={phase:'idle',antX:0,antY:0,antAngle:0,phaseT:0,filtCurrentAngle:0,filtEndAngle:0,correctExitAngle:0,actualExitAngle:0,trailOut:[],trailErr:[],raf:null,lastTs:null,speedMult:1,polWeight:1,restX:0,restY:0,outAngle:0,exitTravel:140};
+  A={phase:'idle',antX:0,antY:0,antAngle:0,phaseT:0,filtCurrentAngle:0,filtEndAngle:0,correctExitAngle:0,actualExitAngle:0,trailOut:[],trailErr:[],raf:null,lastTs:null,speedMult:1,polWeight:1,restX:0,restY:0,outAngle:0,exitTravel:140,landCurrentAngle:0,landEndAngle:0};
   document.getElementById('btn-go').disabled=false;setPhaseUI('idle');drawTopScene();
 }
 
