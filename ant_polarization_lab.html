@@ -622,13 +622,20 @@ function skyXYtoAzEl(x,y){
 
 function getTopLayout(){
   const centerX=TCW*0.5,centerY=TCH*0.5;
-  const scale=Math.min((TCW-140)/SW,(TCH-110)/SH);
-  const dx=(skyFeedX-skyNestX)*scale;
-  const dy=(skyFeedY-skyNestY)*scale;
+  const dxSky=skyFeedX-skyNestX,dySky=skyFeedY-skyNestY;
+  const rawDist=Math.hypot(dxSky,dySky);
+  const baseScale=Math.min((TCW-140)/SW,(TCH-110)/SH);
+  const angle=rawDist>1e-6?Math.atan2(dySky,dxSky):0;
+  const minDisplayDist=165;
+  const maxDisplayDist=265;
+  const scaledDist=rawDist*baseScale;
+  const displayDist=Math.max(minDisplayDist,Math.min(maxDisplayDist,scaledDist));
+  const dx=Math.cos(angle)*displayDist;
+  const dy=Math.sin(angle)*displayDist;
   return{
     nest:{x:centerX-dx/2,y:centerY-dy/2},
     feed:{x:centerX+dx/2,y:centerY+dy/2},
-    scale
+    scale:rawDist>1e-6?displayDist/rawDist:baseScale
   };
 }
 
