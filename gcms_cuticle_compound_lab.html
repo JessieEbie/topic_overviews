@@ -32,10 +32,12 @@ body{min-height:100%;font-family:var(--font);background:var(--bg);color:var(--in
 button,input,select,textarea{font:inherit;}
 button{cursor:pointer;}
 .site-header{position:sticky;top:0;z-index:40;background:rgba(246,248,249,0.94);border-bottom:1px solid var(--line);backdrop-filter:blur(14px);}
-.site-header-inner{width:min(1260px,100%);margin:0 auto;padding:14px clamp(14px,3vw,28px);display:flex;justify-content:space-between;gap:18px;align-items:flex-start;}
-.eyebrow{font-size:11px;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;color:var(--green);}
-h1{font-size:clamp(21px,2.5vw,32px);line-height:1.05;letter-spacing:0;font-weight:780;}
-.intro{max-width:610px;color:var(--muted);font-size:13px;text-align:right;margin-top:2px;}
+.site-header-inner{width:min(1260px,100%);margin:0 auto;padding:16px clamp(14px,3vw,28px);display:flex;align-items:flex-start;justify-content:space-between;gap:18px;}
+.eyebrow{font-size:11px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#315ACD;margin-bottom:2px;}
+h1{font-size:clamp(20px,2.35vw,28px);line-height:1.08;letter-spacing:0;font-weight:750;color:var(--ink);}
+.copyright{font-size:11px;color:var(--soft);margin-top:4px;}
+.header-side{display:flex;flex-direction:column;align-items:flex-end;margin-top:20px;}
+.intro{max-width:610px;color:var(--muted);font-size:13px;text-align:right;margin-top:0;}
 .return-link{display:inline-flex;margin-top:8px;border:1px solid var(--line-strong);border-radius:6px;padding:5px 9px;color:var(--blue);font-size:12px;font-weight:700;text-decoration:none;background:#fff;}
 .return-link:hover,.return-link:focus-visible{border-color:var(--blue);background:var(--bluewash);}
 main{width:min(1260px,100%);margin:0 auto;padding:14px clamp(8px,2vw,28px) 34px;}
@@ -62,9 +64,12 @@ main{width:min(1260px,100%);margin:0 auto;padding:14px clamp(8px,2vw,28px) 34px;
 .btn.primary{background:var(--green);border-color:var(--green);color:#fff;}
 .btn.primary:hover,.btn.primary:focus-visible{background:#10684F;}
 .visual-card{border:1px solid var(--line);border-radius:8px;background:#FBFCFD;overflow:hidden;}
-.context-strip{display:grid;grid-template-columns:82px 1fr;gap:12px;align-items:center;padding:10px;border-bottom:1px solid var(--line);}
-.context-strip img{width:82px;height:62px;object-fit:cover;border-radius:6px;border:1px solid var(--line);}
+.context-strip{padding:10px;border-bottom:1px solid var(--line);}
 .context-strip p{font-size:12px;color:var(--muted);line-height:1.55;}
+.upload-help{border:1px solid var(--line);border-radius:8px;background:#F7FAF9;padding:10px;margin:10px 0 12px;}
+.upload-help h3{font-size:12px;margin-bottom:5px;}
+.upload-help p,.upload-help li{font-size:12px;color:var(--muted);line-height:1.55;}
+.upload-help ul{padding-left:17px;margin-top:5px;}
 canvas{display:block;width:100%;height:auto;background:#fff;}
 .chart-shell{position:relative;border-top:1px solid var(--line);}
 .chart-label{position:absolute;left:10px;top:8px;font-size:10px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:var(--soft);pointer-events:none;}
@@ -101,19 +106,36 @@ tr.selected{background:#EAF3EF;}
 .export-box{border:1px solid var(--line);border-radius:8px;padding:10px;background:#FBFCFD;margin-top:12px;}
 .export-box h3{font-size:13px;margin-bottom:5px;}
 .export-box p{font-size:12px;color:var(--muted);}
-.guide-layout,.pipeline-layout{display:grid;grid-template-columns:minmax(260px,0.85fr) minmax(420px,1.35fr);gap:0;}
+.guide-layout,.pipeline-layout,.tutorial-layout{display:grid;grid-template-columns:minmax(260px,0.85fr) minmax(420px,1.35fr);gap:0;}
 .side-band{padding:18px;border-right:1px solid var(--line);background:#FBFCFD;}
 .side-band h2{font-size:clamp(24px,3.5vw,42px);line-height:1.02;font-weight:790;}
 .side-band p{font-size:13px;color:var(--muted);line-height:1.7;margin-top:11px;}
-.guide-content,.pipeline-content{padding:18px;display:grid;gap:12px;}
-.guide-card,.pipeline-card{border:1px solid var(--line);border-radius:8px;padding:13px;background:#fff;}
-.guide-card h3,.pipeline-card h3{font-size:16px;margin-bottom:8px;}
-.guide-card p,.guide-card li,.pipeline-card p,.pipeline-card li{font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:5px;}
-.guide-card ul,.pipeline-card ul{padding-left:18px;}
+.guide-content,.pipeline-content,.tutorial-content{padding:18px;display:grid;gap:12px;}
+.guide-card,.pipeline-card,.tutorial-card{border:1px solid var(--line);border-radius:8px;padding:13px;background:#fff;}
+.guide-card h3,.pipeline-card h3,.tutorial-card h3{font-size:16px;margin-bottom:8px;}
+.guide-card p,.guide-card li,.pipeline-card p,.pipeline-card li,.tutorial-card p,.tutorial-card li{font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:5px;}
+.guide-card ul,.pipeline-card ul,.tutorial-card ul{padding-left:18px;}
+.guide-card a,.tutorial-card a{color:var(--blue);font-weight:700;text-decoration:none;}
+.guide-card a:hover,.guide-card a:focus-visible,.tutorial-card a:hover,.tutorial-card a:focus-visible{text-decoration:underline;}
 .guide-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;}
 .mini{padding:10px;border-radius:8px;background:#F6F8F9;border:1px solid var(--line);}
 .mini strong{display:block;font-size:12px;margin-bottom:4px;}
 .mini span{display:block;font-size:12px;color:var(--muted);line-height:1.55;}
+.story-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:10px;}
+.story-step{border:1px solid var(--line);border-radius:8px;background:#F6F8F9;padding:10px;min-height:126px;}
+.story-step strong{display:block;font-size:12px;margin-bottom:6px;}
+.story-step span{display:block;font-size:12px;color:var(--muted);line-height:1.55;}
+.molecule{display:block;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono",monospace;font-size:12px;color:var(--ink);background:#fff;border:1px solid var(--line);border-radius:6px;padding:7px;margin:6px 0;white-space:normal;overflow-wrap:anywhere;}
+.break{color:var(--red);font-weight:800;}
+.fragment-card{border:1px solid var(--line);border-radius:8px;padding:10px;background:#FBFCFD;}
+.fragment-card h4{font-size:13px;margin-bottom:6px;}
+.fragment-card p{font-size:12px;color:var(--muted);line-height:1.6;}
+.fragment-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:9px;}
+.reference-table{overflow:auto;border:1px solid var(--line);border-radius:8px;margin-top:8px;}
+.reference-table table{min-width:680px;}
+.reference-table th{position:static;}
+.reference-table td,.reference-table th{font-size:12px;}
+.table-note{font-size:12px;color:var(--muted);line-height:1.6;margin-top:8px;}
 .pipeline-step{display:grid;grid-template-columns:32px 1fr;gap:10px;align-items:start;padding:10px 0;border-top:1px solid var(--line);}
 .pipeline-step:first-of-type{border-top:0;}
 .num{display:flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:6px;background:var(--green);color:#fff;font-size:12px;font-weight:800;}
@@ -128,18 +150,18 @@ tr.selected{background:#EAF3EF;}
 @media (max-width:760px){
   .site-header{position:static;}
   .site-header-inner{flex-direction:column;padding:16px 14px;}
+  .header-side{align-items:flex-start;margin-top:0;}
   .intro{text-align:left;}
   main{padding:8px 0 22px;}
   .lab{border-left:0;border-right:0;border-radius:0;box-shadow:none;}
   .tabs{overflow:auto;}
   .tab{flex:0 0 auto;padding:11px 14px;}
-  .workspace,.guide-layout,.pipeline-layout{grid-template-columns:1fr;}
+  .workspace,.guide-layout,.pipeline-layout,.tutorial-layout{grid-template-columns:1fr;}
   .pane{border-right:0;border-bottom:1px solid var(--line);}
   .selected-peak{grid-template-columns:1fr;}
   .side-band{border-right:0;border-bottom:1px solid var(--line);}
   .guide-grid{grid-template-columns:1fr;}
-  .context-strip{grid-template-columns:1fr;}
-  .context-strip img{width:100%;height:120px;}
+  .story-grid,.fragment-grid{grid-template-columns:1fr;}
   th,td{font-size:11px;padding:7px 5px;}
 }
 </style>
@@ -150,8 +172,9 @@ tr.selected{background:#EAF3EF;}
     <div>
       <div class="eyebrow">Interactive lab</div>
       <h1>GC-MS Cuticular Compound Lab</h1>
+      <div class="copyright">&copy; 2026 Jessie Ebie</div>
     </div>
-    <div>
+    <div class="header-side">
       <p class="intro">Review ant cuticle peaks, compare spectra, assign compound classes, and keep the reasoning visible while you work.</p>
       <a class="return-link" href="index.html">Return to list</a>
     </div>
@@ -164,6 +187,7 @@ tr.selected{background:#EAF3EF;}
     <button class="tab active" data-tab="review">Review peaks</button>
     <button class="tab" data-tab="pipeline">Build pipeline</button>
     <button class="tab" data-tab="guide">Pattern guide</button>
+    <button class="tab" data-tab="tutorials">Tutorials</button>
   </div>
 
   <section class="panel active" id="review-panel">
@@ -175,7 +199,6 @@ tr.selected{background:#EAF3EF;}
         </div>
         <div class="visual-card">
           <div class="context-strip">
-            <img alt="Ant cuticle close-up" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 220 150'%3E%3Crect width='220' height='150' fill='%2314212b'/%3E%3Cg fill='none' stroke='%23d7b36a' stroke-width='5' stroke-linecap='round'%3E%3Cpath d='M41 108c36-44 76-63 139-60'/%3E%3Cpath d='M63 101c24 7 49 7 75-1' opacity='.7'/%3E%3Cpath d='M91 60c17 16 33 31 48 46' opacity='.7'/%3E%3Cpath d='M145 47c12 19 22 40 30 63' opacity='.55'/%3E%3C/g%3E%3Cg fill='%23f3f0e5'%3E%3Cellipse cx='66' cy='92' rx='32' ry='22' transform='rotate(-22 66 92)'/%3E%3Cellipse cx='111' cy='73' rx='36' ry='25' transform='rotate(-11 111 73)'/%3E%3Cellipse cx='158' cy='63' rx='27' ry='19' transform='rotate(7 158 63)'/%3E%3Ccircle cx='187' cy='58' r='15'/%3E%3C/g%3E%3Cg stroke='%2314212b' stroke-width='3' stroke-linecap='round'%3E%3Cpath d='M178 52l26-20M180 63l31 9M190 55l20-1'/%3E%3C/g%3E%3Cg fill='%23177e63' opacity='.9'%3E%3Ccircle cx='78' cy='87' r='3'/%3E%3Ccircle cx='104' cy='67' r='2.4'/%3E%3Ccircle cx='132' cy='70' r='2.7'/%3E%3C/g%3E%3C/svg%3E">
             <p>Cuticular profiles often have many similar hydrocarbon peaks. Treat the match score as a starting point, then check retention behavior, diagnostic ions, standards, and biological context.</p>
           </div>
           <div class="chart-shell">
@@ -184,8 +207,17 @@ tr.selected{background:#EAF3EF;}
           </div>
         </div>
         <div class="file-row">
-          <input id="file-input" type="file" accept=".csv,.tsv,.txt">
+          <input id="file-input" type="file" accept=".csv,.CSV,.tsv,.TSV,.txt,.TXT">
           <button class="btn" id="load-demo">Reload demo</button>
+        </div>
+        <div class="upload-help">
+          <h3>What should I upload?</h3>
+          <p>Use <strong>RESULTS.CSV</strong> first. That is the Agilent export this prototype is designed to read.</p>
+          <ul>
+            <li><strong>Works now:</strong> `.csv`, `.tsv`, or `.txt` peak/library reports.</li>
+            <li><strong>Save as CSV first:</strong> Excel `.xlsx` reports.</li>
+            <li><strong>Advanced/raw path:</strong> `DATA.MS`, `FID1A.CH`, `EDFIL.DAT`, `.ini`, `.val`, and method text files.</li>
+          </ul>
         </div>
         <div class="controls">
           <div class="control-row">
@@ -353,6 +385,111 @@ tr.selected{background:#EAF3EF;}
             <div class="mini"><strong>Oxygenated peaks</strong><span>Esters, alcohols, ketones, and aldehydes may have stronger polar fragments and different retention behavior from hydrocarbons of similar mass.</span></div>
             <div class="mini"><strong>Coelution</strong><span>A mixed spectrum can imitate “other things I don’t know.” If ions do not rise and fall together, deconvolution or manual extraction may be needed.</span></div>
           </div>
+        </section>
+        <section class="guide-card">
+          <h3>Diagnostic ion patterns</h3>
+          <div class="reference-table">
+            <table>
+              <thead><tr><th>Compound class</th><th>Useful ions</th><th>How to use the pattern</th><th>Common caution</th></tr></thead>
+              <tbody>
+                <tr><td>n-Alkanes</td><td>57, 71, 85, 99, 113</td><td>Look for a regular 14 m/z alkyl-fragment series. The molecular ion can estimate carbon number when visible.</td><td>Long-chain alkanes can have weak molecular ions.</td></tr>
+                <tr><td>Methyl-branched alkanes</td><td>57, 71, 85 plus branch-cleavage ions</td><td>Use enhanced fragments and retention index to support branch position.</td><td>Exact branch position is often tentative without standards.</td></tr>
+                <tr><td>Alkenes</td><td>55, 69, 83, 97</td><td>Allylic fragments support unsaturation. Compare the molecular ion with the corresponding alkane.</td><td>Double-bond position usually needs derivatization or standards.</td></tr>
+                <tr><td>Dienes</td><td>67, 81, 95 plus alkene-like ions</td><td>More unsaturation shifts the hydrocarbon pattern toward unsaturated fragment series.</td><td>Coelution can make a monoene look more complex.</td></tr>
+                <tr><td>Methyl esters</td><td>74, 87, 43</td><td>m/z 74 is a common McLafferty rearrangement clue for fatty acid methyl esters.</td><td>Check sample prep; methyl esters can be artifacts if methylation was used.</td></tr>
+                <tr><td>Ketones or aldehydes</td><td>43, 58, 72, M-18 or M-28 patterns</td><td>Oxygenated fragments and retention behavior separate these from pure hydrocarbons.</td><td>Low-match oxygenated peaks need extra confirmation.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+        <section class="guide-card">
+          <h3>CHC molecular-weight table</h3>
+          <p>Methyl-branched alkanes have the same formula and molecular weight as the straight-chain alkane with the same total carbon number. The table uses average molecular weight and shows the nominal molecular ion in parentheses.</p>
+          <div class="reference-table" id="chc-table"></div>
+          <p class="table-note">Use this as a quick carbon-number check, not as a final identification. Retention index, spectrum quality, and standards still matter.</p>
+        </section>
+        <section class="guide-card">
+          <h3>Learning links</h3>
+          <ul>
+            <li><a href="https://www.nist.gov/publications/fundamentals-mass-spectrometry" target="_blank" rel="noopener">NIST: Fundamentals of Mass Spectrometry</a> for EI fragmentation concepts.</li>
+            <li><a href="https://pubmed.ncbi.nlm.nih.gov/27518868/" target="_blank" rel="noopener">Bernier, Carlson, and Geden 1998</a> for GC-MS cuticular hydrocarbon examples with methyl-branched alkanes.</li>
+            <li><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC7677283/" target="_blank" rel="noopener">Tribolium host-recognition CHC paper</a> for real reporting of methyl-branched CHCs and ambiguous branch positions.</li>
+            <li><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5098774/" target="_blank" rel="noopener">Cuticular wax diagnostic-fragment examples</a> for oxygenated wax compounds and derivatives.</li>
+          </ul>
+        </section>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel" id="tutorials-panel">
+    <div class="tutorial-layout">
+      <aside class="side-band">
+        <h2>Beginner tutorials.</h2>
+        <p>Use these when the library result feels like a black box. The goal is to make the spectrum readable enough that you can explain why a peak is probably a hydrocarbon, alkene, ester, or unresolved mixture.</p>
+      </aside>
+      <div class="tutorial-content">
+        <section class="tutorial-card">
+          <h3>1. What the GC-MS is doing</h3>
+          <div class="story-grid">
+            <div class="story-step"><strong>GC separates</strong><span>The gas chromatograph sends compounds through a column. Smaller, more volatile, or less strongly retained compounds usually come out earlier.</span></div>
+            <div class="story-step"><strong>MS breaks</strong><span>At the mass spectrometer, electron impact knocks an electron off the molecule. The energized molecule breaks into fragments.</span></div>
+            <div class="story-step"><strong>Detector counts</strong><span>The instrument counts fragments by m/z. The tallest bar is the base peak and is scaled to 100.</span></div>
+            <div class="story-step"><strong>You interpret</strong><span>The pattern of bars, plus retention time and standards, helps you decide what kind of compound made the peak.</span></div>
+          </div>
+        </section>
+
+        <section class="tutorial-card">
+          <h3>2. How a hydrocarbon makes a fragment pattern</h3>
+          <p>A long alkane is mostly carbon and hydrogen. Under EI conditions, it can break at many carbon-carbon bonds. Those breaks create a family of alkyl fragments that differ by one CH2 group, which is 14 mass units.</p>
+          <div class="reference-table">
+            <table>
+              <thead><tr><th>Step</th><th>Simple illustration</th><th>What appears in the spectrum</th><th>Why it matters</th></tr></thead>
+              <tbody>
+                <tr><td>Whole molecule</td><td><span class="molecule">CH3-(CH2)n-CH3</span></td><td>Weak molecular ion, such as M+ near the compound's molecular weight</td><td>Helps estimate carbon number when visible.</td></tr>
+                <tr><td>Break near one end</td><td><span class="molecule">CH3-CH2-CH2<span class="break">|</span>(CH2)n-CH3</span></td><td>m/z 43, 57, 71</td><td>Small alkyl fragments are common in hydrocarbons.</td></tr>
+                <tr><td>Break at many positions</td><td><span class="molecule">...CH2<span class="break">|</span>CH2... then ...CH2-CH2<span class="break">|</span>CH2...</span></td><td>57, 71, 85, 99, 113</td><td>A repeating 14 m/z series is a classic alkane clue.</td></tr>
+                <tr><td>Compare neighbors</td><td><span class="molecule">C25, C26, C27, C28...</span></td><td>Similar spectra, later retention times as chains get longer</td><td>A homologous series supports CHC assignments.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="tutorial-card">
+          <h3>3. Read a spectrum in five passes</h3>
+          <ul>
+            <li><strong>Find the base peak.</strong> This is the tallest bar. For hydrocarbons it is often m/z 57, 55, 69, 71, or a related fragment.</li>
+            <li><strong>Look for a series.</strong> Alkanes often show 57, 71, 85, 99, 113. Alkenes often emphasize 55, 69, 83, 97.</li>
+            <li><strong>Check the molecular-ion region.</strong> A small high-mass peak can help with carbon number, but it may be weak in long CHCs.</li>
+            <li><strong>Compare retention time.</strong> Longer hydrocarbon chains usually come out later. A sudden odd retention time can mean coelution or a different class.</li>
+            <li><strong>Decide the confidence level.</strong> Class-level is okay. Do not force an exact structure when branch position or double-bond position is not supported.</li>
+          </ul>
+        </section>
+
+        <section class="tutorial-card">
+          <h3>4. Class-by-class beginner clues</h3>
+          <div class="fragment-grid">
+            <div class="fragment-card">
+              <h4>n-Alkane</h4>
+              <p>Look for a repeating alkyl series: 57, 71, 85, 99, 113. Retention time should fit the chain length series.</p>
+            </div>
+            <div class="fragment-card">
+              <h4>Methyl-branched alkane</h4>
+              <p>Still looks hydrocarbon-like, but branch cleavage can strengthen certain fragments. Report branch position cautiously unless standards or strong literature support it.</p>
+            </div>
+            <div class="fragment-card">
+              <h4>Alkene</h4>
+              <p>Look for stronger 55, 69, 83, 97 ions. The double bond changes the fragment pattern, but its position usually needs derivatization or standards.</p>
+            </div>
+            <div class="fragment-card">
+              <h4>Ester</h4>
+              <p>For methyl esters, m/z 74 is a useful clue. Oxygenated compounds often retain differently from hydrocarbons with similar size.</p>
+            </div>
+          </div>
+        </section>
+
+        <section class="tutorial-card">
+          <h3>5. A safe annotation habit</h3>
+          <p>Write the evidence, not just the name. A good note might say: "Hydrocarbon series with m/z 57/71/85/99, weak M+ near 380, retention near C27 standard, probable n-heptacosane." A cautious note might say: "Alkene-like 55/69/83 pattern, exact double-bond position not assigned."</p>
         </section>
       </div>
     </div>
@@ -533,6 +670,25 @@ function downloadCsv(){
   const blob=new Blob([[headers.join(","),...rows].join("\n")],{type:"text/csv"});
   const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="gcms_cuticle_annotations.csv";a.click();URL.revokeObjectURL(a.href);
 }
+function formulaText(carbons,hydrogens){
+  return `C${carbons}H${hydrogens}`;
+}
+function averageMw(carbons,hydrogens){
+  return carbons*12.011+hydrogens*1.008;
+}
+function formatMass(carbons,hydrogens){
+  const mass=averageMw(carbons,hydrogens);
+  return `${mass.toFixed(2)} (${Math.round(mass)})`;
+}
+function renderChcTable(){
+  const holder=document.getElementById("chc-table");
+  if(!holder)return;
+  const rows=[];
+  for(let c=20;c<=40;c+=1){
+    rows.push(`<tr><td>C${c}</td><td>${formulaText(c,2*c+2)}</td><td>${formatMass(c,2*c+2)}</td><td>${formulaText(c,2*c)}</td><td>${formatMass(c,2*c)}</td><td>${formulaText(c,2*c-2)}</td><td>${formatMass(c,2*c-2)}</td></tr>`);
+  }
+  holder.innerHTML=`<table><thead><tr><th>Carbon no.</th><th>Alkane / methyl-branched alkane</th><th>MW, nominal M+</th><th>Alkene</th><th>MW, nominal M+</th><th>Diene</th><th>MW, nominal M+</th></tr></thead><tbody>${rows.join("")}</tbody></table>`;
+}
 document.querySelectorAll(".tab").forEach(tab=>tab.addEventListener("click",()=>{
   document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
   document.querySelectorAll(".panel").forEach(p=>p.classList.remove("active"));
@@ -561,6 +717,7 @@ document.getElementById("save-annotation").addEventListener("click",()=>{
   renderSelected();
 });
 document.getElementById("export-csv").addEventListener("click",downloadCsv);
+renderChcTable();
 renderSelected();
 </script>
 </body>

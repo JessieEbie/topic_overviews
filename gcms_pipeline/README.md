@@ -37,6 +37,24 @@ Then open `gcms_cuticle_compound_lab.html` and upload `reviewed_input.csv`.
 
 You can use this project at three levels.
 
+### Which file should I try first?
+
+From the Agilent-style file list, start with:
+
+- `RESULTS.CSV`
+
+That is the most likely file to contain the peak or library-search table this
+prototype can read directly.
+
+These files are useful later, but are not the right first upload for the browser
+interface:
+
+- `DATA.MS`: raw or semi-raw MS data for a future conversion/parsing path
+- `FID1A.CH`: chromatogram channel data
+- `EDFIL.DAT`, `edfil.val`: instrument/software data files
+- `acqmeth.txt`, `rteres.txt`, `runstart.txt`: method or run metadata
+- `cnorm.ini`, `pre_post.ini`: configuration files
+
 ### 1. Quick MassHunter or ChemStation report export
 
 Export a peak, compound, or library-search report as CSV, TXT, or XLSX. This is
