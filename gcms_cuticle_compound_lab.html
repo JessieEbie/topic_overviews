@@ -131,6 +131,26 @@ tr.selected{background:#EAF3EF;}
 .fragment-card h4{font-size:13px;margin-bottom:6px;}
 .fragment-card p{font-size:12px;color:var(--muted);line-height:1.6;}
 .fragment-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:9px;}
+.sim-shell{border:1px solid var(--line);border-radius:8px;background:#FBFCFD;overflow:hidden;}
+.sim-toolbar{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:10px;border-bottom:1px solid var(--line);flex-wrap:wrap;}
+.sim-toolbar p{font-size:12px;color:var(--muted);margin:0;}
+.button-row{display:flex;gap:8px;flex-wrap:wrap;}
+.pill{border:1px solid var(--line-strong);border-radius:999px;background:#fff;color:var(--muted);padding:6px 10px;font-size:12px;font-weight:700;}
+.pill.active{background:var(--bluewash);border-color:var(--blue);color:var(--blue);}
+.sim-canvas{display:block;width:100%;height:auto;background:#fff;}
+.sim-caption{padding:10px;border-top:1px solid var(--line);font-size:12px;color:var(--muted);line-height:1.6;}
+.ion-layout{display:grid;grid-template-columns:minmax(220px,0.9fr) minmax(260px,1.1fr);gap:12px;align-items:start;}
+.ion-buttons{display:grid;gap:8px;}
+.ion-button{border:1px solid var(--line-strong);border-radius:8px;background:#fff;padding:10px;text-align:left;color:var(--ink);}
+.ion-button strong{display:block;font-size:13px;margin-bottom:4px;}
+.ion-button span{display:block;font-size:12px;color:var(--muted);line-height:1.5;}
+.ion-button.active{border-color:var(--blue);background:var(--bluewash);}
+.ion-visual{border:1px solid var(--line);border-radius:8px;background:#FBFCFD;padding:10px;}
+.ion-canvas{display:block;width:100%;height:auto;background:#fff;border:1px solid var(--line);border-radius:6px;}
+.ion-notes{display:grid;gap:8px;margin-top:10px;}
+.ion-note{padding:10px;border:1px solid var(--line);border-radius:8px;background:#fff;}
+.ion-note strong{display:block;font-size:12px;margin-bottom:4px;}
+.ion-note span{display:block;font-size:12px;color:var(--muted);line-height:1.55;}
 .reference-table{overflow:auto;border:1px solid var(--line);border-radius:8px;margin-top:8px;}
 .reference-table table{min-width:680px;}
 .reference-table th{position:static;}
@@ -161,7 +181,7 @@ tr.selected{background:#EAF3EF;}
   .selected-peak{grid-template-columns:1fr;}
   .side-band{border-right:0;border-bottom:1px solid var(--line);}
   .guide-grid{grid-template-columns:1fr;}
-  .story-grid,.fragment-grid{grid-template-columns:1fr;}
+  .story-grid,.fragment-grid,.ion-layout{grid-template-columns:1fr;}
   th,td{font-size:11px;padding:7px 5px;}
 }
 </style>
@@ -430,11 +450,16 @@ tr.selected{background:#EAF3EF;}
       <div class="tutorial-content">
         <section class="tutorial-card">
           <h3>1. What the GC-MS is doing</h3>
-          <div class="story-grid">
-            <div class="story-step"><strong>GC separates</strong><span>The gas chromatograph sends compounds through a column. Smaller, more volatile, or less strongly retained compounds usually come out earlier.</span></div>
-            <div class="story-step"><strong>MS breaks</strong><span>At the mass spectrometer, electron impact knocks an electron off the molecule. The energized molecule breaks into fragments.</span></div>
-            <div class="story-step"><strong>Detector counts</strong><span>The instrument counts fragments by m/z. The tallest bar is the base peak and is scaled to 100.</span></div>
-            <div class="story-step"><strong>You interpret</strong><span>The pattern of bars, plus retention time and standards, helps you decide what kind of compound made the peak.</span></div>
+          <div class="sim-shell">
+            <div class="sim-toolbar">
+              <p>Watch a simplified run move from injector to column to mass spectrometer.</p>
+              <div class="button-row">
+                <button class="pill" id="gcmssim-toggle" type="button">Pause</button>
+                <button class="pill" id="gcmssim-reset" type="button">Restart</button>
+              </div>
+            </div>
+            <canvas id="gcmssim" class="sim-canvas" width="900" height="250"></canvas>
+            <div class="sim-caption" id="gcmssim-caption">The sample enters the injector, vaporizes, and starts moving into the GC column.</div>
           </div>
         </section>
 
@@ -466,7 +491,23 @@ tr.selected{background:#EAF3EF;}
         </section>
 
         <section class="tutorial-card">
-          <h3>4. Class-by-class beginner clues</h3>
+          <h3>4. Interactive ion-pattern explorer</h3>
+          <p>Pick a compound class and watch the highlighted ions change. This is the quick "what am I looking at?" tool.</p>
+          <div class="ion-layout">
+            <div class="ion-buttons" id="ion-buttons"></div>
+            <div class="ion-visual">
+              <canvas id="ion-canvas" class="ion-canvas" width="560" height="260"></canvas>
+              <div class="ion-notes">
+                <div class="ion-note"><strong id="ion-title">Alkane</strong><span id="ion-summary">A repeating alkyl series is a classic hydrocarbon clue.</span></div>
+                <div class="ion-note"><strong>Watch for</strong><span id="ion-watch">57, 71, 85, 99, 113</span></div>
+                <div class="ion-note"><strong>Be careful because</strong><span id="ion-caution">The molecular ion can be weak, especially for long chains.</span></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="tutorial-card">
+          <h3>5. Class-by-class beginner clues</h3>
           <div class="fragment-grid">
             <div class="fragment-card">
               <h4>n-Alkane</h4>
@@ -488,7 +529,7 @@ tr.selected{background:#EAF3EF;}
         </section>
 
         <section class="tutorial-card">
-          <h3>5. A safe annotation habit</h3>
+          <h3>6. A safe annotation habit</h3>
           <p>Write the evidence, not just the name. A good note might say: "Hydrocarbon series with m/z 57/71/85/99, weak M+ near 380, retention near C27 standard, probable n-heptacosane." A cautious note might say: "Alkene-like 55/69/83 pattern, exact double-bond position not assigned."</p>
         </section>
       </div>
@@ -514,7 +555,21 @@ const tic=document.getElementById("tic");
 const ticCtx=tic.getContext("2d");
 const spec=document.getElementById("spectrum");
 const specCtx=spec.getContext("2d");
+const gcmsSimCanvas=document.getElementById("gcmssim");
+const gcmsSimCtx=gcmsSimCanvas.getContext("2d");
+const ionCanvas=document.getElementById("ion-canvas");
+const ionCtx=ionCanvas.getContext("2d");
 const classMap={"alkane":"hc","methyl-branched alkane":"hc","alkene":"alkene","ester":"ester","unknown":"unknown","other":"other","alcohol":"other","ketone/aldehyde":"other","contaminant":"unknown"};
+const ionTutorials={
+  alkane:{label:"Alkane",subtitle:"Repeating alkyl fragments dominate.",watch:"57, 71, 85, 99, 113",caution:"The molecular ion may be weak, especially for long straight-chain CHCs.",spectrum:[{mz:43,intensity:40},{mz:57,intensity:100},{mz:71,intensity:78},{mz:85,intensity:56},{mz:99,intensity:35},{mz:113,intensity:22},{mz:380,intensity:8}],highlight:[57,71,85,99,113]},
+  branched:{label:"Methyl-branched alkane",subtitle:"Still hydrocarbon-like, but some branch-cleavage ions stand out more strongly.",watch:"57, 71, 85 plus unusually strong branch-related fragments",caution:"Exact branch position is often not secure from EI data alone.",spectrum:[{mz:57,intensity:92},{mz:71,intensity:100},{mz:85,intensity:63},{mz:99,intensity:34},{mz:183,intensity:25},{mz:197,intensity:19},{mz:394,intensity:5}],highlight:[57,71,85,183,197]},
+  alkene:{label:"Alkene",subtitle:"Unsaturation shifts emphasis toward allylic ions.",watch:"55, 69, 83, 97",caution:"Double-bond position usually needs derivatization or standards.",spectrum:[{mz:41,intensity:28},{mz:55,intensity:100},{mz:69,intensity:74},{mz:83,intensity:57},{mz:97,intensity:44},{mz:111,intensity:26},{mz:378,intensity:10}],highlight:[55,69,83,97]},
+  ester:{label:"Ester",subtitle:"Oxygenated fragmentation can look very different from pure hydrocarbons.",watch:"74, 87, 43",caution:"Methyl esters may be sample-prep artifacts if methylation was used.",spectrum:[{mz:43,intensity:68},{mz:55,intensity:32},{mz:74,intensity:100},{mz:87,intensity:45},{mz:143,intensity:22},{mz:298,intensity:16}],highlight:[43,74,87]}
+};
+let activeIonTutorial="alkane";
+let simRunning=true;
+let simFrame=0;
+let simRaf=0;
 
 function parseSpectrum(text){
   if(!text)return[];
@@ -559,6 +614,26 @@ function drawAxes(ctx,w,h,pad){
   ctx.beginPath();ctx.moveTo(pad,h-pad);ctx.lineTo(w-pad,h-pad);ctx.lineTo(w-pad,pad);ctx.stroke();
   ctx.fillStyle="#758594";ctx.font="12px Inter, sans-serif";
 }
+function drawSpectrumData(ctx,canvas,data,highlight,label){
+  const w=canvas.width,h=canvas.height,p=34;
+  drawAxes(ctx,w,h,p);
+  const maxMz=Math.max(120,...data.map(x=>x.mz))+20;
+  const maxI=Math.max(100,...data.map(x=>x.intensity));
+  data.forEach(ion=>{
+    const x=p+(ion.mz/maxMz)*(w-p*2);
+    const y=h-p-(ion.intensity/maxI)*(h-p*2);
+    ctx.strokeStyle=highlight.includes(Math.round(ion.mz))?"#A23A32":"#1D5E9E";
+    ctx.lineWidth=highlight.includes(Math.round(ion.mz))?3:2;
+    ctx.beginPath();ctx.moveTo(x,h-p);ctx.lineTo(x,y);ctx.stroke();
+    if(ion.intensity>34||highlight.includes(Math.round(ion.mz))){
+      ctx.fillStyle="#14212B";ctx.font="11px Inter, sans-serif";
+      ctx.fillText(String(Math.round(ion.mz)),x-8,y-6);
+    }
+  });
+  ctx.fillStyle="#758594";
+  ctx.fillText("m/z",w-p-18,h-10);
+  ctx.fillText(label,p,18);
+}
 function drawTic(){
   const w=tic.width,h=tic.height,p=34;
   drawAxes(ticCtx,w,h,p);
@@ -587,24 +662,84 @@ function drawTic(){
   ticCtx.fillText(`${maxRt.toFixed(1)} min`,w-p-48,h-9);
 }
 function drawSpectrum(peak){
-  const w=spec.width,h=spec.height,p=36;
-  drawAxes(specCtx,w,h,p);
-  const s=parseSpectrum(peak.spectrum);
-  const maxMz=Math.max(120,...s.map(x=>x.mz))+20;
-  const maxI=Math.max(100,...s.map(x=>x.intensity));
-  specCtx.strokeStyle="#1D5E9E";specCtx.lineWidth=2;
-  s.forEach(ion=>{
-    const x=p+(ion.mz/maxMz)*(w-p*2);
-    const y=h-p-(ion.intensity/maxI)*(h-p*2);
-    specCtx.beginPath();specCtx.moveTo(x,h-p);specCtx.lineTo(x,y);specCtx.stroke();
-    if(ion.intensity>35){
-      specCtx.fillStyle="#14212B";specCtx.font="11px Inter, sans-serif";
-      specCtx.fillText(String(Math.round(ion.mz)),x-8,y-6);
-    }
+  drawSpectrumData(specCtx,spec,parseSpectrum(peak.spectrum),[],"relative abundance");
+}
+function renderIonButtons(){
+  const holder=document.getElementById("ion-buttons");
+  if(!holder)return;
+  holder.innerHTML=Object.entries(ionTutorials).map(([key,item])=>`<button class="ion-button ${key===activeIonTutorial?"active":""}" type="button" data-ion="${key}"><strong>${item.label}</strong><span>${item.subtitle}</span></button>`).join("");
+  holder.querySelectorAll(".ion-button").forEach(btn=>btn.addEventListener("click",()=>{activeIonTutorial=btn.dataset.ion;renderIonTutorial();}));
+}
+function renderIonTutorial(){
+  const item=ionTutorials[activeIonTutorial];
+  if(!item)return;
+  renderIonButtons();
+  document.getElementById("ion-title").textContent=item.label;
+  document.getElementById("ion-summary").textContent=item.subtitle;
+  document.getElementById("ion-watch").textContent=item.watch;
+  document.getElementById("ion-caution").textContent=item.caution;
+  drawSpectrumData(ionCtx,ionCanvas,item.spectrum,item.highlight,"highlighted teaching spectrum");
+}
+function gcmsCaptionFor(progress){
+  if(progress<0.2)return"The sample enters the injector, vaporizes, and starts moving into the GC column.";
+  if(progress<0.48)return"Different compounds move through the GC column at different speeds, so they begin to separate.";
+  if(progress<0.72)return"As compounds leave the column, they enter the mass spectrometer one group at a time.";
+  if(progress<0.9)return"Electron impact breaks the molecules into fragments, creating the ion pattern.";
+  return"The detector counts fragment intensities by m/z, and the software turns that into a mass spectrum and chromatographic peak.";
+}
+function drawGcmsSim(){
+  const ctx=gcmsSimCtx, canvas=gcmsSimCanvas, w=canvas.width, h=canvas.height;
+  ctx.clearRect(0,0,w,h);
+  ctx.fillStyle="#ffffff";ctx.fillRect(0,0,w,h);
+  const prog=(simFrame%900)/900;
+  const stageX=[90,250,470,700,830];
+  ctx.strokeStyle="#D8E0E6";ctx.lineWidth=2;
+  ctx.beginPath();ctx.moveTo(stageX[0]+30,135);ctx.lineTo(stageX[1]-30,135);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(stageX[1]+30,135);ctx.bezierCurveTo(330,40,410,40,stageX[2]-20,135);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(stageX[2]+30,135);ctx.lineTo(stageX[3]-30,135);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(stageX[3]+30,135);ctx.lineTo(stageX[4]-30,135);ctx.stroke();
+  const stages=[
+    {x:stageX[0],title:"Injector",fill:"#EAF1F8"},
+    {x:stageX[1],title:"GC column",fill:"#EAF3EF"},
+    {x:stageX[2],title:"Transfer line",fill:"#FAF2E5"},
+    {x:stageX[3],title:"EI source",fill:"#F8EDEC"},
+    {x:stageX[4],title:"Detector",fill:"#F0EEF8"}
+  ];
+  stages.forEach(stage=>{
+    ctx.fillStyle=stage.fill;
+    ctx.strokeStyle="#B8C4CC";
+    ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.roundRect(stage.x-42,102,84,66,8);ctx.fill();ctx.stroke();
+    ctx.fillStyle="#14212B";ctx.font="12px Inter, sans-serif";ctx.textAlign="center";
+    ctx.fillText(stage.title,stage.x,186);
   });
-  specCtx.fillStyle="#758594";
-  specCtx.fillText("m/z",w-p-18,h-10);
-  specCtx.fillText("relative abundance",p,18);
+  const dotX=80+prog*700;
+  const gcEase=Math.min(1,Math.max(0,(prog-0.15)/0.35));
+  const pathY=prog<0.52?135-(Math.sin(gcEase*Math.PI)*58):135;
+  ctx.fillStyle="#177E63";
+  ctx.beginPath();ctx.arc(dotX,pathY,8,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle="#0F172A";ctx.textAlign="left";
+  ctx.font="12px Inter, sans-serif";
+  ctx.fillText("sample",dotX+12,pathY+4);
+  if(prog>0.72){
+    const fragBaseX=730;
+    const bars=[35,80,58,42];
+    const labels=["43","57","71","85"];
+    bars.forEach((bar,i)=>{
+      ctx.strokeStyle=i===1?"#A23A32":"#1D5E9E";
+      ctx.lineWidth=4;
+      const x=fragBaseX+i*22;
+      ctx.beginPath();ctx.moveTo(x,138);ctx.lineTo(x,138-bar);ctx.stroke();
+      ctx.fillStyle="#50616F";ctx.font="10px Inter, sans-serif";ctx.textAlign="center";
+      ctx.fillText(labels[i],x,150);
+    });
+  }
+  document.getElementById("gcmssim-caption").textContent=gcmsCaptionFor(prog);
+}
+function tickGcmsSim(){
+  if(simRunning)simFrame=(simFrame+3)%900;
+  drawGcmsSim();
+  simRaf=requestAnimationFrame(tickGcmsSim);
 }
 function renderRows(){
   const q=document.getElementById("filter").value.trim().toLowerCase();
@@ -717,7 +852,17 @@ document.getElementById("save-annotation").addEventListener("click",()=>{
   renderSelected();
 });
 document.getElementById("export-csv").addEventListener("click",downloadCsv);
+document.getElementById("gcmssim-toggle").addEventListener("click",()=>{
+  simRunning=!simRunning;
+  document.getElementById("gcmssim-toggle").textContent=simRunning?"Pause":"Play";
+  document.getElementById("gcmssim-toggle").classList.toggle("active",simRunning);
+});
+document.getElementById("gcmssim-reset").addEventListener("click",()=>{simFrame=0;simRunning=true;document.getElementById("gcmssim-toggle").textContent="Pause";document.getElementById("gcmssim-toggle").classList.add("active");drawGcmsSim();});
 renderChcTable();
+renderIonTutorial();
+document.getElementById("gcmssim-toggle").classList.add("active");
+drawGcmsSim();
+simRaf=requestAnimationFrame(tickGcmsSim);
 renderSelected();
 </script>
 </body>
