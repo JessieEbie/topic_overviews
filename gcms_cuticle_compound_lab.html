@@ -427,7 +427,13 @@ tr.selected{background:#EAF3EF;}
       <div class="pipeline-content">
         <section class="pipeline-card">
           <h3>What this tab is for</h3>
-          <p>This tab is a guide, not a processing engine. It helps you decide which import path to use for your data and what to expect from each one.</p>
+          <p>This tab is a guide, not a processing engine. It helps you decide what kind of file you have, what the app can do with it, and what level of interpretation you should expect from the result.</p>
+        </section>
+        <section class="pipeline-card">
+          <h3>If you are starting from scratch</h3>
+          <div class="pipeline-step"><span class="num">A</span><div><strong>Beginner: start with any peak table you already have.</strong><p>If your lab software exported a CSV, TXT, or TSV file, use that first. This is the easiest way to learn the review workflow without worrying about raw-data parsing.</p></div></div>
+          <div class="pipeline-step"><span class="num">B</span><div><strong>Next step: use the raw Agilent folder.</strong><p>If you only have the `.D` folder, the app can now read `DATA.MS` directly. That gives you a first-pass chromatogram and approximate peak list.</p></div></div>
+          <div class="pipeline-step"><span class="num">C</span><div><strong>Advanced step: add retention indices and standards.</strong><p>Once you are comfortable with the interface, add RI information, alkane ladders, and authentic standards. That is what turns a plausible call into a much stronger one.</p></div></div>
         </section>
         <section class="pipeline-card">
           <h3>Choose the right import path</h3>
@@ -446,15 +452,18 @@ tr.selected{background:#EAF3EF;}
           </ul>
         </section>
         <section class="pipeline-card">
+          <h3>What the app will actually do</h3>
+          <ul>
+            <li><strong>With a report table:</strong> it will load the listed peaks directly and let you review them one by one.</li>
+            <li><strong>With a raw `DATA.MS` file:</strong> it will build a total ion chromatogram and detect approximate peaks from the raw scans.</li>
+            <li><strong>What it will not do automatically:</strong> prove exact branch position, prove double-bond position, or replace authentic standards.</li>
+          </ul>
+        </section>
+        <section class="pipeline-card">
           <h3>CSV shape this tool understands</h3>
           <p>Column names are flexible. These examples are recognized: <strong>rt</strong>, <strong>retention_time</strong>, <strong>area</strong>, <strong>intensity</strong>, <strong>name</strong>, <strong>formula</strong>, <strong>class</strong>, <strong>match</strong>, <strong>spectrum</strong>.</p>
           <p>The spectrum column can look like this:</p>
           <div class="code-box">57:100 71:66 85:42 99:24 113:12 408:7</div>
-        </section>
-        <section class="pipeline-card">
-          <h3>Future processing script</h3>
-          <p>When you have example raw files, we can add a real pipeline folder for conversion, deconvolution, spectral search, retention-index calculation, and table export. A starter command might eventually look like:</p>
-          <div class="code-box">gcms-cuticle-pipeline process sample.mzML --library cuticle_library.msp --alkane-ladder ladder.csv --out reviewed_input.csv</div>
         </section>
       </div>
     </div>
@@ -471,8 +480,8 @@ tr.selected{background:#EAF3EF;}
           <h3>Cuticular hydrocarbons first</h3>
           <p>Ant cuticles are often dominated by long-chain hydrocarbons. Many peaks form homologous series, so a compound call should usually combine the spectrum, retention time, retention index, and neighboring peaks.</p>
           <div class="guide-grid">
-            <div class="mini"><strong>n-Alkanes</strong><span>Strong alkyl fragments such as m/z 57, 71, 85, 99. Molecular ion may be weak but helps estimate carbon number.</span></div>
-            <div class="mini"><strong>Methyl-branched alkanes</strong><span>Still hydrocarbon-like, but branch cleavage can enhance diagnostic fragments. Exact branch position is hard without standards or special methods.</span></div>
+            <div class="mini"><strong>n-Alkanes</strong><span>Look for a 14 u fragment series such as 57, 71, 85, 99, 113. In long-chain CHCs the pattern often looks like an envelope or clustered hump, not a perfect staircase.</span></div>
+            <div class="mini"><strong>Methyl-branched alkanes</strong><span>Still hydrocarbon-like, but alpha-cleavage ions on each side of the branch can help. Use retention index and literature patterns together, because many positional isomers remain ambiguous.</span></div>
             <div class="mini"><strong>Alkenes</strong><span>Often stronger m/z 55, 69, 83, 97 series. Double-bond position usually needs derivatization such as DMDS or standards.</span></div>
             <div class="mini"><strong>Esters</strong><span>Look for oxygen-containing behavior, McLafferty ions such as m/z 74 for methyl esters, and acylium fragments such as m/z 43.</span></div>
           </div>
@@ -501,8 +510,8 @@ tr.selected{background:#EAF3EF;}
             <table>
               <thead><tr><th>Compound class</th><th>Useful ions</th><th>How to use the pattern</th><th>Common caution</th></tr></thead>
               <tbody>
-                <tr><td>n-Alkanes</td><td>57, 71, 85, 99, 113</td><td>Look for a regular 14 m/z alkyl-fragment series. The molecular ion can estimate carbon number when visible.</td><td>Long-chain alkanes can have weak molecular ions.</td></tr>
-                <tr><td>Methyl-branched alkanes</td><td>57, 71, 85 plus branch-cleavage ions</td><td>Use enhanced fragments and retention index to support branch position.</td><td>Exact branch position is often tentative without standards.</td></tr>
+                <tr><td>n-Alkanes</td><td>43, 57, 71, 85, 99, 113</td><td>Look for a regular 14 m/z alkyl-fragment series. For longer chains, pay more attention to the spacing and overall envelope than to one exact peak height pattern.</td><td>Long-chain alkanes can have weak molecular ions, and the spectrum shape is not identical for every chain length.</td></tr>
+                <tr><td>Methyl-branched alkanes</td><td>57, 71, 85 plus alpha-cleavage pairs</td><td>Look for unusually strong paired fragments produced by cleavage on either side of the methyl branch. Then compare the retention index and published spectra for likely branch positions.</td><td>Exact branch position is often tentative. Internally branched isomers may co-elute and are often reported as slash groups such as 11-/13-MeC27.</td></tr>
                 <tr><td>Alkenes</td><td>55, 69, 83, 97</td><td>Allylic fragments support unsaturation. Compare the molecular ion with the corresponding alkane.</td><td>Double-bond position usually needs derivatization or standards.</td></tr>
                 <tr><td>Dienes</td><td>67, 81, 95 plus alkene-like ions</td><td>More unsaturation shifts the hydrocarbon pattern toward unsaturated fragment series.</td><td>Coelution can make a monoene look more complex.</td></tr>
                 <tr><td>Methyl esters</td><td>74, 87, 43</td><td>m/z 74 is a common McLafferty rearrangement clue for fatty acid methyl esters.</td><td>Check sample prep; methyl esters can be artifacts if methylation was used.</td></tr>
@@ -510,6 +519,15 @@ tr.selected{background:#EAF3EF;}
               </tbody>
             </table>
           </div>
+        </section>
+        <section class="guide-card">
+          <h3>How to think about methyl branch position</h3>
+          <ul>
+            <li><strong>First decide whether it is branched at all.</strong> The spectrum should still look hydrocarbon-like, but some fragments will be stronger than expected for a straight-chain alkane.</li>
+            <li><strong>Then look for paired alpha-cleavage hints.</strong> Cleavage on each side of the methyl branch can create a pair of diagnostic ions. Complementary pairs are more informative than a single isolated peak.</li>
+            <li><strong>Use retention index as a second test.</strong> Branch position assignments are much stronger when the fragmentation pattern and RI both point to the same region of the chain.</li>
+            <li><strong>Expect ambiguity.</strong> Internal branch positions often cannot be separated cleanly. In real CHC tables, it is common to report slash notation such as 12-/13-/14-MeC28 when EI and RI narrow the field but do not prove a single isomer.</li>
+          </ul>
         </section>
         <section class="guide-card">
           <h3>CHC molecular-weight table</h3>
@@ -555,14 +573,14 @@ tr.selected{background:#EAF3EF;}
 
         <section class="tutorial-card">
           <h3>2. How a hydrocarbon makes a fragment pattern</h3>
-          <p>A long alkane is mostly carbon and hydrogen. Under EI conditions, it can break at many carbon-carbon bonds. Those breaks create a family of alkyl fragments that differ by one CH2 group, which is 14 mass units.</p>
+          <p>A long alkane is mostly carbon and hydrogen. Under EI conditions, it can break at many carbon-carbon bonds. Those breaks create a family of alkyl fragments that differ by one CH2 group, which is 14 mass units. In real long-chain CHC spectra, this often appears as an envelope or clustered pattern rather than a perfectly even staircase.</p>
           <div class="reference-table">
             <table>
               <thead><tr><th>Step</th><th>Simple illustration</th><th>What appears in the spectrum</th><th>Why it matters</th></tr></thead>
               <tbody>
                 <tr><td>Whole molecule</td><td><span class="molecule">CH3-(CH2)n-CH3</span></td><td>Weak molecular ion, such as M+ near the compound's molecular weight</td><td>Helps estimate carbon number when visible.</td></tr>
                 <tr><td>Break near one end</td><td><span class="molecule">CH3-CH2-CH2<span class="break">|</span>(CH2)n-CH3</span></td><td>m/z 43, 57, 71</td><td>Small alkyl fragments are common in hydrocarbons.</td></tr>
-                <tr><td>Break at many positions</td><td><span class="molecule">...CH2<span class="break">|</span>CH2... then ...CH2-CH2<span class="break">|</span>CH2...</span></td><td>57, 71, 85, 99, 113</td><td>A repeating 14 m/z series is a classic alkane clue.</td></tr>
+                <tr><td>Break at many positions</td><td><span class="molecule">...CH2<span class="break">|</span>CH2... then ...CH2-CH2<span class="break">|</span>CH2...</span></td><td>43, 57, 71, 85, 99, 113, often with a broad envelope</td><td>The repeating 14 u spacing matters more than one exact peak-height pattern.</td></tr>
                 <tr><td>Compare neighbors</td><td><span class="molecule">C25, C26, C27, C28...</span></td><td>Similar spectra, later retention times as chains get longer</td><td>A homologous series supports CHC assignments.</td></tr>
               </tbody>
             </table>
@@ -573,7 +591,7 @@ tr.selected{background:#EAF3EF;}
           <h3>3. Read a spectrum in five passes</h3>
           <ul>
             <li><strong>Find the base peak.</strong> This is the tallest bar. For hydrocarbons it is often m/z 57, 55, 69, 71, or a related fragment.</li>
-            <li><strong>Look for a series.</strong> Alkanes often show 57, 71, 85, 99, 113. Alkenes often emphasize 55, 69, 83, 97.</li>
+            <li><strong>Look for a series.</strong> Alkanes often show 43, 57, 71, 85, 99, 113 with 14 u spacing. Alkenes often emphasize 55, 69, 83, 97.</li>
             <li><strong>Check the molecular-ion region.</strong> A small high-mass peak can help with carbon number, but it may be weak in long CHCs.</li>
             <li><strong>Compare retention time.</strong> Longer hydrocarbon chains usually come out later. A sudden odd retention time can mean coelution or a different class.</li>
             <li><strong>Decide the confidence level.</strong> Class-level is okay. Do not force an exact structure when branch position or double-bond position is not supported.</li>
@@ -601,11 +619,11 @@ tr.selected{background:#EAF3EF;}
           <div class="fragment-grid">
             <div class="fragment-card">
               <h4>n-Alkane</h4>
-              <p>Look for a repeating alkyl series: 57, 71, 85, 99, 113. Retention time should fit the chain length series.</p>
+              <p>Look for 14 u spacing in a hydrocarbon-like cluster: often 43, 57, 71, 85, 99, 113. Retention time should fit the chain-length series.</p>
             </div>
             <div class="fragment-card">
               <h4>Methyl-branched alkane</h4>
-              <p>Still looks hydrocarbon-like, but branch cleavage can strengthen certain fragments. Report branch position cautiously unless standards or strong literature support it.</p>
+              <p>Still looks hydrocarbon-like, but branch-local alpha-cleavage pairs can strengthen certain fragments. Report branch position cautiously unless standards, RI, or strong literature support it.</p>
             </div>
             <div class="fragment-card">
               <h4>Alkene</h4>
@@ -656,8 +674,8 @@ const chooseFolderBtn=document.getElementById("choose-folder");
 const chooseZipBtn=document.getElementById("choose-zip");
 const classMap={"alkane":"hc","methyl-branched alkane":"hc","alkene":"alkene","ester":"ester","unknown":"unknown","other":"other","alcohol":"other","ketone/aldehyde":"other","contaminant":"unknown"};
 const ionTutorials={
-  alkane:{label:"Alkane",subtitle:"Repeating alkyl fragments dominate.",watch:"57, 71, 85, 99, 113",caution:"The molecular ion may be weak, especially for long straight-chain CHCs.",spectrum:[{mz:43,intensity:40},{mz:57,intensity:100},{mz:71,intensity:78},{mz:85,intensity:56},{mz:99,intensity:35},{mz:113,intensity:22},{mz:380,intensity:8}],highlight:[57,71,85,99,113]},
-  branched:{label:"Methyl-branched alkane",subtitle:"Still hydrocarbon-like, but some branch-cleavage ions stand out more strongly.",watch:"57, 71, 85 plus unusually strong branch-related fragments",caution:"Exact branch position is often not secure from EI data alone.",spectrum:[{mz:57,intensity:92},{mz:71,intensity:100},{mz:85,intensity:63},{mz:99,intensity:34},{mz:183,intensity:25},{mz:197,intensity:19},{mz:394,intensity:5}],highlight:[57,71,85,183,197]},
+  alkane:{label:"Alkane",subtitle:"Long-chain alkanes usually show a 14 u alkyl-ion series, often as an envelope rather than a perfect staircase.",watch:"43, 57, 71, 85, 99, 113 with 14 u spacing",caution:"Do not memorize one exact shape. Chain length and instrument settings change the envelope, but the repeating spacing is the important clue.",spectrum:[{mz:43,intensity:52},{mz:57,intensity:100},{mz:71,intensity:78},{mz:85,intensity:72},{mz:99,intensity:76},{mz:113,intensity:59},{mz:127,intensity:39},{mz:380,intensity:8}],highlight:[43,57,71,85,99,113]},
+  branched:{label:"Methyl-branched alkane",subtitle:"Still hydrocarbon-like, but branch-local alpha-cleavage ions can stand out more strongly than in a straight-chain alkane.",watch:"57, 71, 85 plus paired alpha-cleavage hints and RI support",caution:"Exact branch position is often not secure from EI data alone. Use RI, literature spectra, and be willing to report a slash assignment.",spectrum:[{mz:57,intensity:88},{mz:71,intensity:82},{mz:85,intensity:67},{mz:99,intensity:32},{mz:168,intensity:28},{mz:169,intensity:31},{mz:196,intensity:24},{mz:197,intensity:21},{mz:394,intensity:5}],highlight:[57,71,85,168,169,196,197]},
   alkene:{label:"Alkene",subtitle:"Unsaturation shifts emphasis toward allylic ions.",watch:"55, 69, 83, 97",caution:"Double-bond position usually needs derivatization or standards.",spectrum:[{mz:41,intensity:28},{mz:55,intensity:100},{mz:69,intensity:74},{mz:83,intensity:57},{mz:97,intensity:44},{mz:111,intensity:26},{mz:378,intensity:10}],highlight:[55,69,83,97]},
   ester:{label:"Ester",subtitle:"Oxygenated fragmentation can look very different from pure hydrocarbons.",watch:"74, 87, 43",caution:"Methyl esters may be sample-prep artifacts if methylation was used.",spectrum:[{mz:43,intensity:68},{mz:55,intensity:32},{mz:74,intensity:100},{mz:87,intensity:45},{mz:143,intensity:22},{mz:298,intensity:16}],highlight:[43,74,87]}
 };
@@ -856,9 +874,9 @@ function candidatesFor(peak){
   const base=s.reduce((a,p)=>p.intensity>a.intensity?p:a,{mz:0,intensity:0});
   const items=[];
   if(cls==="alkane"){
-    items.push({tone:"",title:"Long-chain alkane",body:`Base ion m/z ${base.mz} and the 57/71/85/99 series are consistent with saturated hydrocarbon fragmentation. A weak ion near m/z ${highMz||"the molecular region"} can help estimate carbon number.`,points:["Check retention index against an alkane ladder.","Look for neighboring homologs spaced by one CH2 unit.","A library name is tentative until RI or standard agrees."]});
+    items.push({tone:"",title:"Long-chain alkane",body:`Base ion m/z ${base.mz} and the repeating hydrocarbon fragment series are consistent with saturated alkane fragmentation. In long-chain CHCs, focus on the 14 u spacing and the overall envelope more than one exact peak shape. A weak ion near m/z ${highMz||"the molecular region"} can help estimate carbon number.`,points:["Check retention index against an alkane ladder.","Look for neighboring homologs spaced by one CH2 unit.","A library name is tentative until RI or standard agrees."]});
   }else if(cls==="methyl-branched alkane"){
-    items.push({tone:"warn",title:"Methyl-branched alkane",body:"The spectrum is hydrocarbon-like, but enhanced branch-cleavage fragments suggest an isomeric methyl branch. GC-MS often cannot uniquely place the branch by library score alone.",points:["Compare RI to known methyl-branched standards.","Do not over-call branch position without support.","Report as methyl-branched alkane if the exact isomer remains ambiguous."]});
+    items.push({tone:"warn",title:"Methyl-branched alkane",body:"The spectrum is hydrocarbon-like, but stronger alpha-cleavage fragments suggest a methyl branch somewhere along the chain. GC-MS often narrows the branch position rather than proving one exact isomer.",points:["Compare complementary alpha-cleavage ions, not just one peak.","Use RI and published spectra together with the fragment pattern.","Report slash notation or class-level IDs when the exact branch position remains ambiguous."]});
   }else if(cls==="alkene"){
     items.push({tone:"warn",title:"Alkene",body:"The 55/69/83/97-style allylic fragment series supports unsaturation. The double-bond position is usually not secure from an underivatized EI spectrum.",points:["Use DMDS derivatization or standards for double-bond position.","Check whether the molecular ion fits one fewer H2 than the alkane.","Confirm the peak is not a coeluting mixture."]});
   }else if(cls==="ester"){
