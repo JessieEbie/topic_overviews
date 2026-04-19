@@ -38,6 +38,8 @@ h1{font-size:clamp(20px,2.35vw,28px);line-height:1.08;letter-spacing:0;font-weig
 .copyright{font-size:11px;color:var(--soft);margin-top:4px;}
 .header-side{display:flex;flex-direction:column;align-items:flex-end;margin-top:20px;}
 .intro{max-width:610px;color:var(--muted);font-size:13px;text-align:right;margin-top:0;}
+.draft-note{margin-top:10px;max-width:610px;padding:10px 12px;border:1px solid #E7C98A;border-radius:10px;background:#FFF4DE;color:#7A4A00;font-size:12px;line-height:1.6;text-align:right;}
+.draft-note strong{display:block;font-size:11px;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:3px;}
 .return-link{display:inline-flex;margin-top:8px;border:1px solid var(--line-strong);border-radius:6px;padding:5px 9px;color:var(--blue);font-size:12px;font-weight:700;text-decoration:none;background:#fff;}
 .return-link:hover,.return-link:focus-visible{border-color:var(--blue);background:var(--bluewash);}
 main{width:min(1260px,100%);margin:0 auto;padding:14px clamp(8px,2vw,28px) 34px;}
@@ -266,6 +268,7 @@ tr.selected{background:#EAF3EF;}
   .site-header-inner{flex-direction:column;padding:16px 14px;}
   .header-side{align-items:flex-start;margin-top:0;}
   .intro{text-align:left;}
+  .draft-note{text-align:left;}
   main{padding:8px 0 22px;}
   .lab{border-left:0;border-right:0;border-radius:0;box-shadow:none;}
   .tabs{overflow:auto;}
@@ -288,6 +291,10 @@ tr.selected{background:#EAF3EF;}
     </div>
     <div class="header-side">
       <p class="intro">Review ant cuticle peaks, compare spectra, assign compound classes, and keep the reasoning visible while you work.</p>
+      <div class="draft-note" role="note" aria-label="Draft warning">
+        <strong>Draft</strong>
+        This tool is still in progress and is not ready for use yet.
+      </div>
       <a class="return-link" href="index.html">Return to list</a>
     </div>
   </div>
