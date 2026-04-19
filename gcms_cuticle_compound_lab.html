@@ -325,6 +325,7 @@ tr.selected{background:#EAF3EF;}
           <input id="file-input" type="file" accept=".csv,.CSV,.tsv,.TSV,.txt,.TXT">
           <input id="folder-input" class="hidden-input" type="file" webkitdirectory directory multiple>
           <input id="zip-input" class="hidden-input" type="file" accept=".zip,.ZIP">
+          <button class="btn" id="grant-folder-access" type="button">Grant folder access</button>
           <button class="btn" id="choose-folder" type="button">Choose Agilent .D folder</button>
           <button class="btn" id="choose-zip" type="button">Upload zipped .D folder</button>
           <button class="btn" id="load-demo">Reload demo</button>
@@ -342,9 +343,10 @@ tr.selected{background:#EAF3EF;}
           </ul>
         </div>
         <div class="upload-mode" id="upload-mode-raw">
-          <p>If you only have the raw Agilent `.D` folder, choose the folder or upload a zipped copy here. The app will look for <strong>DATA.MS</strong> and build a first-pass TIC and peak list directly from the raw file.</p>
+          <p>If you only have the raw Agilent `.D` folder, choose the folder, grant access to a parent folder, or upload a zipped copy here. The app will look for <strong>DATA.MS</strong> and build a first-pass TIC and peak list directly from the raw file.</p>
           <ul>
             <li><strong>Works now:</strong> `.D` folders that contain `DATA.MS`.</li>
+            <li><strong>Best for batch work:</strong> <strong>Grant folder access</strong> lets the browser read all files inside one selected local folder for this session, including nested `.D` folders when your browser supports it.</li>
             <li><strong>Also works on GitHub Pages:</strong> a `.zip` file that contains the `.D` folder and `DATA.MS` inside it.</li>
             <li><strong>Still a first-pass importer:</strong> peak picking is approximate and exact identifications still need your review.</li>
           </ul>
@@ -889,6 +891,7 @@ const ionCanvas=document.getElementById("ion-canvas");
 const ionCtx=ionCanvas.getContext("2d");
 const folderInput=document.getElementById("folder-input");
 const zipInput=document.getElementById("zip-input");
+const grantFolderAccessBtn=document.getElementById("grant-folder-access");
 const chooseFolderBtn=document.getElementById("choose-folder");
 const chooseZipBtn=document.getElementById("choose-zip");
 const classMap={"alkane":"hc","methyl-branched alkane":"hc","alkene":"alkene","ester":"ester","unknown":"unknown","other":"other","alcohol":"other","ketone/aldehyde":"other","contaminant":"unknown"};
@@ -905,6 +908,7 @@ let simRaf=0;
 let dataSourceLabel="Demo data loaded";
 let dataSourceKind="demo";
 let currentTrace=null;
+let currentRunMeta=null;
 const rawStatus=document.getElementById("raw-import-status");
 let ticZoom=null;
 let ticDrag=null;
@@ -1002,6 +1006,93 @@ function parseAgilentMsBuffer(buffer){
     }
   };
 }
+function parseIniText(text){
+  const result={};
+  let section="";
+  String(text||"").split(/\r?\n/).forEach(line=>{
+    const trimmed=line.trim();
+    if(!trimmed || trimmed.startsWith(";"))return;
+    const sectionMatch=trimmed.match(/^\[(.+)\]$/);
+    if(sectionMatch){
+      section=sectionMatch[1];
+      return;
+    }
+    const eq=trimmed.indexOf("=");
+    if(eq<0)return;
+    const key=trimmed.slice(0,eq).trim();
+    const value=trimmed.slice(eq+1).trim();
+    result[section?`${section}.${key}`:key]=value;
+  });
+  return result;
+}
+function parseRunstartText(text){
+  const meta={};
+  String(text||"").split(/\r?\n/).forEach(line=>{
+    const match=line.match(/^\s*([^=]+?)\s*=\s*(.+)\s*$/);
+    if(!match)return;
+    const key=match[1].trim();
+    const value=match[2].trim();
+    if(/Methfile/i.test(key))meta.methodFile=value;
+    else if(/Sample Name/i.test(key))meta.sampleName=value;
+    else if(/Miscellaneous/i.test(key))meta.miscInfo=value;
+    else if(/Datafile/i.test(key))meta.dataFile=value;
+  });
+  return meta;
+}
+function parseAcqMethText(text){
+  const meta={};
+  const clean=String(text||"");
+  const methodPath=clean.match(/^[ \t]*([A-Z]:\\[^\r\n]+\.M)\s*$/m);
+  if(methodPath)meta.methodPath=methodPath[1].trim();
+  const runTime=clean.match(/Run time:\s+([0-9.]+)\s+min/i);
+  if(runTime)meta.runTimeMin=Number(runTime[1]);
+  const column=clean.match(/DB-1ms[^\r\n]*/i);
+  if(column)meta.column=column[0].trim();
+  return meta;
+}
+function parseAssociatedAgilentMetadata(filesByPath,runName,msMetadata){
+  const result={
+    runName,
+    acquiredAt:msMetadata?.date || "",
+    methodName:msMetadata?.method || "",
+    sampleName:"",
+    miscInfo:"",
+    methodFile:"",
+    scanRange:"",
+    sourceTemp:"",
+    quadTemp:"",
+    pressure:"",
+    runTimeMin:""
+  };
+  const entries=Object.entries(filesByPath||{});
+  for(const [path,text] of entries){
+    if(path.toLowerCase().endsWith("runstart.txt")){
+      const parsed=parseRunstartText(text);
+      result.methodFile=parsed.methodFile || result.methodFile;
+      result.sampleName=parsed.sampleName || result.sampleName;
+      result.miscInfo=parsed.miscInfo || result.miscInfo;
+    }else if(path.toLowerCase().endsWith("acqmeth.txt")){
+      const parsed=parseAcqMethText(text);
+      result.methodFile=parsed.methodPath || result.methodFile;
+      result.runTimeMin=parsed.runTimeMin || result.runTimeMin;
+      result.column=parsed.column || result.column;
+    }else if(path.toLowerCase().endsWith("pre_post.ini")){
+      const parsed=parseIniText(text);
+      result.miscInfo=parsed["POSTRUN.Miscinfo"] || result.miscInfo;
+      result.acquiredAt=parsed["POSTRUN.Date"] || result.acquiredAt;
+      const low=parsed["Scan Parameters.lowmass1"];
+      const high=parsed["Scan Parameters.highmass1"];
+      if(low && high)result.scanRange=`m/z ${low}-${high}`;
+      result.sourceTemp=parsed["POSTRUN.SourceTemp"] ? `${parsed["POSTRUN.SourceTemp"]} C` : result.sourceTemp;
+      result.quadTemp=parsed["POSTRUN.QuadTemp"] ? `${parsed["POSTRUN.QuadTemp"]} C` : result.quadTemp;
+      result.pressure=parsed["POSTRUN.Pressure"] || result.pressure;
+    }
+  }
+  if(!result.methodName && result.methodFile){
+    result.methodName=result.methodFile.split(/[\\/]/).pop().replace(/\.M$/i,"");
+  }
+  return result;
+}
 function smoothValues(values,windowRadius=3){
   return values.map((_,i)=>{
     let sum=0,count=0;
@@ -1022,7 +1113,31 @@ function nearestTracePoint(trace,rt){
   }
   return best;
 }
-function detectRawPeaks(scans){
+function spectrumFromScanWindow(scans,left,right,centerIndex){
+  const lo=Math.max(left,centerIndex-2);
+  const hi=Math.min(right,centerIndex+2);
+  const bins=new Map();
+  for(let i=lo;i<=hi;i+=1){
+    const distance=Math.abs(centerIndex-i);
+    const weight=distance===0?1:distance===1?0.7:0.45;
+    for(const ion of scans[i].ions){
+      const key=Math.round(ion.mz);
+      bins.set(key,(bins.get(key)||0)+(ion.intensity*weight));
+    }
+  }
+  const ions=[...bins.entries()]
+    .map(([mz,intensity])=>({mz:Number(mz),intensity}))
+    .filter(ion=>ion.intensity>0)
+    .sort((a,b)=>b.intensity-a.intensity);
+  const maxIons=ions.slice(0,22);
+  const maxIntensity=Math.max(...maxIons.map(ion=>ion.intensity),1);
+  return maxIons
+    .map(ion=>({mz:ion.mz,intensity:Math.max(1,Math.round((ion.intensity/maxIntensity)*100))}))
+    .sort((a,b)=>a.mz-b.mz)
+    .map(ion=>`${Math.round(ion.mz)}:${ion.intensity}`)
+    .join(" ");
+}
+function detectRawPeaks(scans,runMeta=null){
   if(!scans.length)return[];
   const ticValues=scans.map(s=>s.tic);
   const smooth=smoothValues(ticValues,7);
@@ -1056,16 +1171,20 @@ function detectRawPeaks(scans){
       let area=0;
       for(let i=left;i<=right;i+=1)area+=Math.max(0,ticValues[i]-baseline);
       const scan=scans[candidate.index];
+      const spectrum=spectrumFromScanWindow(scans,left,right,candidate.index);
+      const weightedRtWindow=scans.slice(left,right+1);
+      const rtWeightedSum=weightedRtWindow.reduce((sum,current)=>sum+(current.timeMin*Math.max(current.tic-baseline,0)),0);
+      const weightTotal=weightedRtWindow.reduce((sum,current)=>sum+Math.max(current.tic-baseline,0),0);
       const peak={
         id:`R${String(idx+1).padStart(2,"0")}`,
-        rt:scan.timeMin,
+        rt:weightTotal?rtWeightedSum/weightTotal:scan.timeMin,
         area:Math.round(area),
         name:"Unknown raw peak",
         formula:"",
         class:"unknown",
         match:0,
-        spectrum:mzIntensityToSpectrum(scan.ions),
-        notes:"Imported directly from Agilent DATA.MS. Peak picking is approximate and should be reviewed manually."
+        spectrum,
+        notes:`Imported directly from Agilent DATA.MS${runMeta?.methodName?` using ${runMeta.methodName}`:""}. Spectrum is averaged around the peak apex; peak picking remains approximate and should be reviewed manually.`
       };
       peak.class=inferClass(peak);
       peak.annotation={name:peak.name,class:peak.class,confidence:"tentative class",notes:peak.notes};
@@ -1085,24 +1204,78 @@ function simplifyTrace(scans,maxPoints=1400){
   }
   return trace;
 }
+function runNameFromPath(pathLike){
+  const bits=String(pathLike).split("/").filter(Boolean);
+  if(!bits.length)return "Raw Agilent run";
+  const dIndex=bits.findIndex(part=>/\.d$/i.test(part));
+  if(dIndex>=0)return bits[dIndex];
+  return bits[Math.max(0,bits.length-2)] || bits[bits.length-1];
+}
+function runFolderPath(pathLike){
+  const bits=String(pathLike).split("/").filter(Boolean);
+  const dIndex=bits.findIndex(part=>/\.d$/i.test(part));
+  if(dIndex>=0)return bits.slice(0,dIndex+1).join("/");
+  return bits.slice(0,-1).join("/");
+}
+function buildRawRun(fileLike,parsed,fileTextMap={}){
+  const runName=runNameFromPath(fileLike.webkitRelativePath || fileLike.name);
+  const runMeta=parseAssociatedAgilentMetadata(fileTextMap,runName,parsed.metadata);
+  const importedPeaks=detectRawPeaks(parsed.scans,runMeta);
+  return {
+    runName,
+    peaks:importedPeaks,
+    trace:simplifyTrace(parsed.scans,2200),
+    parsed,
+    metadata:runMeta
+  };
+}
+function setCurrentRawRun(run){
+  currentTrace=run.trace;
+  currentRunMeta=run.metadata || null;
+  peaks=run.peaks;
+  selectedId=peaks[0].id;
+  ticZoom=null;
+  dataSourceKind="raw";
+  dataSourceLabel=`Raw import from ${run.runName}`;
+  document.getElementById("tic-label-mode").value="off";
+}
+async function importAgilentBatch(fileEntries,sourceLabel="folder"){
+  const files=[...fileEntries];
+  const dataFiles=files
+    .filter(file=>/(^|\/)data\.ms$/i.test(file.webkitRelativePath||file.name))
+    .filter(file=>!/^__MACOSX\//.test(file.webkitRelativePath||file.name))
+    .sort((a,b)=>(a.webkitRelativePath||a.name).localeCompare(b.webkitRelativePath||b.name));
+  if(!dataFiles.length) throw new Error("I could not find any DATA.MS files in that selection.");
+  const textFiles=files.filter(file=>/\.(txt|ini)$/i.test(file.webkitRelativePath||file.name) && !/^__MACOSX\//.test(file.webkitRelativePath||file.name));
+  const textByRun={};
+  for(const file of textFiles){
+    const key=runFolderPath(file.webkitRelativePath||file.name);
+    if(!textByRun[key])textByRun[key]={};
+    try{
+      textByRun[key][file.webkitRelativePath||file.name]=await file.text();
+    }catch(error){
+      // Ignore unreadable sidecar text and keep the raw import moving.
+    }
+  }
+  const loadedRuns=[];
+  for(const dataFile of dataFiles){
+    const parsed=parseAgilentMsBuffer(await dataFile.arrayBuffer());
+    const run=buildRawRun(dataFile,parsed,textByRun[runFolderPath(dataFile.webkitRelativePath||dataFile.name)]||{});
+    if(run.peaks.length)loadedRuns.push(run);
+  }
+  if(!loadedRuns.length) throw new Error("The selected files opened, but no usable peaks were detected from DATA.MS.");
+  const [currentRun,...otherRuns]=loadedRuns;
+  setCurrentRawRun(currentRun);
+  compareRuns=otherRuns.map(run=>makeRun(run.runName,run.peaks,"raw",run.trace));
+  rawStatus.textContent=`Loaded ${loadedRuns.length} raw run${loadedRuns.length===1?"":"s"} from ${sourceLabel}. Reviewing ${currentRun.runName} now${otherRuns.length?`; ${otherRuns.length} more run${otherRuns.length===1?"":"s"} added to Compare runs.`:"."}`;
+  renderSelected();
+}
 async function importAgilentFolder(fileList){
   const files=[...fileList];
   const dataFile=files.find(file=>/(^|\/)data\.ms$/i.test(file.webkitRelativePath||file.name));
   if(!dataFile) throw new Error("I could not find DATA.MS in that folder selection.");
   rawStatus.textContent=`Reading ${dataFile.webkitRelativePath || dataFile.name}...`;
-  const parsed=parseAgilentMsBuffer(await dataFile.arrayBuffer());
-  const importedPeaks=detectRawPeaks(parsed.scans);
-  if(!importedPeaks.length) throw new Error("The raw file was read, but no usable peaks were detected.");
-  currentTrace=simplifyTrace(parsed.scans,2200);
-  peaks=importedPeaks;
-  selectedId=peaks[0].id;
-  ticZoom=null;
-  dataSourceKind="raw";
-  dataSourceLabel=`Raw import from ${(dataFile.webkitRelativePath||dataFile.name).split('/')[0]}`;
-  document.getElementById("tic-label-mode").value="off";
-  compareRuns=[...(compareRuns.filter(run=>run.id!=="current-run")), makeRun(dataSourceLabel,importedPeaks,"raw",currentTrace)];
-  rawStatus.textContent=`Loaded ${peaks.length} candidate peaks from DATA.MS${parsed.metadata.date?` · acquired ${parsed.metadata.date}`:""}. Raw TIC is shown in the chromatogram.`;
-  renderSelected();
+  await importAgilentBatch(files,"selected folder");
 }
 async function importAgilentZip(file){
   if(!window.JSZip) throw new Error("ZIP import is unavailable because the JSZip helper did not load.");
@@ -1111,20 +1284,60 @@ async function importAgilentZip(file){
   const names=Object.keys(zip.files);
   const dataName=names.find(name=>/data\.ms$/i.test(name));
   if(!dataName) throw new Error("I could not find DATA.MS inside that ZIP file.");
+  const folderKey=runFolderPath(dataName);
+  const sidecarEntries=names.filter(name=>name.startsWith(folderKey) && /\.(txt|ini)$/i.test(name) && !/^__MACOSX\//.test(name));
+  const fileTextMap={};
+  for(const name of sidecarEntries){
+    try{
+      fileTextMap[name]=await zip.files[name].async("text");
+    }catch(error){
+      // Ignore unreadable sidecar text and continue with the raw import.
+    }
+  }
   const parsed=parseAgilentMsBuffer(await zip.files[dataName].async("arraybuffer"));
-  const importedPeaks=detectRawPeaks(parsed.scans);
-  if(!importedPeaks.length) throw new Error("The ZIP opened, but no usable peaks were detected from DATA.MS.");
-  currentTrace=simplifyTrace(parsed.scans,2200);
-  peaks=importedPeaks;
+  const run=buildRawRun({name:dataName,webkitRelativePath:dataName},parsed,fileTextMap);
+  if(!run.peaks.length) throw new Error("The ZIP opened, but no usable peaks were detected from DATA.MS.");
+  currentTrace=run.trace;
+  currentRunMeta=run.metadata || null;
+  peaks=run.peaks;
   selectedId=peaks[0].id;
   ticZoom=null;
   dataSourceKind="raw";
   const root=(dataName.split("/").find(Boolean) || file.name).replace(/\/$/,"");
   dataSourceLabel=`Raw import from ${root}`;
   document.getElementById("tic-label-mode").value="off";
-  compareRuns=[...(compareRuns.filter(run=>run.id!=="current-run")), makeRun(dataSourceLabel,importedPeaks,"raw",currentTrace)];
-  rawStatus.textContent=`Loaded ${peaks.length} candidate peaks from ZIP${parsed.metadata.date?` · acquired ${parsed.metadata.date}`:""}. Raw TIC is shown in the chromatogram.`;
+  compareRuns=[...(compareRuns.filter(run=>run.id!=="current-run")), makeRun(dataSourceLabel,run.peaks,"raw",currentTrace)];
+  rawStatus.textContent=`Loaded ${peaks.length} candidate peaks from ZIP${run.metadata?.acquiredAt?` · acquired ${run.metadata.acquiredAt}`:""}. Raw TIC and run metadata are shown in the workstation.`;
   renderSelected();
+}
+async function collectFilesFromDirectoryHandle(handle,prefix=""){
+  const files=[];
+  for await (const [name,entry] of handle.entries()){
+    const nextPath=prefix?`${prefix}/${name}`:name;
+    if(entry.kind==="file"){
+      const file=await entry.getFile();
+      files.push({
+        name:file.name,
+        webkitRelativePath:nextPath,
+        arrayBuffer:()=>file.arrayBuffer(),
+        text:()=>file.text()
+      });
+    }else if(entry.kind==="directory"){
+      files.push(...await collectFilesFromDirectoryHandle(entry,nextPath));
+    }
+  }
+  return files;
+}
+async function grantFolderAccess(){
+  if(typeof window.showDirectoryPicker!=="function"){
+    folderInput.click();
+    return;
+  }
+  rawStatus.textContent="Waiting for folder permission...";
+  const handle=await window.showDirectoryPicker({mode:"read"});
+  const files=await collectFilesFromDirectoryHandle(handle,handle.name);
+  if(!files.length) throw new Error("That folder did not expose any readable files.");
+  await importAgilentBatch(files,handle.name);
 }
 function inferClass(peak){
   const s=parseSpectrum(peak.spectrum);
@@ -1386,6 +1599,9 @@ function renderPeakDetailsGrid(peak){
   if(!holder)return;
   const info=formulaInfo(peak.formula);
   const entries=[
+    {label:"Run",value:currentRunMeta?.runName || null},
+    {label:"Method",value:currentRunMeta?.methodName || currentRunMeta?.methodFile || null},
+    {label:"Sample info",value:currentRunMeta?.miscInfo || currentRunMeta?.sampleName || null},
     {label:"Source name",value:peak.name || "Unknown"},
     {label:"Assigned class",value:peak.annotation?.class || peak.class || inferClass(peak)},
     {label:"Formula",value:peak.formula || null},
@@ -1393,7 +1609,9 @@ function renderPeakDetailsGrid(peak){
     {label:"Retention index",value:Number.isFinite(peak.ri)?peak.ri.toFixed(1):null},
     {label:"Molecular weight",value:info?`${averageMw(info.c,info.h).toFixed(2)} (${Math.round(averageMw(info.c,info.h))})`:null},
     {label:"Nominal molecular ion",value:info?`m/z ${Math.round(averageMw(info.c,info.h))}`:null},
-    {label:"Match score",value:peak.match || null}
+    {label:"Match score",value:peak.match || null},
+    {label:"Scan range",value:currentRunMeta?.scanRange || null},
+    {label:"Source / quad",value:(currentRunMeta?.sourceTemp||currentRunMeta?.quadTemp)?`${currentRunMeta?.sourceTemp||"n/a"} / ${currentRunMeta?.quadTemp||"n/a"}`:null}
   ];
   holder.innerHTML=entries.map(entry=>`<div class="detail-cell"><strong>${entry.label}</strong><span>${formatPeakDetailValue(entry.value)}</span></div>`).join("");
 }
@@ -2019,7 +2237,7 @@ function downloadTextFile(content,filename,type="text/plain"){
   URL.revokeObjectURL(a.href);
 }
 function saveProjectFile(){
-  const project={version:1,savedAt:new Date().toISOString(),dataSourceLabel,dataSourceKind,selectedId,peaks,compareRuns,currentTrace};
+  const project={version:1,savedAt:new Date().toISOString(),dataSourceLabel,dataSourceKind,selectedId,peaks,compareRuns,currentTrace,currentRunMeta};
   downloadTextFile(JSON.stringify(project,null,2),"gcms_workstation_project.json","application/json");
 }
 async function loadProjectFile(file){
@@ -2031,6 +2249,7 @@ async function loadProjectFile(file){
   dataSourceKind=parsed.dataSourceKind || "project";
   compareRuns=Array.isArray(parsed.compareRuns)?parsed.compareRuns:[];
   currentTrace=Array.isArray(parsed.currentTrace)?parsed.currentTrace:null;
+  currentRunMeta=parsed.currentRunMeta || null;
   ticZoom=null;
   document.getElementById("tic-label-mode").value=dataSourceKind==="raw"?"off":"id";
   renderSelected();
@@ -2089,6 +2308,13 @@ function setUploadMode(mode){
 }
 function setupHostedAppSupport(){
   const folderSupported="webkitdirectory" in folderInput;
+  const canGrantFolder=typeof window.showDirectoryPicker==="function";
+  if(!canGrantFolder && !folderSupported){
+    grantFolderAccessBtn.disabled=true;
+    grantFolderAccessBtn.title="Folder access is not supported in this browser.";
+  }else if(!canGrantFolder){
+    grantFolderAccessBtn.title="This browser will fall back to the standard folder picker.";
+  }
   if(!folderSupported){
     chooseFolderBtn.disabled=true;
     chooseFolderBtn.title="Folder picking is not supported in this browser.";
@@ -2157,10 +2383,10 @@ document.getElementById("export-tic-png").addEventListener("click",()=>downloadC
 document.getElementById("export-spectrum-png").addEventListener("click",()=>downloadCanvasPng(spec,"mass-spectrum.png"));
 document.getElementById("filter").addEventListener("input",renderRows);
 document.getElementById("class-filter").addEventListener("change",renderRows);
-document.getElementById("load-demo").addEventListener("click",()=>{peaks=demoPeaks.map(p=>({...p,annotation:{name:p.name,class:p.class,confidence:p.match>84?"probable compound":"tentative compound",notes:p.notes}}));selectedId=peaks[0].id;ticZoom=null;dataSourceLabel="Demo data loaded";dataSourceKind="demo";currentTrace=null;document.getElementById("tic-label-mode").value="id";renderSelected();});
+document.getElementById("load-demo").addEventListener("click",()=>{peaks=demoPeaks.map(p=>({...p,annotation:{name:p.name,class:p.class,confidence:p.match>84?"probable compound":"tentative compound",notes:p.notes}}));selectedId=peaks[0].id;ticZoom=null;dataSourceLabel="Demo data loaded";dataSourceKind="demo";currentTrace=null;currentRunMeta=null;document.getElementById("tic-label-mode").value="id";renderSelected();});
 document.getElementById("file-input").addEventListener("change",event=>{
   const file=event.target.files[0];if(!file)return;
-  file.text().then(text=>{peaks=parseDelimited(text);selectedId=peaks[0]?.id;ticZoom=null;dataSourceLabel=`Loaded ${file.name}`;dataSourceKind="table";currentTrace=null;document.getElementById("tic-label-mode").value="id";renderSelected();});
+  file.text().then(text=>{peaks=parseDelimited(text);selectedId=peaks[0]?.id;ticZoom=null;dataSourceLabel=`Loaded ${file.name}`;dataSourceKind="table";currentTrace=null;currentRunMeta=null;document.getElementById("tic-label-mode").value="id";renderSelected();});
 });
 document.getElementById("save-annotation").addEventListener("click",()=>{
   const peak=peaks.find(p=>p.id===selectedId);if(!peak)return;
@@ -2214,6 +2440,15 @@ document.getElementById("quant-export-csv").addEventListener("click",()=>{
   const total=run.peaks.reduce((sum,p)=>sum+p.area,0)||1;
   const rows=run.peaks.slice().sort((a,b)=>a.rt-b.rt).map(peak=>[`"${peak.rt.toFixed(2)}"`,`"${(peak.name||peak.id).replaceAll('"','""')}"`,`"${peak.class||"unknown"}"`,`"${peak.area}"`,`"${((peak.area/total)*100).toFixed(2)}"`].join(","));
   downloadTextFile([`rt,peak,class,area,percent_area`,...rows].join("\n"),`${run.name.replace(/\s+/g,"_")}_percent_area.csv`,"text/csv");
+});
+grantFolderAccessBtn.addEventListener("click",()=>{
+  grantFolderAccess().catch(error=>{
+    if(error && error.name==="AbortError"){
+      rawStatus.textContent="Folder access canceled.";
+      return;
+    }
+    rawStatus.textContent=error.message;
+  });
 });
 chooseFolderBtn.addEventListener("click",()=>folderInput.click());
 folderInput.addEventListener("change",event=>{
