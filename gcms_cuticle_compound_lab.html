@@ -1211,6 +1211,16 @@ function suggestedCallFor(peak){
       ]
     };
   }
+  if(!isRawUnknown && peak.match>=60){
+    return {
+      call:`Possible ${sourceName}`,
+      reason:`The imported table suggests ${sourceName}${formula?` (${formula})`:""}, but the match strength is better treated as provisional than fully tentative.`,
+      evidence:[
+        ...evidence,
+        "This is a specific candidate from the imported result, but it should still be checked against RI, spectrum quality, and neighboring peaks."
+      ]
+    };
+  }
   if(cls==="alkane"){
     const carbonHint=formula.match(/^C(\d+)H\d+$/i)?.[1];
     if(!has(57,40) || !has(71,30) || !has(85,25)){
@@ -1767,9 +1777,19 @@ function normalizedArea(run,peak,mode){
   const max=Math.max(...run.peaks.map(p=>p.area),1);
   return peak.area/max;
 }
+function localPeakWidth(run,index){
+  const current=run.peaks[index];
+  const prev=run.peaks[index-1];
+  const next=run.peaks[index+1];
+  const left=prev ? current.rt-prev.rt : null;
+  const right=next ? next.rt-current.rt : null;
+  const spacingCandidates=[left,right].filter(Number.isFinite);
+  const spacing=spacingCandidates.length ? Math.min(...spacingCandidates) : 0.25;
+  return Math.max(0.018, Math.min(0.08, spacing*0.18));
+}
 function traceValue(run,rt,mode){
-  return run.peaks.reduce((sum,peak)=>{
-    const sigma=Math.max(0.035,(compareDomain().maxRt-compareDomain().minRt)/240);
+  return run.peaks.reduce((sum,peak,index)=>{
+    const sigma=localPeakWidth(run,index);
     const amp=normalizedArea(run,peak,mode);
     return sum + amp*Math.exp(-((rt-peak.rt)**2)/(2*sigma*sigma));
   },0);
