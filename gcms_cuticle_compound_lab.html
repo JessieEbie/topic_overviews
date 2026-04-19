@@ -903,6 +903,8 @@ let simRunning=true;
 let simFrame=0;
 let simRaf=0;
 let dataSourceLabel="Demo data loaded";
+let dataSourceKind="demo";
+let currentTrace=null;
 const rawStatus=document.getElementById("raw-import-status");
 let ticZoom=null;
 let ticDrag=null;
@@ -1007,32 +1009,52 @@ function smoothValues(values,windowRadius=3){
     return sum/count;
   });
 }
+function nearestTracePoint(trace,rt){
+  if(!Array.isArray(trace) || !trace.length)return null;
+  let best=trace[0];
+  let bestDiff=Math.abs(rt-best.rt);
+  for(let i=1;i<trace.length;i+=1){
+    const diff=Math.abs(rt-trace[i].rt);
+    if(diff<bestDiff){
+      best=trace[i];
+      bestDiff=diff;
+    }
+  }
+  return best;
+}
 function detectRawPeaks(scans){
   if(!scans.length)return[];
   const ticValues=scans.map(s=>s.tic);
-  const smooth=smoothValues(ticValues,4);
+  const smooth=smoothValues(ticValues,7);
   const max=Math.max(...smooth);
   const candidates=[];
-  for(let i=2;i<smooth.length-2;i+=1){
+  for(let i=4;i<smooth.length-4;i+=1){
     const current=smooth[i];
-    if(current>smooth[i-1]&&current>=smooth[i+1]&&current>max*0.03){
-      if(candidates.length && i-candidates[candidates.length-1].index<8){
-        if(current>candidates[candidates.length-1].height)candidates[candidates.length-1]={index:i,height:current};
+    if(current>smooth[i-1]&&current>=smooth[i+1]&&current>max*0.045){
+      let left=i,right=i;
+      while(left>2 && smooth[left-1]<=smooth[left])left-=1;
+      while(right<smooth.length-3 && smooth[right+1]<=smooth[right])right+=1;
+      const leftFloor=Math.min(...smooth.slice(Math.max(0,left-10),left+1));
+      const rightFloor=Math.min(...smooth.slice(right,Math.min(smooth.length,right+11)));
+      const prominence=current-Math.max(leftFloor,rightFloor);
+      if(prominence<max*0.012)continue;
+      if(candidates.length && i-candidates[candidates.length-1].index<18){
+        if(current>candidates[candidates.length-1].height)candidates[candidates.length-1]={index:i,height:current,left,right,prominence};
       }else{
-        candidates.push({index:i,height:current});
+        candidates.push({index:i,height:current,left,right,prominence});
       }
     }
   }
   return candidates
-    .sort((a,b)=>b.height-a.height)
-    .slice(0,80)
+    .sort((a,b)=>b.prominence-a.prominence||b.height-a.height)
+    .slice(0,36)
     .sort((a,b)=>a.index-b.index)
     .map((candidate,idx)=>{
-      let left=candidate.index,right=candidate.index;
-      while(left>1&&smooth[left-1]<=smooth[left])left-=1;
-      while(right<smooth.length-2&&smooth[right+1]<=smooth[right])right+=1;
+      const left=candidate.left;
+      const right=candidate.right;
+      const baseline=Math.max(smooth[left],smooth[right]);
       let area=0;
-      for(let i=left;i<=right;i+=1)area+=ticValues[i];
+      for(let i=left;i<=right;i+=1)area+=Math.max(0,ticValues[i]-baseline);
       const scan=scans[candidate.index];
       const peak={
         id:`R${String(idx+1).padStart(2,"0")}`,
@@ -1071,12 +1093,15 @@ async function importAgilentFolder(fileList){
   const parsed=parseAgilentMsBuffer(await dataFile.arrayBuffer());
   const importedPeaks=detectRawPeaks(parsed.scans);
   if(!importedPeaks.length) throw new Error("The raw file was read, but no usable peaks were detected.");
+  currentTrace=simplifyTrace(parsed.scans,2200);
   peaks=importedPeaks;
   selectedId=peaks[0].id;
   ticZoom=null;
+  dataSourceKind="raw";
   dataSourceLabel=`Raw import from ${(dataFile.webkitRelativePath||dataFile.name).split('/')[0]}`;
-  compareRuns=[...(compareRuns.filter(run=>run.id!=="current-run")), makeRun(dataSourceLabel,importedPeaks,"raw",simplifyTrace(parsed.scans))];
-  rawStatus.textContent=`Loaded ${peaks.length} approximate peaks from DATA.MS${parsed.metadata.date?` · acquired ${parsed.metadata.date}`:""}.`;
+  document.getElementById("tic-label-mode").value="off";
+  compareRuns=[...(compareRuns.filter(run=>run.id!=="current-run")), makeRun(dataSourceLabel,importedPeaks,"raw",currentTrace)];
+  rawStatus.textContent=`Loaded ${peaks.length} candidate peaks from DATA.MS${parsed.metadata.date?` · acquired ${parsed.metadata.date}`:""}. Raw TIC is shown in the chromatogram.`;
   renderSelected();
 }
 async function importAgilentZip(file){
@@ -1089,13 +1114,16 @@ async function importAgilentZip(file){
   const parsed=parseAgilentMsBuffer(await zip.files[dataName].async("arraybuffer"));
   const importedPeaks=detectRawPeaks(parsed.scans);
   if(!importedPeaks.length) throw new Error("The ZIP opened, but no usable peaks were detected from DATA.MS.");
+  currentTrace=simplifyTrace(parsed.scans,2200);
   peaks=importedPeaks;
   selectedId=peaks[0].id;
   ticZoom=null;
+  dataSourceKind="raw";
   const root=(dataName.split("/").find(Boolean) || file.name).replace(/\/$/,"");
   dataSourceLabel=`Raw import from ${root}`;
-  compareRuns=[...(compareRuns.filter(run=>run.id!=="current-run")), makeRun(dataSourceLabel,importedPeaks,"raw",simplifyTrace(parsed.scans))];
-  rawStatus.textContent=`Loaded ${peaks.length} approximate peaks from ZIP${parsed.metadata.date?` · acquired ${parsed.metadata.date}`:""}.`;
+  document.getElementById("tic-label-mode").value="off";
+  compareRuns=[...(compareRuns.filter(run=>run.id!=="current-run")), makeRun(dataSourceLabel,importedPeaks,"raw",currentTrace)];
+  rawStatus.textContent=`Loaded ${peaks.length} candidate peaks from ZIP${parsed.metadata.date?` · acquired ${parsed.metadata.date}`:""}. Raw TIC is shown in the chromatogram.`;
   renderSelected();
 }
 function inferClass(peak){
@@ -1416,24 +1444,53 @@ function drawTic(){
   const {minRt,maxRt}=getTicDomain();
   const visiblePeaks=peaks.filter(peak=>peak.rt>=minRt&&peak.rt<=maxRt);
   const sourcePeaks=visiblePeaks.length?visiblePeaks:peaks;
-  const maxArea=Math.max(...sourcePeaks.map(x=>x.area));
   const xFor=rt=>ticXFor(rt,w,p,minRt,maxRt);
-  const yFor=a=>h-p-(a/maxArea)*(h-p*2);
-  ticCtx.strokeStyle="#177E63";ticCtx.lineWidth=2;
-  ticCtx.beginPath();ticCtx.moveTo(p,yFor(0));
+  const visibleTrace=(Array.isArray(currentTrace)&&currentTrace.length?currentTrace.filter(point=>point.rt>=minRt&&point.rt<=maxRt):[]);
+  if(visibleTrace.length>1){
+    const maxTrace=Math.max(...visibleTrace.map(point=>point.value),1);
+    const yForTrace=value=>h-p-(value/maxTrace)*(h-p*2);
+    ticCtx.strokeStyle="#177E63";
+    ticCtx.lineWidth=2;
+    ticCtx.beginPath();
+    visibleTrace.forEach((point,index)=>{
+      const x=xFor(point.rt);
+      const y=yForTrace(point.value);
+      if(index===0)ticCtx.moveTo(x,y);
+      else ticCtx.lineTo(x,y);
+    });
+    ticCtx.stroke();
+  }else{
+    const maxArea=Math.max(...sourcePeaks.map(x=>x.area),1);
+    const yFor=a=>h-p-(a/maxArea)*(h-p*2);
+    ticCtx.strokeStyle="#177E63";
+    ticCtx.lineWidth=2;
+    ticCtx.beginPath();
+    ticCtx.moveTo(p,yFor(0));
+    sourcePeaks.forEach(peak=>{
+      const x=xFor(peak.rt), y=yFor(peak.area);
+      ticCtx.lineTo(x-12,h-p);
+      ticCtx.quadraticCurveTo(x-6,y+24,x,y);
+      ticCtx.quadraticCurveTo(x+6,y+24,x+12,h-p);
+    });
+    ticCtx.stroke();
+  }
+  const pointForPeak=peak=>{
+    if(visibleTrace.length>1){
+      const point=nearestTracePoint(visibleTrace,peak.rt) || nearestTracePoint(currentTrace,peak.rt);
+      const maxTrace=Math.max(...visibleTrace.map(item=>item.value),1);
+      return {x:xFor(peak.rt),y:h-p-((point?.value||0)/maxTrace)*(h-p*2)};
+    }
+    const maxArea=Math.max(...sourcePeaks.map(x=>x.area),1);
+    return {x:xFor(peak.rt),y:h-p-(peak.area/maxArea)*(h-p*2)};
+  };
+  const labelBudget=Math.max(8,Math.min(14,Math.round((maxRt-minRt)/1.5)));
+  const labelableIds=new Set(sourcePeaks.slice().sort((a,b)=>(b.area||0)-(a.area||0)).slice(0,labelBudget).map(peak=>peak.id));
   sourcePeaks.forEach(peak=>{
-    const x=xFor(peak.rt), y=yFor(peak.area);
-    ticCtx.lineTo(x-12,h-p);
-    ticCtx.quadraticCurveTo(x-6,y+24,x,y);
-    ticCtx.quadraticCurveTo(x+6,y+24,x+12,h-p);
-  });
-  ticCtx.stroke();
-  sourcePeaks.forEach(peak=>{
-    const x=xFor(peak.rt), y=yFor(peak.area);
+    const {x,y}=pointForPeak(peak);
     ticCtx.fillStyle=peak.id===selectedId?"#A23A32":"#14212B";
-    ticCtx.beginPath();ticCtx.arc(x,y,5,0,Math.PI*2);ticCtx.fill();
+    ticCtx.beginPath();ticCtx.arc(x,y,peak.id===selectedId?5:4,0,Math.PI*2);ticCtx.fill();
     const peakLabel=labelForPeak(peak);
-    if(peakLabel){
+    if(peakLabel && (peak.id===selectedId || labelableIds.has(peak.id))){
       ticCtx.fillStyle="#50616F";
       ticCtx.fillText(peakLabel,x-12,y-10);
     }
@@ -1831,10 +1888,10 @@ function syncCurrentRunToCompare(){
   const current={
     id:"current-run",
     name:dataSourceLabel,
-    kind:existing?.kind || "review",
+    kind:dataSourceKind || existing?.kind || "review",
     color:comparePalette[0],
     peaks:peaks.map(p=>({...p})),
-    trace:existing?.trace || null
+    trace:dataSourceKind==="raw" && Array.isArray(currentTrace) && currentTrace.length ? currentTrace : null
   };
   const idx=compareRuns.findIndex(run=>run.id==="current-run");
   if(idx>=0)compareRuns[idx]=current;
@@ -1962,7 +2019,7 @@ function downloadTextFile(content,filename,type="text/plain"){
   URL.revokeObjectURL(a.href);
 }
 function saveProjectFile(){
-  const project={version:1,savedAt:new Date().toISOString(),dataSourceLabel,selectedId,peaks,compareRuns};
+  const project={version:1,savedAt:new Date().toISOString(),dataSourceLabel,dataSourceKind,selectedId,peaks,compareRuns,currentTrace};
   downloadTextFile(JSON.stringify(project,null,2),"gcms_workstation_project.json","application/json");
 }
 async function loadProjectFile(file){
@@ -1971,8 +2028,11 @@ async function loadProjectFile(file){
   peaks=parsed.peaks;
   selectedId=parsed.selectedId || parsed.peaks[0]?.id;
   dataSourceLabel=parsed.dataSourceLabel || "Loaded project";
+  dataSourceKind=parsed.dataSourceKind || "project";
   compareRuns=Array.isArray(parsed.compareRuns)?parsed.compareRuns:[];
+  currentTrace=Array.isArray(parsed.currentTrace)?parsed.currentTrace:null;
   ticZoom=null;
+  document.getElementById("tic-label-mode").value=dataSourceKind==="raw"?"off":"id";
   renderSelected();
 }
 function renderCompareLegend(){
@@ -2097,10 +2157,10 @@ document.getElementById("export-tic-png").addEventListener("click",()=>downloadC
 document.getElementById("export-spectrum-png").addEventListener("click",()=>downloadCanvasPng(spec,"mass-spectrum.png"));
 document.getElementById("filter").addEventListener("input",renderRows);
 document.getElementById("class-filter").addEventListener("change",renderRows);
-document.getElementById("load-demo").addEventListener("click",()=>{peaks=demoPeaks.map(p=>({...p,annotation:{name:p.name,class:p.class,confidence:p.match>84?"probable compound":"tentative compound",notes:p.notes}}));selectedId=peaks[0].id;ticZoom=null;dataSourceLabel="Demo data loaded";renderSelected();});
+document.getElementById("load-demo").addEventListener("click",()=>{peaks=demoPeaks.map(p=>({...p,annotation:{name:p.name,class:p.class,confidence:p.match>84?"probable compound":"tentative compound",notes:p.notes}}));selectedId=peaks[0].id;ticZoom=null;dataSourceLabel="Demo data loaded";dataSourceKind="demo";currentTrace=null;document.getElementById("tic-label-mode").value="id";renderSelected();});
 document.getElementById("file-input").addEventListener("change",event=>{
   const file=event.target.files[0];if(!file)return;
-  file.text().then(text=>{peaks=parseDelimited(text);selectedId=peaks[0]?.id;ticZoom=null;dataSourceLabel=`Loaded ${file.name}`;renderSelected();});
+  file.text().then(text=>{peaks=parseDelimited(text);selectedId=peaks[0]?.id;ticZoom=null;dataSourceLabel=`Loaded ${file.name}`;dataSourceKind="table";currentTrace=null;document.getElementById("tic-label-mode").value="id";renderSelected();});
 });
 document.getElementById("save-annotation").addEventListener("click",()=>{
   const peak=peaks.find(p=>p.id===selectedId);if(!peak)return;
