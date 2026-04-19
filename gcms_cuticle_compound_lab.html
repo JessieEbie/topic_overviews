@@ -131,6 +131,23 @@ tr.selected{background:#EAF3EF;}
 .ion-chip{border:1px solid var(--line);border-radius:8px;background:#fff;padding:8px;}
 .ion-chip strong{display:block;font-size:12px;line-height:1.1;}
 .ion-chip span{display:block;font-size:11px;color:var(--muted);margin-top:3px;}
+.facts-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:10px;}
+.fact-chip{border:1px solid var(--line);border-radius:8px;background:#FBFCFD;padding:9px;}
+.fact-chip strong{display:block;font-size:11px;color:var(--muted);margin-bottom:3px;text-transform:uppercase;letter-spacing:.05em;}
+.fact-chip span{display:block;font-size:13px;color:var(--ink);}
+.candidate-workbench{border:1px solid var(--line);border-radius:8px;background:#fff;overflow:hidden;margin-top:10px;}
+.candidate-workbench-head{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:10px 12px;border-bottom:1px solid var(--line);background:#FBFCFD;flex-wrap:wrap;}
+.candidate-workbench-head h3{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--soft);}
+.candidate-workbench-head p{font-size:12px;color:var(--muted);}
+.candidate-table{width:100%;border-collapse:collapse;}
+.candidate-table th,.candidate-table td{font-size:12px;padding:9px 8px;border-bottom:1px solid var(--line);vertical-align:top;}
+.candidate-table th{position:static;background:#F7F9FA;}
+.candidate-table td small{display:block;color:var(--muted);line-height:1.45;margin-top:2px;}
+.candidate-action{padding:6px 8px;border:1px solid var(--line-strong);border-radius:6px;background:#fff;font-size:11px;font-weight:700;color:var(--ink);}
+.candidate-action:hover,.candidate-action:focus-visible{border-color:var(--blue);background:var(--bluewash);}
+.teaching-details{padding:10px 12px;background:#FBFCFD;border-top:1px solid var(--line);}
+.teaching-details summary{font-size:12px;font-weight:700;color:var(--muted);cursor:pointer;}
+.teaching-details[open] summary{margin-bottom:8px;}
 .candidate{border:1px solid var(--line);border-left:4px solid var(--green);border-radius:8px;padding:10px;background:#fff;}
 .candidate h3{font-size:14px;line-height:1.2;margin-bottom:6px;}
 .candidate p,.candidate li{font-size:12px;color:var(--muted);line-height:1.55;}
@@ -220,7 +237,7 @@ tr.selected{background:#EAF3EF;}
   .guide-layout,.pipeline-layout,.tutorial-layout{grid-template-columns:1fr;}
   .selected-peak{grid-template-columns:1fr;}
   .guide-grid{grid-template-columns:1fr;}
-  .step-strip,.story-grid,.fragment-grid,.ion-layout,.stage-list,.ion-readout{grid-template-columns:1fr;}
+  .step-strip,.story-grid,.fragment-grid,.ion-layout,.stage-list,.ion-readout,.facts-grid{grid-template-columns:1fr;}
   th,td{font-size:11px;padding:7px 5px;}
 }
 </style>
@@ -374,7 +391,23 @@ tr.selected{background:#EAF3EF;}
                 </div>
                 <div class="ion-readout" id="ion-readout"></div>
               </div>
-              <div class="candidate-list" id="candidate-list"></div>
+              <div class="facts-grid" id="peak-facts"></div>
+              <div class="candidate-workbench">
+                <div class="candidate-workbench-head">
+                  <h3>Candidate calls</h3>
+                  <p>Ranked first-pass options you can apply directly to the annotation form.</p>
+                </div>
+                <div class="peak-table">
+                  <table class="candidate-table">
+                    <thead><tr><th>Candidate</th><th>Class</th><th>Confidence</th><th>Why it fits</th><th>Use</th></tr></thead>
+                    <tbody id="candidate-rows"></tbody>
+                  </table>
+                </div>
+                <details class="teaching-details">
+                  <summary>Open interpretation notes</summary>
+                  <div class="candidate-list" id="candidate-list"></div>
+                </details>
+              </div>
             </div>
           </div>
         </div>
@@ -984,6 +1017,55 @@ function inferHomologName(peak,cls,highMz){
   }
   return null;
 }
+function peakFactsFor(peak){
+  const s=parseSpectrum(peak.spectrum);
+  const top=s.slice().sort((a,b)=>b.intensity-a.intensity);
+  const base=top[0];
+  const highMz=s.reduce((a,p)=>p.intensity>3&&p.mz>a?p.mz:a,0);
+  return [
+    {label:"RT",value:`${peak.rt.toFixed(2)} min`},
+    {label:"Area",value:peak.area.toLocaleString()},
+    {label:"Base peak",value:base?`m/z ${Math.round(base.mz)}`:"n/a"},
+    {label:"Molecular region",value:highMz?`m/z ${Math.round(highMz)}`:"not clear"}
+  ];
+}
+function rankedCandidatesFor(peak){
+  const suggestion=suggestedCallFor(peak);
+  const cls=inferClass(peak);
+  const rows=[];
+  const primaryClass=cls==="unknown"?"other":cls;
+  rows.push({
+    name:suggestion.call,
+    className:primaryClass,
+    confidence:/No strong|uncertain/i.test(suggestion.call)?"tentative class":"tentative compound",
+    reason:suggestion.reason
+  });
+  const homolog=inferHomologName(peak,cls,parseSpectrum(peak.spectrum).reduce((a,p)=>p.intensity>3&&p.mz>a?p.mz:a,0));
+  if(homolog && !rows.some(row=>row.name.toLowerCase().includes(homolog.toLowerCase()))){
+    rows.push({
+      name:homolog,
+      className:primaryClass,
+      confidence:"tentative compound",
+      reason:"Formula or molecular-ion region is compatible with this homolog name."
+    });
+  }
+  if(peak.name && !/^unknown raw peak$/i.test(peak.name) && !/^unknown$/i.test(peak.name) && !rows.some(row=>row.name.toLowerCase()===peak.name.toLowerCase())){
+    rows.push({
+      name:peak.name,
+      className:peak.class||primaryClass,
+      confidence:peak.match>=80?"tentative compound":"tentative class",
+      reason:`Imported source name${peak.match?` with match score ${peak.match}`:""}`
+    });
+  }
+  if(cls==="alkene"){
+    rows.push({name:"unresolved alkene isomer",className:"alkene",confidence:"tentative class",reason:"Unsaturation is supported, but the exact double-bond position is not."});
+  }else if(cls==="methyl-branched alkane"){
+    rows.push({name:"unresolved methyl-branched alkane",className:"methyl-branched alkane",confidence:"tentative class",reason:"Branching is supported, but the exact branch position is not."});
+  }else if(cls==="other" || cls==="unknown"){
+    rows.push({name:"oxygenated or mixed peak",className:"other",confidence:"tentative class",reason:"The current ion pattern does not cleanly support one hydrocarbon assignment."});
+  }
+  return rows.slice(0,4);
+}
 function suggestedCallFor(peak){
   const s=parseSpectrum(peak.spectrum);
   const cls=inferClass(peak);
@@ -1185,6 +1267,31 @@ function renderIonReadout(peak){
     .sort((a,b)=>b.intensity-a.intensity)
     .slice(0,6);
   holder.innerHTML=top.map(ion=>`<div class="ion-chip"><strong>m/z ${Math.round(ion.mz)}</strong><span>${Math.round(ion.intensity)}% rel. abundance</span></div>`).join("");
+}
+function renderPeakFacts(peak){
+  const holder=document.getElementById("peak-facts");
+  if(!holder)return;
+  holder.innerHTML=peakFactsFor(peak).map(item=>`<div class="fact-chip"><strong>${item.label}</strong><span>${item.value}</span></div>`).join("");
+}
+function applyCandidate(candidate){
+  document.getElementById("assigned-name").value=candidate.name;
+  document.getElementById("assigned-class").value=candidate.className;
+  document.getElementById("confidence").value=candidate.confidence;
+  const notes=document.getElementById("notes");
+  if(!notes.value.trim())notes.value=candidate.reason;
+  document.getElementById("save-status").textContent="Candidate applied. Review and save when ready.";
+}
+function renderCandidateWorkbench(peak){
+  const tbody=document.getElementById("candidate-rows");
+  if(!tbody)return;
+  const rows=rankedCandidatesFor(peak);
+  tbody.innerHTML="";
+  rows.forEach((candidate,index)=>{
+    const tr=document.createElement("tr");
+    tr.innerHTML=`<td><strong>${candidate.name}</strong><small>${index===0?"top suggestion":"alternate candidate"}</small></td><td><span class="tag ${classMap[candidate.className]||"unknown"}">${candidate.className}</span></td><td>${candidate.confidence}</td><td>${candidate.reason}</td><td><button class="candidate-action" type="button">Apply</button></td>`;
+    tr.querySelector("button").addEventListener("click",()=>applyCandidate(candidate));
+    tbody.appendChild(tr);
+  });
 }
 function renderIonButtons(){
   const holder=document.getElementById("ion-buttons");
@@ -1434,6 +1541,8 @@ function renderSelected(){
   document.getElementById("suggested-reason").textContent=suggested.reason;
   const evidenceList=document.getElementById("suggested-evidence");
   evidenceList.innerHTML=(suggested.evidence||["No evidence summary available yet."]).map(item=>`<li>${item}</li>`).join("");
+  renderPeakFacts(peak);
+  renderCandidateWorkbench(peak);
   const list=document.getElementById("candidate-list");
   list.innerHTML="";
   candidatesFor(peak).forEach(c=>{
