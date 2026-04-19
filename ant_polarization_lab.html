@@ -908,9 +908,7 @@ SC.addEventListener('mousemove',e=>{
   if(!skyDragTarget)return;
   const{x,y}=scCoords(e),c=clampSky(x,y);
   if(skyDragTarget==='nest'){
-    const dfx=skyFeedX-skyNestX,dfy=skyFeedY-skyNestY;
     skyNestX=c.x;skyNestY=c.y;
-    const nc=clampSky(skyNestX+dfx,skyNestY+dfy);skyFeedX=nc.x;skyFeedY=nc.y;
   }else{skyFeedX=c.x;skyFeedY=c.y;}
   update();
 });
@@ -922,7 +920,7 @@ SC.addEventListener('mousemove',e=>{
   SC.style.cursor=(hitSky(x,y,skyNestX,skyNestY,14)||hitSky(x,y,skyFeedX,skyFeedY,12))?'grab':'default';
 },{passive:true});
 SC.addEventListener('touchstart',e=>{e.preventDefault();const{x,y}=scCoords(e);if(hitSky(x,y,skyNestX,skyNestY,14))skyDragTarget='nest';else if(hitSky(x,y,skyFeedX,skyFeedY,12))skyDragTarget='feeder';},{passive:false});
-SC.addEventListener('touchmove',e=>{e.preventDefault();if(!skyDragTarget)return;const{x,y}=scCoords(e),c=clampSky(x,y);if(skyDragTarget==='nest'){const dfx=skyFeedX-skyNestX,dfy=skyFeedY-skyNestY;skyNestX=c.x;skyNestY=c.y;const nc=clampSky(skyNestX+dfx,skyNestY+dfy);skyFeedX=nc.x;skyFeedY=nc.y;}else{skyFeedX=c.x;skyFeedY=c.y;}update();},{passive:false});
+SC.addEventListener('touchmove',e=>{e.preventDefault();if(!skyDragTarget)return;const{x,y}=scCoords(e),c=clampSky(x,y);if(skyDragTarget==='nest'){skyNestX=c.x;skyNestY=c.y;}else{skyFeedX=c.x;skyFeedY=c.y;}update();},{passive:false});
 SC.addEventListener('touchend',()=>{skyDragTarget=null;});
 
 window.addEventListener('resize',()=>{
