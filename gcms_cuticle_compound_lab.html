@@ -59,6 +59,7 @@ main{width:min(1260px,100%);margin:0 auto;padding:14px clamp(8px,2vw,28px) 34px;
 .control-row input,.control-row select{min-width:0;border:1px solid var(--line-strong);border-radius:6px;padding:6px 8px;background:#fff;color:var(--ink);font-size:12px;}
 .file-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:9px 0;}
 .file-row input{max-width:260px;font-size:12px;}
+.file-row .hidden-input{display:none;}
 .btn{border:1px solid var(--line-strong);border-radius:6px;background:#fff;color:var(--ink);padding:7px 10px;font-size:12px;font-weight:750;}
 .btn:hover,.btn:focus-visible{border-color:var(--blue);background:var(--bluewash);}
 .btn.primary{background:var(--green);border-color:var(--green);color:#fff;}
@@ -83,6 +84,7 @@ main{width:min(1260px,100%);margin:0 auto;padding:14px clamp(8px,2vw,28px) 34px;
 .toggle-btn.active{border-color:var(--blue);background:var(--bluewash);color:var(--blue);}
 .upload-mode{display:none;}
 .upload-mode.active{display:block;}
+.raw-import-status{margin-top:8px;font-size:12px;color:var(--muted);line-height:1.55;}
 canvas{display:block;width:100%;height:auto;background:#fff;}
 .chart-shell{position:relative;border-top:1px solid var(--line);}
 .chart-label{position:absolute;left:10px;top:8px;font-size:10px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:var(--soft);pointer-events:none;}
@@ -266,6 +268,8 @@ tr.selected{background:#EAF3EF;}
         </div>
         <div class="file-row">
           <input id="file-input" type="file" accept=".csv,.CSV,.tsv,.TSV,.txt,.TXT">
+          <input id="folder-input" class="hidden-input" type="file" webkitdirectory directory multiple>
+          <button class="btn" id="choose-folder" type="button">Choose Agilent .D folder</button>
           <button class="btn" id="load-demo">Reload demo</button>
         </div>
         <div class="upload-help">
@@ -283,12 +287,13 @@ tr.selected{background:#EAF3EF;}
             </ul>
           </div>
           <div class="upload-mode" id="upload-mode-raw">
-            <p>If you only have the raw Agilent `.D` folder, the best first target is usually <strong>MSRep.xls</strong> inside that folder. Direct `DATA.MS` parsing is a later step.</p>
+            <p>If you only have the raw Agilent `.D` folder, you can choose the folder here. The app will look for <strong>DATA.MS</strong> and build a first-pass TIC and peak list directly from the raw file.</p>
             <ul>
-              <li><strong>Best bridge file:</strong> `MSRep.xls` if Agilent generated it in the run folder.</li>
-              <li><strong>Not yet uploaded directly here:</strong> `DATA.MS`, `FID1A.CH`, `EDFIL.DAT`, `.ini`, `.val`, and method text files.</li>
-              <li><strong>Raw-data plan:</strong> add `.D` folder support that auto-detects `MSRep.xls` or converts the run into the review format.</li>
+              <li><strong>Works now:</strong> `.D` folders that contain `DATA.MS`.</li>
+              <li><strong>Also useful when present:</strong> `MSRep.xls` and `fileinfo.txt`, but they are not required for the raw import path.</li>
+              <li><strong>Still a first-pass importer:</strong> peak picking is approximate and exact identifications still need your review.</li>
             </ul>
+            <div class="raw-import-status" id="raw-import-status">No raw folder selected yet.</div>
           </div>
         </div>
         <div class="controls">
@@ -635,6 +640,7 @@ let simRunning=true;
 let simFrame=0;
 let simRaf=0;
 let dataSourceLabel="Demo data loaded";
+const rawStatus=document.getElementById("raw-import-status");
 
 function parseSpectrum(text){
   if(!text)return[];
@@ -642,6 +648,122 @@ function parseSpectrum(text){
     const bits=pair.split(/[:=]/);
     return {mz:Number(bits[0]),intensity:Number(bits[1])};
   }).filter(p=>Number.isFinite(p.mz)&&Number.isFinite(p.intensity));
+}
+function mzIntensityToSpectrum(ions,limit=18){
+  return ions
+    .slice()
+    .sort((a,b)=>b.intensity-a.intensity)
+    .slice(0,limit)
+    .sort((a,b)=>a.mz-b.mz)
+    .map(ion=>`${Math.round(ion.mz)}:${Math.round(ion.intensity)}`)
+    .join(" ");
+}
+function readAgilentString(view,offset,gap=1){
+  const len=view.getUint8(offset)*gap;
+  const chars=[];
+  for(let i=0;i<len;i+=gap){
+    const code=view.getUint8(offset+1+i);
+    if(code)chars.push(String.fromCharCode(code));
+  }
+  return chars.join("").trim();
+}
+function parseAgilentMsBuffer(buffer){
+  const view=new DataView(buffer);
+  if(view.getUint32(0,false)!==0x01320000) throw new Error("This DATA.MS header is not the expected ChemStation GC-MS format.");
+  const type=readAgilentString(view,0x4,1);
+  const numTimes=type==="MSD Spectral File" ? view.getUint32(0x116,false) : view.getUint16(0x142,true);
+  let offset=view.getUint16(0x10A,false)*2-2;
+  const scans=[];
+  for(let i=0;i<numTimes&&offset+18<view.byteLength;i+=1){
+    offset+=2;
+    const time=view.getUint32(offset,false); offset+=4;
+    offset+=6;
+    const pairCount=view.getUint16(offset,false); offset+=2;
+    offset+=4;
+    const ions=[];
+    let tic=0;
+    for(let j=0;j<pairCount&&offset+4<=view.byteLength;j+=1){
+      const mz=view.getUint16(offset,false)/20; offset+=2;
+      const enc=view.getUint16(offset,false); offset+=2;
+      const intensity=(8**(enc>>14))*(enc & 0x3fff);
+      ions.push({mz,intensity});
+      tic+=intensity;
+    }
+    offset+=10;
+    scans.push({timeMin:time/60000,tic,ions});
+  }
+  return {
+    type,
+    scans,
+    metadata:{
+      date:readAgilentString(view,0xB2,1),
+      method:readAgilentString(view,0xE4,1)
+    }
+  };
+}
+function smoothValues(values,windowRadius=3){
+  return values.map((_,i)=>{
+    let sum=0,count=0;
+    for(let j=Math.max(0,i-windowRadius);j<=Math.min(values.length-1,i+windowRadius);j+=1){sum+=values[j];count+=1;}
+    return sum/count;
+  });
+}
+function detectRawPeaks(scans){
+  if(!scans.length)return[];
+  const ticValues=scans.map(s=>s.tic);
+  const smooth=smoothValues(ticValues,4);
+  const max=Math.max(...smooth);
+  const candidates=[];
+  for(let i=2;i<smooth.length-2;i+=1){
+    const current=smooth[i];
+    if(current>smooth[i-1]&&current>=smooth[i+1]&&current>max*0.03){
+      if(candidates.length && i-candidates[candidates.length-1].index<8){
+        if(current>candidates[candidates.length-1].height)candidates[candidates.length-1]={index:i,height:current};
+      }else{
+        candidates.push({index:i,height:current});
+      }
+    }
+  }
+  return candidates
+    .sort((a,b)=>b.height-a.height)
+    .slice(0,80)
+    .sort((a,b)=>a.index-b.index)
+    .map((candidate,idx)=>{
+      let left=candidate.index,right=candidate.index;
+      while(left>1&&smooth[left-1]<=smooth[left])left-=1;
+      while(right<smooth.length-2&&smooth[right+1]<=smooth[right])right+=1;
+      let area=0;
+      for(let i=left;i<=right;i+=1)area+=ticValues[i];
+      const scan=scans[candidate.index];
+      const peak={
+        id:`R${String(idx+1).padStart(2,"0")}`,
+        rt:scan.timeMin,
+        area:Math.round(area),
+        name:"Unknown raw peak",
+        formula:"",
+        class:"unknown",
+        match:0,
+        spectrum:mzIntensityToSpectrum(scan.ions),
+        notes:"Imported directly from Agilent DATA.MS. Peak picking is approximate and should be reviewed manually."
+      };
+      peak.class=inferClass(peak);
+      peak.annotation={name:peak.name,class:peak.class,confidence:"tentative class",notes:peak.notes};
+      return peak;
+    });
+}
+async function importAgilentFolder(fileList){
+  const files=[...fileList];
+  const dataFile=files.find(file=>/(^|\/)data\.ms$/i.test(file.webkitRelativePath||file.name));
+  if(!dataFile) throw new Error("I could not find DATA.MS in that folder selection.");
+  rawStatus.textContent=`Reading ${dataFile.webkitRelativePath || dataFile.name}...`;
+  const parsed=parseAgilentMsBuffer(await dataFile.arrayBuffer());
+  const importedPeaks=detectRawPeaks(parsed.scans);
+  if(!importedPeaks.length) throw new Error("The raw file was read, but no usable peaks were detected.");
+  peaks=importedPeaks;
+  selectedId=peaks[0].id;
+  dataSourceLabel=`Raw import from ${(dataFile.webkitRelativePath||dataFile.name).split('/')[0]}`;
+  rawStatus.textContent=`Loaded ${peaks.length} approximate peaks from DATA.MS${parsed.metadata.date?` · acquired ${parsed.metadata.date}`:""}.`;
+  renderSelected();
 }
 function inferClass(peak){
   const s=parseSpectrum(peak.spectrum);
@@ -922,6 +1044,14 @@ document.getElementById("save-annotation").addEventListener("click",()=>{
   renderSelected();
 });
 document.getElementById("export-csv").addEventListener("click",downloadCsv);
+document.getElementById("choose-folder").addEventListener("click",()=>document.getElementById("folder-input").click());
+document.getElementById("folder-input").addEventListener("change",event=>{
+  const files=event.target.files;
+  if(!files||!files.length)return;
+  importAgilentFolder(files).catch(error=>{
+    rawStatus.textContent=error.message;
+  });
+});
 document.getElementById("gcmssim-toggle").addEventListener("click",()=>{
   simRunning=!simRunning;
   document.getElementById("gcmssim-toggle").textContent=simRunning?"Pause":"Play";
