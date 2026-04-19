@@ -256,7 +256,7 @@ button.rst-btn:hover{background:var(--color-background-secondary);}
       <button class="rst-btn" onclick="resetAnim()">Reset</button>
       <span id="phase-lbl">Ready</span>
     </div>
-    <canvas id="top-c" width="310" height="295" style="cursor:default;"></canvas>
+    <canvas id="top-c" width="360" height="295" style="cursor:default;"></canvas>
     <canvas id="angle-c" width="310" height="90" style="margin-top:4px;"></canvas>
   </div>
 </div>
@@ -365,7 +365,7 @@ button.rst-btn:hover{background:var(--color-background-secondary);}
 const SC=document.getElementById('sky-c'),sctx=SC.getContext('2d');
 const TC=document.getElementById('top-c'),tctx=TC.getContext('2d');
 const AC=document.getElementById('angle-c'),actx=AC.getContext('2d');
-const SW=310,SH=310,TCW=310,TCH=295;
+const SW=310,SH=310,TCW=360,TCH=295;
 const SR=134; // sky dome radius in canvas px
 const SCX=SW/2,SCY=SH/2;
 const LAT=33.45,LON=-112.07;
