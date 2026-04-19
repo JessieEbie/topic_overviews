@@ -6,6 +6,9 @@ The first script normalizes exported peak tables into the CSV shape that
 `gcms_cuticle_compound_lab.html` can open. It also adds conservative class hints
 from EI mass-spectrum fragments.
 
+There is now also a raw-run script that turns an Agilent `.D` folder or zipped
+`.D` folder into a workstation bundle JSON that the browser app can reopen.
+
 ## Input table
 
 Use CSV or TSV with any of these columns:
@@ -32,6 +35,34 @@ python3 gcms_pipeline/process_peak_table.py input.csv reviewed_input.csv
 ```
 
 Then open `gcms_cuticle_compound_lab.html` and upload `reviewed_input.csv`.
+
+## Raw Agilent bundle
+
+For a stronger local-processing path, build a workstation bundle from a raw
+Agilent run:
+
+```bash
+python3 gcms_pipeline/process_agilent_run.py /path/to/run.D processed_run.json
+```
+
+or
+
+```bash
+python3 gcms_pipeline/process_agilent_run.py /path/to/run.D.zip processed_run.json
+```
+
+Then open `gcms_cuticle_compound_lab.html` and use **Load project or bundle** to
+open `processed_run.json`.
+
+The bundle includes:
+
+- TIC trace
+- first-pass detected peaks
+- apex-window averaged spectra
+- run metadata from `runstart.txt`, `acqmeth.txt`, and `PRE_POST.INI` when present
+
+This is the beginning of the local analysis core layer. It is still more modest
+than OpenChrom, but it is a better foundation than browser-only raw parsing.
 
 ## Agilent export options
 
@@ -85,8 +116,9 @@ pipeline can convert those folders to open formats such as mzML or NetCDF, then
 do chromatogram reading, peak detection, deconvolution, library search, and
 retention-index calculation before the review step.
 
-This is the most powerful path, but it is not required to start using the
-interface.
+The new `process_agilent_run.py` script is a first step toward that stronger
+local path, even though it is not yet doing full deconvolution or library
+search.
 
 ## Identification caution
 
