@@ -48,7 +48,7 @@ main{width:min(1260px,100%);margin:0 auto;padding:14px clamp(8px,2vw,28px) 34px;
 .panel{display:none;}
 .panel.active{display:block;}
 .review-shell{padding:16px;display:grid;gap:14px;background:#fff;}
-.review-grid{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(340px,0.95fr);gap:14px;align-items:start;}
+.review-grid{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:14px;align-items:start;}
 .review-main,.review-side{display:grid;gap:14px;align-items:start;}
 .review-card{border:1px solid var(--line);border-radius:8px;background:#fff;overflow:hidden;}
 .review-card-body{padding:14px;}
@@ -88,6 +88,10 @@ main{width:min(1260px,100%);margin:0 auto;padding:14px clamp(8px,2vw,28px) 34px;
 .upload-mode.active{display:block;}
 .raw-import-status{margin-top:8px;font-size:12px;color:var(--muted);line-height:1.55;}
 canvas{display:block;width:100%;height:auto;background:#fff;}
+.chart-toolbar{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:10px 12px;border-top:1px solid var(--line);background:#FBFCFD;flex-wrap:wrap;}
+.chart-toolbar h3{font-size:12px;letter-spacing:0.08em;text-transform:uppercase;color:var(--soft);}
+.chart-toolbar p{font-size:12px;color:var(--muted);margin:0;}
+.chart-meta{display:flex;gap:12px;align-items:center;flex-wrap:wrap;}
 .chart-shell{position:relative;border-top:1px solid var(--line);}
 .chart-label{position:absolute;left:10px;top:8px;font-size:10px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:var(--soft);pointer-events:none;}
 .peak-table{border-top:1px solid var(--line);max-height:430px;overflow:auto;}
@@ -296,11 +300,17 @@ tr.selected{background:#EAF3EF;}
         <div class="review-main">
           <div class="review-card">
             <div class="context-strip">
-              <p>Use the chromatogram to see where the strongest features are in the run, then compare that to the peak list on the right. The current importer uses simple peak picking, so treat the plot as the main view of the raw run.</p>
+              <p>Use the chromatogram to see where the strongest features are in the run, then compare that to the spectrum beside it. Drag across the chromatogram to zoom into a time window, then click peaks for closer review.</p>
+            </div>
+            <div class="chart-toolbar">
+              <h3>Total ion chromatogram</h3>
+              <div class="chart-meta">
+                <p>Drag to zoom. Click a peak to inspect it.</p>
+                <button class="btn" id="reset-tic-zoom" type="button">Reset zoom</button>
+              </div>
             </div>
             <div class="chart-shell">
-              <span class="chart-label">Total ion chromatogram</span>
-              <canvas id="tic" width="960" height="320"></canvas>
+              <canvas id="tic" width="960" height="380"></canvas>
             </div>
           </div>
 
@@ -360,6 +370,36 @@ tr.selected{background:#EAF3EF;}
         <div class="review-side">
           <div class="review-card">
             <div class="review-card-body">
+              <div class="next-step">
+                <h3>What happens here?</h3>
+                <p>When you click a peak, this panel shows the mass spectrum and gives a plain-language interpretation of what the ion pattern might mean. It is meant to help you decide whether the peak is probably an alkane, alkene, ester, branched hydrocarbon, or still unresolved.</p>
+              </div>
+              <div class="selected-peak">
+                <div>
+                  <div class="small-note" id="peak-subtitle">Peak review</div>
+                  <h2 id="peak-title">Select a peak</h2>
+                  <p id="peak-description">Click a chromatogram peak or a table row to inspect the spectrum and candidate interpretations.</p>
+                </div>
+                <div class="score-box">
+                  <div class="score-number" id="match-score">--</div>
+                  <span>working confidence</span>
+                </div>
+              </div>
+              <div class="visual-card">
+                <div class="chart-toolbar">
+                  <h3>Mass spectrum</h3>
+                  <p>Selected peak ion pattern</p>
+                </div>
+                <div class="chart-shell">
+                  <canvas id="spectrum" width="760" height="380"></canvas>
+                </div>
+              </div>
+              <div class="candidate-list" id="candidate-list"></div>
+            </div>
+          </div>
+
+          <div class="review-card">
+            <div class="review-card-body">
               <div class="pane-title">
                 <h2>Peaks to review</h2>
                 <span class="small-note">click a row or chromatogram peak</span>
@@ -388,33 +428,6 @@ tr.selected{background:#EAF3EF;}
                 <thead><tr><th>RT</th><th>Peak</th><th>Class</th><th>Confidence</th></tr></thead>
                 <tbody id="peak-rows"></tbody>
               </table>
-            </div>
-          </div>
-
-          <div class="review-card">
-            <div class="review-card-body">
-              <div class="next-step">
-                <h3>What happens here?</h3>
-                <p>When you click a peak, this panel shows the mass spectrum and gives a plain-language interpretation of what the ion pattern might mean. It is meant to help you decide whether the peak is probably an alkane, alkene, ester, branched hydrocarbon, or still unresolved.</p>
-              </div>
-              <div class="selected-peak">
-                <div>
-                  <div class="small-note" id="peak-subtitle">Peak review</div>
-                  <h2 id="peak-title">Select a peak</h2>
-                  <p id="peak-description">Click a chromatogram peak or a table row to inspect the spectrum and candidate interpretations.</p>
-                </div>
-                <div class="score-box">
-                  <div class="score-number" id="match-score">--</div>
-                  <span>working confidence</span>
-                </div>
-              </div>
-              <div class="visual-card">
-                <div class="chart-shell">
-                  <span class="chart-label">Mass spectrum</span>
-                  <canvas id="spectrum" width="760" height="320"></canvas>
-                </div>
-              </div>
-              <div class="candidate-list" id="candidate-list"></div>
             </div>
           </div>
         </div>
@@ -685,6 +698,8 @@ let simFrame=0;
 let simRaf=0;
 let dataSourceLabel="Demo data loaded";
 const rawStatus=document.getElementById("raw-import-status");
+let ticZoom=null;
+let ticDrag=null;
 const gcmsStages=[
   {
     key:"injector",
@@ -837,6 +852,7 @@ async function importAgilentFolder(fileList){
   if(!importedPeaks.length) throw new Error("The raw file was read, but no usable peaks were detected.");
   peaks=importedPeaks;
   selectedId=peaks[0].id;
+  ticZoom=null;
   dataSourceLabel=`Raw import from ${(dataFile.webkitRelativePath||dataFile.name).split('/')[0]}`;
   rawStatus.textContent=`Loaded ${peaks.length} approximate peaks from DATA.MS${parsed.metadata.date?` · acquired ${parsed.metadata.date}`:""}.`;
   renderSelected();
@@ -853,6 +869,7 @@ async function importAgilentZip(file){
   if(!importedPeaks.length) throw new Error("The ZIP opened, but no usable peaks were detected from DATA.MS.");
   peaks=importedPeaks;
   selectedId=peaks[0].id;
+  ticZoom=null;
   const root=(dataName.split("/").find(Boolean) || file.name).replace(/\/$/,"");
   dataSourceLabel=`Raw import from ${root}`;
   rawStatus.textContent=`Loaded ${peaks.length} approximate peaks from ZIP${parsed.metadata.date?` · acquired ${parsed.metadata.date}`:""}.`;
@@ -914,29 +931,51 @@ function drawSpectrumData(ctx,canvas,data,highlight,label){
   ctx.fillText("m/z",w-p-18,h-10);
   ctx.fillText(label,p,18);
 }
+function getTicDomain(){
+  const baseMin=Math.min(...peaks.map(x=>x.rt))-0.8;
+  const baseMax=Math.max(...peaks.map(x=>x.rt))+0.8;
+  if(!ticZoom)return{minRt:baseMin,maxRt:baseMax,baseMin,baseMax};
+  return{minRt:ticZoom.minRt,maxRt:ticZoom.maxRt,baseMin,baseMax};
+}
+function ticXFor(rt,w,p,minRt,maxRt){
+  return p+(rt-minRt)/(maxRt-minRt)*(w-p*2);
+}
+function ticRtFor(x,w,p,minRt,maxRt){
+  return minRt+((x-p)/(w-p*2))*(maxRt-minRt);
+}
 function drawTic(){
   const w=tic.width,h=tic.height,p=34;
   drawAxes(ticCtx,w,h,p);
-  const minRt=Math.min(...peaks.map(x=>x.rt))-0.8;
-  const maxRt=Math.max(...peaks.map(x=>x.rt))+0.8;
-  const maxArea=Math.max(...peaks.map(x=>x.area));
-  const xFor=rt=>p+(rt-minRt)/(maxRt-minRt)*(w-p*2);
+  const {minRt,maxRt}=getTicDomain();
+  const visiblePeaks=peaks.filter(peak=>peak.rt>=minRt&&peak.rt<=maxRt);
+  const sourcePeaks=visiblePeaks.length?visiblePeaks:peaks;
+  const maxArea=Math.max(...sourcePeaks.map(x=>x.area));
+  const xFor=rt=>ticXFor(rt,w,p,minRt,maxRt);
   const yFor=a=>h-p-(a/maxArea)*(h-p*2);
   ticCtx.strokeStyle="#177E63";ticCtx.lineWidth=2;
   ticCtx.beginPath();ticCtx.moveTo(p,yFor(0));
-  peaks.forEach(peak=>{
+  sourcePeaks.forEach(peak=>{
     const x=xFor(peak.rt), y=yFor(peak.area);
     ticCtx.lineTo(x-12,h-p);
     ticCtx.quadraticCurveTo(x-6,y+24,x,y);
     ticCtx.quadraticCurveTo(x+6,y+24,x+12,h-p);
   });
   ticCtx.stroke();
-  peaks.forEach(peak=>{
+  sourcePeaks.forEach(peak=>{
     const x=xFor(peak.rt), y=yFor(peak.area);
     ticCtx.fillStyle=peak.id===selectedId?"#A23A32":"#14212B";
     ticCtx.beginPath();ticCtx.arc(x,y,5,0,Math.PI*2);ticCtx.fill();
     ticCtx.fillStyle="#50616F";ticCtx.fillText(peak.id,x-8,y-10);
   });
+  if(ticDrag){
+    const left=Math.min(ticDrag.startX,ticDrag.currentX);
+    const width=Math.abs(ticDrag.currentX-ticDrag.startX);
+    ticCtx.fillStyle="rgba(29,94,158,0.16)";
+    ticCtx.fillRect(left,p,width,h-p*2);
+    ticCtx.strokeStyle="#1D5E9E";
+    ticCtx.lineWidth=1.5;
+    ticCtx.strokeRect(left,p,width,h-p*2);
+  }
   ticCtx.fillStyle="#758594";
   ticCtx.fillText(`${minRt.toFixed(1)} min`,p,h-9);
   ticCtx.fillText(`${maxRt.toFixed(1)} min`,w-p-48,h-9);
@@ -1136,6 +1175,10 @@ function setupHostedAppSupport(){
     chooseZipBtn.title="ZIP support failed to load.";
   }
 }
+function getTicCanvasX(event){
+  const rect=tic.getBoundingClientRect();
+  return (event.clientX-rect.left)*(tic.width/rect.width);
+}
 document.querySelectorAll(".tab").forEach(tab=>tab.addEventListener("click",()=>{
   document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
   document.querySelectorAll(".panel").forEach(p=>p.classList.remove("active"));
@@ -1143,20 +1186,51 @@ document.querySelectorAll(".tab").forEach(tab=>tab.addEventListener("click",()=>
   document.getElementById(`${tab.dataset.tab}-panel`).classList.add("active");
 }));
 document.querySelectorAll(".toggle-btn").forEach(btn=>btn.addEventListener("click",()=>setUploadMode(btn.dataset.uploadMode)));
-tic.addEventListener("click",event=>{
-  const rect=tic.getBoundingClientRect();
-  const x=(event.clientX-rect.left)*(tic.width/rect.width);
-  const minRt=Math.min(...peaks.map(p=>p.rt))-0.8,maxRt=Math.max(...peaks.map(p=>p.rt))+0.8,pad=34;
-  const rt=minRt+((x-pad)/(tic.width-pad*2))*(maxRt-minRt);
-  const nearest=peaks.reduce((best,p)=>Math.abs(p.rt-rt)<Math.abs(best.rt-rt)?p:best,peaks[0]);
-  selectPeak(nearest.id);
+tic.addEventListener("mousedown",event=>{
+  const x=getTicCanvasX(event);
+  ticDrag={startX:x,currentX:x};
+  drawTic();
+});
+tic.addEventListener("mousemove",event=>{
+  if(!ticDrag)return;
+  ticDrag.currentX=getTicCanvasX(event);
+  drawTic();
+});
+window.addEventListener("mouseup",event=>{
+  if(!ticDrag)return;
+  const x=getTicCanvasX(event);
+  const dragWidth=Math.abs(x-ticDrag.startX);
+  const {minRt,maxRt}=getTicDomain();
+  const pad=34;
+  if(dragWidth>14){
+    const left=Math.max(pad,Math.min(ticDrag.startX,x));
+    const right=Math.min(tic.width-pad,Math.max(ticDrag.startX,x));
+    if(right-left>8){
+      ticZoom={
+        minRt:ticRtFor(left,tic.width,pad,minRt,maxRt),
+        maxRt:ticRtFor(right,tic.width,pad,minRt,maxRt)
+      };
+    }
+  }else{
+    const rt=ticRtFor(x,tic.width,pad,minRt,maxRt);
+    const visiblePeaks=peaks.filter(peak=>peak.rt>=minRt&&peak.rt<=maxRt);
+    const nearest=(visiblePeaks.length?visiblePeaks:peaks).reduce((best,p)=>Math.abs(p.rt-rt)<Math.abs(best.rt-rt)?p:best,(visiblePeaks.length?visiblePeaks:peaks)[0]);
+    selectPeak(nearest.id);
+  }
+  ticDrag=null;
+  drawTic();
+});
+document.getElementById("reset-tic-zoom").addEventListener("click",()=>{
+  ticZoom=null;
+  ticDrag=null;
+  drawTic();
 });
 document.getElementById("filter").addEventListener("input",renderRows);
 document.getElementById("class-filter").addEventListener("change",renderRows);
-document.getElementById("load-demo").addEventListener("click",()=>{peaks=demoPeaks.map(p=>({...p,annotation:{name:p.name,class:p.class,confidence:p.match>84?"probable compound":"tentative compound",notes:p.notes}}));selectedId=peaks[0].id;dataSourceLabel="Demo data loaded";renderSelected();});
+document.getElementById("load-demo").addEventListener("click",()=>{peaks=demoPeaks.map(p=>({...p,annotation:{name:p.name,class:p.class,confidence:p.match>84?"probable compound":"tentative compound",notes:p.notes}}));selectedId=peaks[0].id;ticZoom=null;dataSourceLabel="Demo data loaded";renderSelected();});
 document.getElementById("file-input").addEventListener("change",event=>{
   const file=event.target.files[0];if(!file)return;
-  file.text().then(text=>{peaks=parseDelimited(text);selectedId=peaks[0]?.id;dataSourceLabel=`Loaded ${file.name}`;renderSelected();});
+  file.text().then(text=>{peaks=parseDelimited(text);selectedId=peaks[0]?.id;ticZoom=null;dataSourceLabel=`Loaded ${file.name}`;renderSelected();});
 });
 document.getElementById("save-annotation").addEventListener("click",()=>{
   const peak=peaks.find(p=>p.id===selectedId);if(!peak)return;
