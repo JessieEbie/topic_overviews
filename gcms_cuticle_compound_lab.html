@@ -144,6 +144,15 @@ tr.selected{background:#EAF3EF;}
 .detail-cell{border:1px solid var(--line);border-radius:8px;background:#fff;padding:9px;}
 .detail-cell strong{display:block;font-size:11px;color:var(--muted);margin-bottom:3px;text-transform:uppercase;letter-spacing:.05em;}
 .detail-cell span{display:block;font-size:13px;color:var(--ink);}
+.homolog-panel{border:1px solid var(--line);border-radius:8px;background:#FBFCFD;padding:10px;margin-top:10px;}
+.homolog-panel h3{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--soft);margin-bottom:8px;}
+.homolog-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;}
+.homolog-box{border:1px solid var(--line);border-radius:8px;background:#fff;padding:9px;}
+.homolog-box strong{display:block;font-size:11px;color:var(--muted);margin-bottom:3px;text-transform:uppercase;letter-spacing:.05em;}
+.homolog-box span{display:block;font-size:13px;color:var(--ink);}
+.homolog-panel p,.homolog-panel li{font-size:12px;color:var(--muted);line-height:1.55;}
+.homolog-panel ul{padding-left:17px;margin-top:6px;}
+.homolog-panel .callout{margin-top:8px;padding-top:8px;border-top:1px solid var(--line);}
 .candidate-workbench{border:1px solid var(--line);border-radius:8px;background:#fff;overflow:hidden;margin-top:10px;}
 .candidate-workbench-head{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:10px 12px;border-bottom:1px solid var(--line);background:#FBFCFD;flex-wrap:wrap;}
 .candidate-workbench-head h3{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--soft);}
@@ -404,6 +413,16 @@ tr.selected{background:#EAF3EF;}
                 </div>
               </div>
               <div class="details-grid" id="peak-details-grid"></div>
+              <div class="homolog-panel" id="molecular-family-panel">
+                <h3>M+ / homolog calculator</h3>
+                <div class="homolog-grid" id="molecular-family-grid"></div>
+                <div class="callout">
+                  <p id="molecular-family-summary">Pick a peak to see how the molecular-ion region maps onto a homolog family.</p>
+                  <ul id="molecular-family-notes">
+                    <li>The workstation will use the observed molecular-ion region together with the ion series.</li>
+                  </ul>
+                </div>
+              </div>
               <div class="suggestion-strip">
                 <div class="suggestion-card">
                   <h3>Suggested call</h3>
@@ -1419,6 +1438,28 @@ function inferMolecularIonFamily(peak,highMz){
   }
   return null;
 }
+function homologOptionsForFamily(familyInfo){
+  if(!familyInfo)return [];
+  const c=familyInfo.carbonCount;
+  if(!Number.isInteger(c) || c<=0)return [];
+  if(familyInfo.family==="alkane family"){
+    const straight=alkaneNames[c] || `C${c} alkane`;
+    const branched=methylBranchedNameForTotalCarbons(c);
+    return [straight, branched ? `${branched} isomer` : null].filter(Boolean);
+  }
+  if(familyInfo.family==="alkene family"){
+    const alkene=alkeneNameForCarbons(c) || `C${c} alkene`;
+    return [alkene, `unresolved ${alkene} isomer`];
+  }
+  if(familyInfo.family==="diene family"){
+    return [`C${c} diene`, `unresolved C${c} diene isomer`];
+  }
+  if(familyInfo.family==="methyl ester family"){
+    const ester=methylEsterNameForTotalCarbons(c);
+    return [ester || `C${c} methyl ester`];
+  }
+  return [];
+}
 function inferHomologName(peak,cls,highMz){
   const info=formulaInfo(peak.formula);
   if(info){
@@ -1664,6 +1705,44 @@ function renderPeakDetailsGrid(peak){
     {label:"Source / quad",value:(currentRunMeta?.sourceTemp||currentRunMeta?.quadTemp)?`${currentRunMeta?.sourceTemp||"n/a"} / ${currentRunMeta?.quadTemp||"n/a"}`:null}
   ];
   holder.innerHTML=entries.map(entry=>`<div class="detail-cell"><strong>${entry.label}</strong><span>${formatPeakDetailValue(entry.value)}</span></div>`).join("");
+}
+function renderMolecularFamilyPanel(peak){
+  const grid=document.getElementById("molecular-family-grid");
+  const summary=document.getElementById("molecular-family-summary");
+  const notes=document.getElementById("molecular-family-notes");
+  if(!grid || !summary || !notes)return;
+  const spectrum=parseSpectrum(peak.spectrum);
+  const highMz=spectrum.reduce((a,p)=>p.intensity>3&&p.mz>a?p.mz:a,0);
+  const familyInfo=inferMolecularIonFamily(peak,highMz);
+  const options=homologOptionsForFamily(familyInfo);
+  grid.innerHTML=[
+    {label:"Observed M+",value:highMz?`m/z ${Math.round(highMz)}`:"not clear"},
+    {label:"Inferred family",value:familyInfo?familyInfo.label:"not resolved"},
+    {label:"Possible names",value:options.length?options.join(" / "):"not enough information"},
+    {label:"What to remember",value:familyInfo&&familyInfo.family==="alkane family"?"same M+ can also fit methyl-branched isomers":"use the ion series and RI to refine this family"}
+  ].map(item=>`<div class="homolog-box"><strong>${item.label}</strong><span>${item.value}</span></div>`).join("");
+  if(!familyInfo){
+    summary.textContent="The molecular-ion region is too weak or ambiguous to assign a homolog family confidently from M+ alone.";
+    notes.innerHTML=[
+      "In EI GC-MS, the molecular ion can be weak, especially for long hydrocarbons.",
+      "Use the 14-unit ion series, retention behavior, and branch-specific fragments to keep working."
+    ].map(item=>`<li>${item}</li>`).join("");
+    return;
+  }
+  summary.textContent=`Observed M+ ${familyInfo.nominal} suggests ${familyInfo.label}. ${familyInfo.reason}`;
+  const noteItems=[
+    "This panel uses the nominal molecular-ion region as a family-level clue, then the rest of the spectrum should refine the call."
+  ];
+  if(familyInfo.family==="alkane family"){
+    noteItems.push("A straight-chain alkane and a methyl-branched alkane with the same total carbon number share the same molecular weight.");
+    noteItems.push("Use the 14-unit hydrocarbon series, retention index, and branch-local fragments to decide whether the peak is straight-chain or branched.");
+  }else if(familyInfo.family==="alkene family"){
+    noteItems.push("An alkene family assignment from M+ still needs allylic ions such as 55, 69, 83, or 97 to support unsaturation.");
+    noteItems.push("Double-bond position still needs stronger evidence such as RI, derivatization, or standards.");
+  }else{
+    noteItems.push("Treat this as a homolog-family clue rather than a finished identification.");
+  }
+  notes.innerHTML=noteItems.map(item=>`<li>${item}</li>`).join("");
 }
 function drawSpectrumData(ctx,canvas,data,highlight,label){
   const w=canvas.width,h=canvas.height,p=34;
@@ -2076,6 +2155,7 @@ function renderSelected(){
   const evidenceList=document.getElementById("suggested-evidence");
   evidenceList.innerHTML=(suggested.evidence||["No evidence summary available yet."]).map(item=>`<li>${item}</li>`).join("");
   renderPeakDetailsGrid(peak);
+  renderMolecularFamilyPanel(peak);
   renderPeakFacts(peak);
   renderCandidateWorkbench(peak);
   const list=document.getElementById("candidate-list");
