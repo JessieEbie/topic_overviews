@@ -17,6 +17,7 @@
 :root{
   --bg:#F7FAFC;
   --surface:#FFFFFF;
+  --surface-alt:#F1F6FA;
   --ink:#102033;
   --muted:#46576B;
   --soft:#6B7C91;
@@ -24,7 +25,13 @@
   --accent:#1467B8;
   --accent-dark:#0E447A;
   --green:#0E8F6D;
+  --teal:#0D8C93;
+  --navy:#153A63;
+  --rose:#B65D63;
   --wash:#EAF3EF;
+  --teal-wash:#E7F7F6;
+  --blue-wash:#EAF2FB;
+  --shadow:0 24px 60px rgba(16,32,51,0.08);
 }
 html{min-height:100%;background:var(--bg);scroll-behavior:smooth;}
 body{min-height:100%;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--ink);background:var(--bg);line-height:1.5;}
@@ -34,8 +41,12 @@ a{color:inherit;}
 .brand{display:flex;flex-direction:column;gap:1px;text-decoration:none;}
 .eyebrow{font-size:11px;font-weight:800;letter-spacing:0.14em;text-transform:uppercase;color:var(--accent);}
 .brand-title{font-size:18px;line-height:1.1;font-weight:760;letter-spacing:0;}
+.header-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end;}
 .nav-link{font-size:13px;font-weight:700;color:var(--accent);text-decoration:none;}
 .nav-link:hover,.nav-link:focus-visible{text-decoration:underline;}
+.nav-chip{display:inline-flex;align-items:center;gap:8px;border:1px solid rgba(234,242,251,0.8);border-radius:999px;padding:8px 12px;background:rgba(255,255,255,0.74);font-size:12px;font-weight:750;color:var(--navy);text-decoration:none;transition:transform 180ms ease,background 180ms ease,border-color 180ms ease;}
+.nav-chip span{display:inline-flex;align-items:center;justify-content:center;min-width:22px;height:22px;padding:0 7px;border-radius:999px;background:var(--blue-wash);color:var(--accent-dark);font-size:11px;font-weight:800;}
+.nav-chip:hover,.nav-chip:focus-visible{transform:translateY(-1px);background:#fff;border-color:rgba(20,103,184,0.18);}
 .hero{position:relative;min-height:360px;overflow:hidden;display:flex;align-items:stretch;background:#10251F;}
 .hero-media{position:absolute;inset:0;background-image:linear-gradient(90deg,rgba(9,30,23,0.9) 0%,rgba(9,30,23,0.76) 36%,rgba(9,30,23,0.18) 74%),url("https://images.unsplash.com/photo-1473773508845-188df298d2d1?auto=format&fit=crop&w=1800&q=82");background-size:cover;background-position:center;transform:scale(1.02);animation:heroDrift 12s ease-out forwards;}
 .hero-inner{position:relative;width:min(1180px,100%);margin:0 auto;padding:clamp(36px,5vw,58px) clamp(18px,4vw,34px);display:grid;grid-template-columns:minmax(0,600px) minmax(260px,1fr);gap:clamp(28px,6vw,70px);align-items:end;}
@@ -43,28 +54,57 @@ a{color:inherit;}
 .hero-kicker{font-size:11px;font-weight:800;letter-spacing:0.16em;text-transform:uppercase;color:#9DD7C8;margin-bottom:10px;}
 h1{font-size:clamp(38px,6vw,72px);line-height:0.94;font-weight:790;letter-spacing:0;color:#fff;max-width:640px;}
 .hero-copy p{font-size:clamp(15px,1.6vw,18px);line-height:1.55;color:rgba(255,255,255,0.82);max-width:520px;margin-top:18px;}
+.hero-summary{display:flex;gap:12px;flex-wrap:wrap;margin-top:24px;}
+.hero-pill{display:flex;align-items:center;gap:10px;padding:10px 14px;border:1px solid rgba(255,255,255,0.16);border-radius:16px;background:rgba(255,255,255,0.08);backdrop-filter:blur(10px);}
+.hero-pill strong{display:block;font-size:18px;line-height:1;color:#fff;}
+.hero-pill span{display:block;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:rgba(255,255,255,0.74);}
 .hero-note{align-self:end;color:rgba(255,255,255,0.82);border-left:1px solid rgba(255,255,255,0.34);padding-left:18px;animation:fadeIn 900ms ease-out 160ms both;}
 .hero-note strong{display:block;color:#fff;font-size:14px;margin-bottom:6px;}
 .hero-note span{display:block;font-size:13px;line-height:1.6;max-width:330px;}
 main{width:min(1180px,100%);margin:0 auto;padding:clamp(44px,7vw,76px) clamp(18px,4vw,34px) 58px;}
-.section-top{display:grid;grid-template-columns:minmax(0,0.95fr) minmax(260px,0.55fr);gap:clamp(26px,6vw,72px);align-items:end;margin-bottom:22px;}
+.section-top{display:grid;grid-template-columns:minmax(0,0.95fr) minmax(260px,0.55fr);gap:clamp(26px,6vw,72px);align-items:end;margin-bottom:28px;}
 .section-label{font-size:12px;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;color:var(--accent);margin-bottom:10px;}
 .section-top h2{font-size:clamp(30px,4.6vw,58px);line-height:0.98;font-weight:780;letter-spacing:0;max-width:720px;}
 .section-top p{font-size:15px;color:var(--muted);line-height:1.7;max-width:390px;}
-.app-section + .app-section{margin-top:38px;}
-.app-section-heading{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-bottom:14px;}
-.app-section-heading h3{font-size:clamp(18px,2.4vw,28px);line-height:1.05;font-weight:760;color:var(--ink);}
-.app-section-heading p{font-size:14px;color:var(--muted);max-width:460px;}
-.app-list{border-top:1px solid var(--line);}
-.app-link{position:relative;display:grid;grid-template-columns:minmax(0,1fr) minmax(150px,220px);gap:24px;align-items:center;padding:26px 0;border-bottom:1px solid var(--line);text-decoration:none;transition:padding-left 180ms ease;}
-.app-link::before{content:"";position:absolute;left:0;top:24px;bottom:24px;width:3px;border-radius:8px;background:var(--green);opacity:0;transform:scaleY(0.5);transition:opacity 180ms ease,transform 180ms ease;}
-.app-link h3{font-size:clamp(22px,3vw,34px);line-height:1.08;font-weight:760;letter-spacing:0;margin-bottom:9px;color:var(--ink);}
+.browse-grid{display:grid;gap:28px;}
+.app-section{position:relative;border:1px solid rgba(217,227,238,0.92);border-radius:28px;padding:26px;background:linear-gradient(180deg,rgba(255,255,255,0.96) 0%,rgba(255,255,255,0.92) 100%);box-shadow:var(--shadow);overflow:hidden;}
+.app-section::after{content:"";position:absolute;inset:auto -50px -80px auto;width:220px;height:220px;border-radius:50%;opacity:0.8;pointer-events:none;}
+.app-section.simulations{background:linear-gradient(180deg,#F8FCFB 0%,#FFFFFF 100%);}
+.app-section.simulations::after{background:radial-gradient(circle,var(--teal-wash) 0%,rgba(231,247,246,0) 72%);}
+.app-section.analysis{background:linear-gradient(180deg,#F7FAFE 0%,#FFFFFF 100%);}
+.app-section.analysis::after{background:radial-gradient(circle,var(--blue-wash) 0%,rgba(234,242,251,0) 72%);}
+.app-section-heading{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:20px;align-items:end;padding-bottom:18px;border-bottom:1px solid rgba(217,227,238,0.9);}
+.section-copy{max-width:640px;}
+.section-tag{display:inline-flex;align-items:center;gap:8px;font-size:11px;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;border-radius:999px;padding:6px 10px;margin-bottom:14px;}
+.simulations .section-tag{background:var(--teal-wash);color:var(--teal);}
+.analysis .section-tag{background:var(--blue-wash);color:var(--accent-dark);}
+.app-section-heading h3{font-size:clamp(24px,3.1vw,38px);line-height:1.02;font-weight:760;color:var(--ink);}
+.app-section-heading p{font-size:15px;color:var(--muted);max-width:520px;margin-top:10px;}
+.section-stats{display:grid;grid-template-columns:repeat(2,minmax(90px,1fr));gap:10px;min-width:min(220px,100%);}
+.stat-box{padding:14px 16px;border-radius:18px;background:rgba(255,255,255,0.78);border:1px solid rgba(217,227,238,0.96);text-align:left;}
+.stat-box strong{display:block;font-size:22px;line-height:1;color:var(--ink);}
+.stat-box span{display:block;font-size:11px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:var(--soft);margin-top:8px;}
+.app-list{display:grid;gap:16px;padding-top:20px;}
+.app-link{position:relative;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:24px;align-items:end;padding:20px 22px;border:1px solid rgba(217,227,238,0.96);border-radius:22px;background:rgba(255,255,255,0.88);text-decoration:none;transition:transform 180ms ease,box-shadow 180ms ease,border-color 180ms ease;}
+.app-link::before{content:"";position:absolute;left:0;top:16px;bottom:16px;width:4px;border-radius:999px;opacity:1;transform:none;}
+.simulations .app-link::before{background:linear-gradient(180deg,#12A8A0 0%,#0E8F6D 100%);}
+.analysis .app-link::before{background:linear-gradient(180deg,#1F78D1 0%,#1467B8 100%);}
+.app-body{padding-left:12px;}
+.app-header{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:10px;}
+.app-link h3{font-size:clamp(22px,3vw,34px);line-height:1.08;font-weight:760;letter-spacing:0;color:var(--ink);}
+.app-type{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border-radius:999px;font-size:11px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;white-space:nowrap;}
+.simulations .app-type{background:var(--teal-wash);color:var(--teal);}
+.analysis .app-type{background:var(--blue-wash);color:var(--accent-dark);}
 .app-link p{font-size:15px;color:var(--muted);max-width:760px;}
-.app-meta{display:flex;align-items:center;justify-content:space-between;gap:12px;color:var(--soft);font-size:12px;font-weight:750;text-transform:uppercase;letter-spacing:0.08em;}
-.open-label{color:var(--accent);font-size:13px;font-weight:800;text-transform:none;letter-spacing:0;}
-.app-link:hover,.app-link:focus-visible{padding-left:14px;}
-.app-link:hover::before,.app-link:focus-visible::before{opacity:1;transform:scaleY(1);}
-.app-link:hover h3,.app-link:focus-visible h3{color:var(--accent-dark);}
+.app-meta{display:grid;gap:8px;justify-items:end;align-self:stretch;min-width:165px;}
+.sort-label{font-size:11px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:var(--soft);}
+.open-label{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:0 18px;border-radius:999px;background:var(--ink);color:#fff;font-size:13px;font-weight:800;text-transform:none;letter-spacing:0;transition:transform 180ms ease,background 180ms ease;}
+.simulations .open-label{background:var(--teal);}
+.analysis .open-label{background:var(--accent);}
+.app-link:hover,.app-link:focus-visible{transform:translateY(-2px);box-shadow:0 18px 40px rgba(16,32,51,0.1);}
+.app-link:hover .open-label,.app-link:focus-visible .open-label{transform:translateX(2px);}
+.simulations .app-link:hover,.simulations .app-link:focus-visible{border-color:rgba(13,140,147,0.28);}
+.analysis .app-link:hover,.analysis .app-link:focus-visible{border-color:rgba(20,103,184,0.28);}
 footer{width:min(1180px,100%);margin:0 auto;padding:0 clamp(18px,4vw,34px) 30px;color:var(--soft);font-size:12px;}
 @keyframes riseIn{
   from{opacity:0;transform:translateY(16px);}
@@ -84,17 +124,24 @@ footer{width:min(1180px,100%);margin:0 auto;padding:0 clamp(18px,4vw,34px) 30px;
 }
 @media (max-width:780px){
   .site-header{position:static;}
-  .header-inner{padding:14px 18px;}
+  .header-inner{padding:14px 18px;align-items:flex-start;flex-direction:column;}
+  .header-actions{justify-content:flex-start;}
   .hero{min-height:auto;}
   .hero-media{background-image:linear-gradient(180deg,rgba(9,30,23,0.84) 0%,rgba(9,30,23,0.72) 48%,rgba(9,30,23,0.42) 100%),url("https://images.unsplash.com/photo-1473773508845-188df298d2d1?auto=format&fit=crop&w=1100&q=82");}
   .hero-inner{grid-template-columns:1fr;padding:38px 18px;gap:30px;}
   h1{font-size:clamp(38px,13vw,58px);}
   .hero-copy p{font-size:16px;}
+  .hero-summary{gap:10px;}
+  .hero-pill{width:100%;}
   .hero-note{border-left:none;border-top:1px solid rgba(255,255,255,0.3);padding-left:0;padding-top:15px;}
   .section-top{grid-template-columns:1fr;gap:14px;}
-  .app-section-heading{align-items:flex-start;flex-direction:column;}
-  .app-link{grid-template-columns:1fr;gap:14px;}
-  .app-meta{justify-content:flex-start;}
+  .app-section{padding:20px 18px;border-radius:24px;}
+  .app-section-heading{grid-template-columns:1fr;align-items:flex-start;}
+  .section-stats{grid-template-columns:repeat(2,minmax(0,1fr));width:100%;}
+  .app-link{grid-template-columns:1fr;gap:16px;padding:18px;}
+  .app-header{flex-direction:column;align-items:flex-start;}
+  .app-meta{justify-items:start;min-width:0;}
+  .open-label{min-height:40px;}
 }
 </style>
 </head>
@@ -105,7 +152,11 @@ footer{width:min(1180px,100%);margin:0 auto;padding:0 clamp(18px,4vw,34px) 30px;
       <span class="eyebrow">Jessie Ebie</span>
       <span class="brand-title">Topic Overviews</span>
     </a>
-    <a class="nav-link" href="#apps">Available apps</a>
+    <div class="header-actions">
+      <a class="nav-link" href="#apps">Available apps</a>
+      <a class="nav-chip" href="#simulations-title">Simulations <span>1</span></a>
+      <a class="nav-chip" href="#analysis-tools-title">Analysis <span>1</span></a>
+    </div>
   </div>
 </header>
 
@@ -115,7 +166,27 @@ footer{width:min(1180px,100%);margin:0 auto;padding:0 clamp(18px,4vw,34px) 30px;
     <div class="hero-copy">
       <div class="hero-kicker">Interactive science tools</div>
       <h1 id="page-title">Topic Overviews</h1>
-      <p>Browser-based simulations for exploring scientific ideas in motion, built for classes, workshops, and curious detours.</p>
+      <p>Interactive models and data tools for exploring behavior, testing assumptions, and making scientific ideas easier to see.</p>
+      <div class="hero-summary" aria-label="Collection summary">
+        <div class="hero-pill">
+          <div>
+            <strong>2</strong>
+            <span>Total apps</span>
+          </div>
+        </div>
+        <div class="hero-pill">
+          <div>
+            <strong>1</strong>
+            <span>Simulation</span>
+          </div>
+        </div>
+        <div class="hero-pill">
+          <div>
+            <strong>1</strong>
+            <span>Analysis tool</span>
+          </div>
+        </div>
+      </div>
     </div>
     <aside class="hero-note" aria-label="Collection note">
       <strong>One focused tool at a time.</strong>
@@ -130,41 +201,74 @@ footer{width:min(1180px,100%);margin:0 auto;padding:0 clamp(18px,4vw,34px) 30px;
       <div class="section-label" id="apps">Available apps</div>
       <h2 id="overview-title">Choose a model and start experimenting.</h2>
     </div>
+    <p>Browse by how you want to work: dynamic systems to manipulate, or data-heavy tools to inspect and interpret.</p>
   </section>
 
-  <section aria-label="App list">
-    <div class="app-section" aria-labelledby="simulations-title">
+  <section class="browse-grid" aria-label="App list">
+    <div class="app-section simulations" aria-labelledby="simulations-title">
       <div class="app-section-heading">
-        <h3 id="simulations-title">Simulations</h3>
-        <p>Interactive models for testing ideas by changing conditions and watching the system respond.</p>
+        <div class="section-copy">
+          <div class="section-tag">Manipulate the system</div>
+          <h3 id="simulations-title">Simulations</h3>
+          <p>Interactive models for testing ideas by changing conditions and watching the system respond.</p>
+        </div>
+        <div class="section-stats" aria-label="Simulation stats">
+          <div class="stat-box">
+            <strong>1</strong>
+            <span>App</span>
+          </div>
+          <div class="stat-box">
+            <strong>A-Z</strong>
+            <span>Sorted</span>
+          </div>
+        </div>
       </div>
       <div class="app-list">
         <a class="app-link" href="ant_polarization_lab.html">
-          <div>
-            <h3>Ant Navigation with Polarized Light Simulation</h3>
+          <div class="app-body">
+            <div class="app-header">
+              <h3>Ant Navigation with Polarized Light Simulation</h3>
+              <span class="app-type">Simulation</span>
+            </div>
             <p>Rotate a polarizing filter, shift a celestial compass, and compare the predicted exit heading against the unshifted homeward route.</p>
           </div>
           <div class="app-meta">
-            <span>Simulation</span>
+            <span class="sort-label">Alphabetized</span>
             <span class="open-label">Open app</span>
           </div>
         </a>
       </div>
     </div>
 
-    <div class="app-section" aria-labelledby="analysis-tools-title">
+    <div class="app-section analysis" aria-labelledby="analysis-tools-title">
       <div class="app-section-heading">
-        <h3 id="analysis-tools-title">Analysis tools</h3>
-        <p>Browser-based tools for reviewing uploaded data, interpreting results, and organizing scientific observations.</p>
+        <div class="section-copy">
+          <div class="section-tag">Read the evidence</div>
+          <h3 id="analysis-tools-title">Analysis tools</h3>
+          <p>Browser-based tools for reviewing uploaded data, interpreting results, and organizing scientific observations.</p>
+        </div>
+        <div class="section-stats" aria-label="Analysis tool stats">
+          <div class="stat-box">
+            <strong>1</strong>
+            <span>App</span>
+          </div>
+          <div class="stat-box">
+            <strong>A-Z</strong>
+            <span>Sorted</span>
+          </div>
+        </div>
       </div>
       <div class="app-list">
         <a class="app-link" href="gcms_cuticle_compound_lab.html">
-          <div>
-            <h3>GC-MS Cuticular Compound Lab</h3>
+          <div class="app-body">
+            <div class="app-header">
+              <h3>GC-MS Cuticular Compound Lab</h3>
+              <span class="app-type">Analysis tool</span>
+            </div>
             <p>Upload peak tables, inspect chromatograms and spectra, annotate compound classes, and use pattern guides for ant cuticular hydrocarbons, alkenes, methyl-branched alkanes, esters, and unknowns.</p>
           </div>
           <div class="app-meta">
-            <span>Analysis tool</span>
+            <span class="sort-label">Alphabetized</span>
             <span class="open-label">Open app</span>
           </div>
         </a>

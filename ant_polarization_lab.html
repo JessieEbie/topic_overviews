@@ -44,7 +44,8 @@ main{width:min(1180px,100%);margin:0 auto;padding:16px clamp(10px,2.5vw,28px) 32
 .top-tab:hover:not(.active){color:var(--color-text-primary);}
 .panel-content{display:none;}
 .panel-content.active{display:block;}
-#exp-panel{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:0;}
+#exp-panel{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:0;}
+#exp-panel.active{display:grid;}
 .exp-col{padding:12px clamp(8px,1.6vw,16px);}
 .exp-col:first-child{border-right:0.5px solid var(--color-border-tertiary);}
 .slabel{font-size:10px;font-weight:500;color:var(--color-text-tertiary);text-transform:uppercase;letter-spacing:0.05em;margin:8px 0 3px;}
@@ -472,6 +473,7 @@ function showTab(t){
 }
 function d2r(d){return d*Math.PI/180;}
 function r2d(r){return r*180/Math.PI;}
+function clamp(v,min,max){return Math.max(min,Math.min(max,v));}
 
 function solarPos(yr,mo,dy,hr,mn){
   const utc=hr+7+mn/60;
@@ -533,11 +535,6 @@ function derivedAzimuth(){
 }
 
 // Local polarization angle at a sky canvas point
-function localPolAngle(sx,sy,sunAz){
-  const ptAz=(r2d(Math.atan2(sy-SCY,sx-SCX))+90+360)%360;
-  return d2r(ptAz-sunAz+90);
-}
-
 function setMode(m){
   curMode=m;
   document.getElementById('pane-dt').style.display=m==='datetime'?'block':'none';
@@ -559,6 +556,49 @@ function syncExp(){
 function azElToSkyXY(az,el){
   const r=SR*(1-el/90),a=d2r(az-90);
   return{x:SCX+r*Math.cos(a),y:SCY+r*Math.sin(a)};
+}
+
+function azElToUnit(az,el){
+  const azR=d2r(az),elR=d2r(el),ce=Math.cos(elR);
+  return{x:ce*Math.sin(azR),y:ce*Math.cos(azR),z:Math.sin(elR)};
+}
+
+function unitToAzEl(v){
+  const m=Math.hypot(v.x,v.y,v.z)||1;
+  const x=v.x/m,y=v.y/m,z=v.z/m;
+  return{az:(r2d(Math.atan2(x,y))+360)%360,el:r2d(Math.asin(clamp(z,-1,1)))};
+}
+
+function dotVec(a,b){return a.x*b.x+a.y*b.y+a.z*b.z;}
+function crossVec(a,b){return{x:a.y*b.z-a.z*b.y,y:a.z*b.x-a.x*b.z,z:a.x*b.y-a.y*b.x};}
+function normalizeVec(v){
+  const m=Math.hypot(v.x,v.y,v.z);
+  return m>1e-9?{x:v.x/m,y:v.y/m,z:v.z/m}:{x:0,y:0,z:0};
+}
+
+function localPolDataAtAzEl(az,el,sunAz,sunEl){
+  const sunVec=azElToUnit(sunAz,sunEl);
+  const viewVec=azElToUnit(az,el);
+  const eVec=crossVec(sunVec,viewVec);
+  const eMag=Math.hypot(eVec.x,eVec.y,eVec.z);
+  const cosGamma=clamp(dotVec(sunVec,viewVec),-1,1);
+  const dolp=(1-cosGamma*cosGamma)/(1+cosGamma*cosGamma);
+  if(eMag<1e-6)return{angle:0,dolp:0};
+  const eHat=normalizeVec(eVec);
+  const stepped=normalizeVec({x:viewVec.x+0.015*eHat.x,y:viewVec.y+0.015*eHat.y,z:viewVec.z+0.015*eHat.z});
+  const p1=azElToSkyXY(az,el);
+  const p2AzEl=unitToAzEl(stepped);
+  const p2=azElToSkyXY(p2AzEl.az,p2AzEl.el);
+  return{angle:Math.atan2(p2.y-p1.y,p2.x-p1.x),dolp};
+}
+
+function localPolData(sx,sy,sunAz,sunEl){
+  const pt=skyXYtoAzEl(sx,sy);
+  return localPolDataAtAzEl(pt.az,pt.el,sunAz,sunEl);
+}
+
+function localPolAngle(sx,sy,sunAz,sunEl){
+  return localPolData(sx,sy,sunAz,sunEl).angle;
 }
 
 function drawFilterSlits(ctx,cx,cy,r,angle,alpha){
@@ -610,10 +650,13 @@ function drawSky(v){
       for(let py=-SR+8;py<=SR-8;py+=28){
         const dist=Math.sqrt(px*px+py*py);if(dist>SR-12)continue;
         const x=SCX+px,y=SCY+py;
-        const lp=localPolAngle(x,y,sunAz),len=11,ca=Math.cos(lp),sa=Math.sin(lp);
-        sctx.save();sctx.strokeStyle=ec;sctx.lineWidth=2;sctx.lineCap='round';sctx.globalAlpha=ea;
+        const pol=localPolData(x,y,sunAz,sunEl);
+        if(pol.dolp<0.02)continue;
+        const lp=pol.angle,len=11,ca=Math.cos(lp),sa=Math.sin(lp);
+        const localAlpha=ea*(0.2+0.8*pol.dolp);
+        sctx.save();sctx.strokeStyle=ec;sctx.lineWidth=2;sctx.lineCap='round';sctx.globalAlpha=localAlpha;
         sctx.beginPath();sctx.moveTo(x-ca*len/2,y-sa*len/2);sctx.lineTo(x+ca*len/2,y+sa*len/2);sctx.stroke();
-        sctx.globalAlpha=ea*0.58;sctx.strokeStyle=endColor;sctx.lineWidth=0.8;
+        sctx.globalAlpha=localAlpha*0.58;sctx.strokeStyle=endColor;sctx.lineWidth=0.8;
         sctx.beginPath();sctx.arc(x-ca*len/2,y-sa*len/2,1.4,0,Math.PI*2);sctx.stroke();
         sctx.beginPath();sctx.arc(x+ca*len/2,y+sa*len/2,1.4,0,Math.PI*2);sctx.stroke();
         sctx.restore();
@@ -650,7 +693,8 @@ function drawSky(v){
     sctx.save();sctx.globalAlpha=0.4;sctx.beginPath();sctx.arc(bsp.x,bsp.y,7,0,Math.PI*2);sctx.setLineDash([3,2]);sctx.strokeStyle='#FDE047';sctx.lineWidth=1.5;sctx.stroke();sctx.restore();
   }
   // Filter at feeder
-  const lp=localPolAngle(skyFeedX,skyFeedY,sunAz);
+  const feederPol=localPolData(skyFeedX,skyFeedY,sunAz,sunEl);
+  const lp=feederPol.angle;
   const filtPol=lp+d2r(filtInit);
   const isAligned=Math.abs(filtInit)<=1;
   const fR=32;
@@ -682,7 +726,7 @@ function drawSky(v){
   // Status
   const sunAzV=v.sunAz,sunElV=v.sunEl;
   const feedAzDerived=derivedAzimuth();
-  const lpolDeg=((r2d(localPolAngle(skyFeedX,skyFeedY,sunAz))%180)+180)%180;
+  const lpolDeg=((r2d(lp)%180)+180)%180;
   const filtPolDeg=((lpolDeg+filtInit)%180+180)%180;
   let strips=`<span class="ibadge sun">Sun</span> Az ${sunAzV.toFixed(1)}° El ${sunElV.toFixed(1)}°&nbsp;`;
   if(curMode==='datetime'){
@@ -743,7 +787,7 @@ function drawTopScene(){
   }
   // Filter circle
   const fR=32;
-  const feederPol=localPolAngle(skyFeedX,skyFeedY,v.sunAz);
+  const feederPol=localPolData(skyFeedX,skyFeedY,v.sunAz,v.sunEl).angle;
   const fDA=feederPol+d2r(v.filtInit+A.filtCurrentAngle);
   tctx.save();tctx.globalAlpha=0.14;tctx.fillStyle='#7C3AED';tctx.beginPath();tctx.arc(ft.x,ft.y,fR,0,Math.PI*2);tctx.fill();tctx.restore();
   drawFilterSlits(tctx,ft.x,ft.y,fR,fDA,0.9);
@@ -800,7 +844,7 @@ function drawTopCompass(cx,cy,r){
 function drawAngleDiagram(v,s){
   const cy=44,ll2=30;
   actx.clearRect(0,0,310,90);
-  const lp=localPolAngle(skyFeedX,skyFeedY,v.sunAz);
+  const lp=localPolData(skyFeedX,skyFeedY,v.sunAz,v.sunEl).angle;
   const lpolNorm=((r2d(lp)%180)+180)%180*Math.PI/180;
   const initF=lpolNorm+d2r(v.filtInit),rotF=initF+d2r(s.filtCurrentAngle);
   [{label:'Ambient E-vec',angle:lpolNorm,color:'#1D4ED8',x:52},{label:'Filter at start',angle:initF,color:'#7C3AED',x:155},{label:'Filter rotated',angle:rotF,color:'#DC2626',x:258}].forEach(p=>{
