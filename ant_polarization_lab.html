@@ -235,10 +235,11 @@ button.rst-btn:hover{background:var(--color-background-secondary);}
     <div class="exp-input-box">
       <div class="slabel" style="margin-top:0;">Experiment parameters</div>
       <div class="crow"><label>Filter rotation during trial</label><input type="range" id="e-filt-rot" min="-45" max="45" value="45" step="1" oninput="syncExp()"><span class="val" id="e-filt-rot-v">+45°</span></div>
-      <div class="crow"><label>Ant uses polarized light?</label>
+      <div class="crow"><label>Compass cue model</label>
         <select id="e-uses-pol" onchange="syncExp()">
-          <option value="1">Yes — show navigation error</option>
-          <option value="0">No — exits on correct heading</option>
+          <option value="1">Polarization only</option>
+          <option value="0.5">Sun + polarization (equal weight)</option>
+          <option value="0">Sun only</option>
         </select>
       </div>
       <div class="crow">
@@ -250,7 +251,7 @@ button.rst-btn:hover{background:var(--color-background-secondary);}
     <div class="stat-grid">
       <div class="scard"><div class="sl">Feeder azimuth</div><div class="sv" id="ic-faz">—</div></div>
       <div class="scard"><div class="sl">Filter rotated by</div><div class="sv" id="ic-frot">+45°</div></div>
-      <div class="scard"><div class="sl">Predicted error</div><div class="sv" id="ic-err" style="color:#DC2626;">45°</div></div>
+      <div class="scard"><div class="sl">Predicted shift</div><div class="sv" id="ic-err" style="color:#DC2626;">45°</div></div>
     </div>
     <div class="phase-indicator">
       <span class="phase-dot" id="pd-out"></span><span class="phase-name" id="pn-out">Outbound</span>
@@ -275,8 +276,9 @@ button.rst-btn:hover{background:var(--color-background-secondary);}
 
   <div class="guide-section">
     <h3>Overview</h3>
-    <p>This tool simulates a polarized light manipulation experiment based on Freas et al. (2019, <em>Journal of Comparative Physiology A</em>). A linear polarizing filter is placed over a foraging ant at a feeder and rotated while she feeds. If the ant uses the sky's polarization pattern as a compass, her exit heading will be offset by the same angle as the filter rotation — a measurable navigation error that confirms use of the celestial polarization compass.</p>
+    <p>This tool simulates a polarized light manipulation experiment based on Freas et al. (2019, <em>Journal of Comparative Physiology A</em>). A linear polarizing filter is placed over a foraging ant at a feeder and rotated while she feeds. The strongest prediction in the simulator is the <strong>polarization-only</strong> case, where the ant's home vector is rotated by the same total filter-angle manipulation. Because desert ants can also combine sun and polarization cues, the app also offers a blended cue-conflict prediction instead of assuming one cue always dominates.</p>
     <p>The tool has two windows side by side. Window 1 is the sky dome — the view looking straight up from the ground. Window 2 is a top-down ground view showing the ant's movement. Both windows are linked: dragging the nest or feeder in Window 1 updates Window 2 automatically.</p>
+    <p>Use the app for <strong>geometric experimental predictions</strong> under clear-sky Phoenix conditions, not as a full behavioral model. The sky polarization field is modeled with a Rayleigh-style single-scattering approximation, and the cue-conflict prediction depends on the cue-weight model you choose.</p>
   </div>
 
   <div class="guide-section">
@@ -288,7 +290,7 @@ button.rst-btn:hover{background:var(--color-background-secondary);}
       <li>Check the E-vector tick marks (blue lines) in and around the filter circle to see what polarization angle the ant will perceive at the feeder location.</li>
       <li>Adjust the <strong>initial filter angle</strong> slider if you want the filter pre-rotated. At 0° the filter is near center alignment with the feeder's ambient E-vector — a green glow marks the control condition while the surrounding vectors show how close the whole filter field gets.</li>
       <li>In Window 2, set the <strong>filter rotation during trial</strong> — this is the angle the filter will rotate while the ant feeds. Freas et al. used ±45°.</li>
-      <li>Choose whether the ant uses polarized light and set the animation speed.</li>
+      <li>Choose a <strong>compass cue model</strong> and set the animation speed.</li>
       <li>Click <strong>Run experiment</strong> to watch the full trial: outbound walk → feeding pause → filter rotation → exit on error heading.</li>
       <li>Use <strong>Reset</strong> to clear the trails and run again with different settings.</li>
     </ul>
@@ -299,7 +301,7 @@ button.rst-btn:hover{background:var(--color-background-secondary);}
     <div class="guide-row">
       <div class="gcard">
         <div class="gtitle"><span class="gbadge amber">Date and time</span></div>
-        <p>Defaults to today's date and current hour in Phoenix MST (UTC−7, no daylight saving). The NOAA solar position algorithm computes the exact sun azimuth and elevation for that date and time. Adjust to match your planned field session. The sky color changes with sun elevation: bright blue at high elevation, warm orange near sunset/sunrise, deep navy during twilight.</p>
+        <p>Defaults to today's date and current hour in Phoenix MST (UTC−7, no daylight saving). A solar-position calculation tied to Phoenix latitude, longitude, and MST converts the selected date and time into sun azimuth and elevation. Adjust to match your planned field session. The sky color changes with sun elevation: bright blue at high elevation, warm orange near sunset/sunrise, deep navy during twilight.</p>
       </div>
       <div class="gcard">
         <div class="gtitle"><span class="gbadge amber">Manual sun azimuth and elevation</span></div>
@@ -329,11 +331,11 @@ button.rst-btn:hover{background:var(--color-background-secondary);}
     <div class="guide-row">
       <div class="gcard">
         <div class="gtitle"><span class="gbadge red">Filter rotation during trial (−45° to +45°)</span></div>
-        <p>The number of degrees the filter physically rotates while the ant is feeding at the feeder. This is the core experimental manipulation. +45° rotates clockwise, −45° counterclockwise. If the ant uses the polarization pattern for navigation, her exit heading will be offset by exactly this angle. Freas et al. used ±45° in all conditions. The filter circle E-vector lines visibly rotate during the animation.</p>
+        <p>The number of degrees the filter physically rotates while the ant is feeding at the feeder. This is the core experimental manipulation. +45° rotates clockwise, −45° counterclockwise. In the polarization-only model, the ant's predicted home direction shifts by the total filter angle acting at the feeder. In the blended model, the shift is smaller because the sun cue and polarization cue are averaged. Freas et al. used ±45° rotations in their manipulations.</p>
       </div>
       <div class="gcard">
-        <div class="gtitle">Ant uses polarized light?</div>
-        <p>Toggle between two conditions. "Yes" shows the experimental prediction: the ant exits on a heading offset by the filter rotation angle, shown as a dashed red trail with an error arc and label. "No" shows the null hypothesis: the ant exits on the correct homeward heading regardless of filter rotation. Running both in sequence lets you compare what a positive result vs. a negative result would look like visually.</p>
+        <div class="gtitle">Compass cue model</div>
+        <p><strong>Polarization only</strong> shows the idealized case where the manipulated polarization cue fully determines the homeward heading. <strong>Sun + polarization (equal weight)</strong> shows a cue-conflict compromise, motivated by experiments in which desert ants use both celestial cues. <strong>Sun only</strong> is the null case where the polarizer has no directional effect and the ant exits on the correct homeward course.</p>
       </div>
       <div class="gcard">
         <div class="gtitle">Animation speed</div>
@@ -354,7 +356,7 @@ button.rst-btn:hover{background:var(--color-background-secondary);}
 
   <div class="guide-section">
     <h3>Reading the angle diagram</h3>
-    <p>The three circles at the bottom of Window 2 show E-vector orientation at the feeder location. The left circle (blue) shows the ambient E-vector — what the ant perceives without any filter. The middle circle (purple) shows the filter at its starting angle before the trial rotation. The right circle (red) shows the filter after rotation — the ant perceives this as if it were the natural sky direction and calculates its homeward heading accordingly, producing the navigation error shown by the red trail.</p>
+    <p>The three circles at the bottom of Window 2 show E-vector orientation at the feeder location. The left circle (blue) shows the ambient E-vector without any filter. The middle circle (purple) shows the filter at its starting angle before the trial rotation. The right circle (red) shows the filter after rotation. In the polarization-only model, that total filter angle sets the full compass shift. In the blended model, it contributes one component of the final predicted heading.</p>
   </div>
 
   <div class="guide-section">
@@ -362,7 +364,7 @@ button.rst-btn:hover{background:var(--color-background-secondary);}
     <ul>
       <li>Set the time to early morning (6–8 AM) or late afternoon (4–6 PM) in November or April — these match the seasons and times used in Freas et al. (October–November 2018 and April 2019).</li>
       <li>Sun elevation of 0–20° gives the strongest polarization pattern and is when V. pergandei is most active near the nest.</li>
-      <li>With feeder azimuth 90° (feeder due east of nest), the ant's homeward heading is 270° (west). A +45° filter rotation predicts exit at 315° (NW).</li>
+      <li>With feeder azimuth 90° (feeder due east of nest), the ant's homeward heading is 270° (west). In the polarization-only model, a total +45° filter manipulation predicts exit at 315° (NW); in the equal-weight cue-conflict model it predicts a smaller shift.</li>
       <li>Drag the nest to a corner and the feeder toward the opposite side to maximize the visible trail length in Window 2.</li>
       <li>Use 0.25× speed during presentations so the audience can see the filter rotate and the ant reorient before it exits.</li>
     </ul>
@@ -399,7 +401,7 @@ button.rst-btn:hover{background:var(--color-background-secondary);}
   <div class="guide-section">
     <h3>Why ants can use it</h3>
     <p>Many insects, including desert ants, have a specialized dorsal rim area in the compound eye with photoreceptors tuned to polarization. Those receptors are sensitive to e-vector orientation rather than only brightness. Combined with time compensation and other navigational cues, the sky polarization pattern can provide a stable celestial reference frame for path integration.</p>
-    <p>That is why a rotated filter can produce a predictable heading error: if the ant interprets the filtered e-vector field as the real sky compass, its calculated homeward direction rotates by the same angular manipulation.</p>
+    <p>That is why a rotated filter can produce a predictable heading error: if the ant interprets the filtered e-vector field as a compass cue, its calculated homeward direction shifts toward the manipulated polarization direction. How large that shift is depends on how strongly the ant weights polarization relative to other available celestial cues.</p>
   </div>
 
 </div>
@@ -447,7 +449,7 @@ let curMode='datetime';
 
 let A={phase:'idle',antX:0,antY:0,antAngle:0,phaseT:0,
   filtCurrentAngle:0,filtEndAngle:0,correctExitAngle:0,actualExitAngle:0,
-  trailOut:[],trailErr:[],raf:null,lastTs:null,speedMult:1,usesPol:true,
+  trailOut:[],trailErr:[],raf:null,lastTs:null,speedMult:1,polWeight:1,
   restX:0,restY:0,outAngle:0};
 
 function formatHourLabel(hr){
@@ -521,21 +523,45 @@ function r2d(r){return r*180/Math.PI;}
 function clamp(v,min,max){return Math.max(min,Math.min(max,v));}
 
 function solarPos(yr,mo,dy,hr,mn){
-  const utc=hr+7+mn/60;
+  const timezone=-7; // Phoenix stays on MST year-round.
+  const mins=hr*60+mn;
   const AA=Math.floor((14-mo)/12),Y=yr+4800-AA,M=mo+12*AA-3;
   let JD=dy+Math.floor((153*M+2)/5)+365*Y+Math.floor(Y/4)-Math.floor(Y/100)+Math.floor(Y/400)-32045;
-  JD=JD-0.5+utc/24;
-  const n=JD-2451545.0,L0=(280.46646+36000.76983*(n/36525))%360;
-  const M0=d2r((357.52911+35999.05029*(n/36525))%360);
-  const C=(1.914602-0.004817*(n/36525))*Math.sin(M0)+(0.019993-0.000101*(n/36525))*Math.sin(2*M0)+0.000289*Math.sin(3*M0);
-  const sL=d2r(L0+C),ob=d2r(23.439291-0.013004*(n/36525));
-  const sinDec=Math.sin(ob)*Math.sin(sL),dec=Math.asin(sinDec);
-  const e2=0.016708634,y2=Math.tan(ob/2)**2,L0r=d2r(L0);
-  const EqT=4*r2d(y2*Math.sin(2*L0r)-2*e2*Math.sin(M0)+4*e2*y2*Math.sin(M0)*Math.cos(2*L0r)-0.5*y2*y2*Math.sin(4*L0r)-1.25*e2*e2*Math.sin(2*M0));
-  const TST=utc*60+4*LON+EqT,HA=d2r(TST/4-180),latR=d2r(LAT);
-  const sinEl=Math.sin(latR)*Math.sin(dec)+Math.cos(latR)*Math.cos(dec)*Math.cos(HA),el=r2d(Math.asin(sinEl));
-  const az=(r2d(Math.atan2(Math.sin(HA),Math.cos(HA)*Math.sin(latR)-Math.tan(dec)*Math.cos(latR)))+180+360)%360;
-  return{az:az%360,el};
+  JD=JD-0.5+(hr-timezone+mn/60)/24;
+  const T=(JD-2451545.0)/36525;
+  const wrapDeg=d=>((d%360)+360)%360;
+  const L0=wrapDeg(280.46646+T*(36000.76983+0.0003032*T));
+  const M0=wrapDeg(357.52911+T*(35999.05029-0.0001537*T));
+  const e=0.016708634-T*(0.000042037+0.0000001267*T);
+  const M0r=d2r(M0),L0r=d2r(L0);
+  const C=Math.sin(M0r)*(1.914602-T*(0.004817+0.000014*T))+Math.sin(2*M0r)*(0.019993-0.000101*T)+Math.sin(3*M0r)*0.000289;
+  const trueLong=L0+C;
+  const omega=125.04-1934.136*T;
+  const lambda=trueLong-0.00569-0.00478*Math.sin(d2r(omega));
+  const seconds=21.448-T*(46.815+T*(0.00059-T*0.001813));
+  const meanObliq=23+(26+(seconds/60))/60;
+  const obliqCorr=meanObliq+0.00256*Math.cos(d2r(omega));
+  const lambdaR=d2r(lambda),obliqR=d2r(obliqCorr),latR=d2r(LAT);
+  const sinDec=Math.sin(obliqR)*Math.sin(lambdaR),dec=Math.asin(sinDec);
+  const y=Math.tan(obliqR/2)**2;
+  const eqTime=4*r2d(y*Math.sin(2*L0r)-2*e*Math.sin(M0r)+4*e*y*Math.sin(M0r)*Math.cos(2*L0r)-0.5*y*y*Math.sin(4*L0r)-1.25*e*e*Math.sin(2*M0r));
+  let trueSolarTime=(mins+eqTime+4*LON-60*timezone)%1440;
+  if(trueSolarTime<0)trueSolarTime+=1440;
+  const hourAngleDeg=trueSolarTime/4<0?trueSolarTime/4+180:trueSolarTime/4-180;
+  const hourAngle=d2r(hourAngleDeg);
+  const cosZen=clamp(Math.sin(latR)*Math.sin(dec)+Math.cos(latR)*Math.cos(dec)*Math.cos(hourAngle),-1,1);
+  const zenith=Math.acos(cosZen);
+  const trueEl=90-r2d(zenith);
+  let refraction=0;
+  if(trueEl<=85){
+    const te=Math.tan(d2r(trueEl));
+    if(trueEl>5)refraction=(58.1/te-0.07/(te**3)+0.000086/(te**5))/3600;
+    else if(trueEl>-0.575)refraction=(1735+trueEl*(-518.2+trueEl*(103.4+trueEl*(-12.79+trueEl*0.711))))/3600;
+    else refraction=(-20.774/te)/3600;
+  }
+  const el=trueEl+refraction;
+  const az=(r2d(Math.atan2(Math.sin(hourAngle),Math.cos(hourAngle)*Math.sin(latR)-Math.tan(dec)*Math.cos(latR)))+180+360)%360;
+  return{az:az%360,el,trueEl,eqTime};
 }
 
 function getDateInputs(){
@@ -558,7 +584,7 @@ function getV(){
 }
 function getEP(){
   const si=+document.getElementById('e-speed').value;
-  return{filtRot:+document.getElementById('e-filt-rot').value,speedMult:SPEED_MAP[si],usesPol:document.getElementById('e-uses-pol').value==='1'};
+  return{filtRot:+document.getElementById('e-filt-rot').value,speedMult:SPEED_MAP[si],polWeight:+document.getElementById('e-uses-pol').value};
 }
 
 // Convert sky canvas coords → sky-relative azimuth & elevation
@@ -603,7 +629,8 @@ function syncExp(){
   document.getElementById('e-filt-rot-v').textContent=(ep.filtRot>=0?'+':'')+ep.filtRot+'°';
   document.getElementById('e-speed-v').textContent=SPEED_LABELS[si];
   document.getElementById('ic-frot').textContent=(ep.filtRot>=0?'+':'')+ep.filtRot+'°';
-  document.getElementById('ic-err').textContent=Math.abs(ep.filtRot)+'°';
+  const predictedShift=Math.abs(totalFilterShiftDeg(ep.filtRot)*ep.polWeight);
+  document.getElementById('ic-err').textContent=predictedShift.toFixed(predictedShift%1?1:0)+'°';
   if(A.phase==='idle'||A.phase==='done')drawTopScene();
 }
 
@@ -653,6 +680,26 @@ function localPolData(sx,sy,sunAz,sunEl){
 
 function localPolAngle(sx,sy,sunAz,sunEl){
   return localPolData(sx,sy,sunAz,sunEl).angle;
+}
+
+function normalizeAngle(a){
+  while(a<=-Math.PI)a+=Math.PI*2;
+  while(a>Math.PI)a-=Math.PI*2;
+  return a;
+}
+
+function shortestAngleDelta(from,to){
+  return normalizeAngle(to-from);
+}
+
+function blendHeadingAngles(baseAngle,shiftedAngle,polWeight){
+  if(polWeight<=0)return baseAngle;
+  if(polWeight>=1)return shiftedAngle;
+  return normalizeAngle(baseAngle+shortestAngleDelta(baseAngle,shiftedAngle)*polWeight);
+}
+
+function totalFilterShiftDeg(currentRotationDeg){
+  return (+document.getElementById('filt-init').value||0)+currentRotationDeg;
 }
 
 function drawFilterSlits(ctx,cx,cy,r,angle,alpha){
@@ -947,7 +994,9 @@ function drawSky(v){
     strips=`<span class="ibadge loc">Phoenix MST</span> ${mo2[mm-1]} ${document.getElementById('dt-day').value} ${document.getElementById('dt-year').value} ${hs}:${String(mn2).padStart(2,'0')}${ap}&nbsp;`+strips;
   }
   document.getElementById('info-strip').innerHTML=strips+`<span class="ibadge pol">E-vec at feeder ~${Math.round(lpolDeg)}°</span>&nbsp;<span class="ibadge filt">Filter E-vec ~${Math.round(filtPolDeg)}°</span>`;
-  document.getElementById('status-txt').innerHTML=isAligned?'<span style="color:#059669;font-weight:500">Filter near center alignment — compare the full filter area visually</span>':`Filter shifted <strong>${(filtInit>=0?'+':'')+filtInit}°</strong> — expected heading change: <strong>${(filtInit>=0?'+':'')+filtInit}°</strong>`;
+  const totalShiftNow=totalFilterShiftDeg(0);
+  const predictedNow=totalShiftNow*getEP().polWeight;
+  document.getElementById('status-txt').innerHTML=isAligned?'<span style="color:#059669;font-weight:500">Filter near center alignment — compare the full filter area visually</span>':`Filter shifted <strong>${(totalShiftNow>=0?'+':'')+totalShiftNow}°</strong> — current predicted compass shift: <strong>${(predictedNow>=0?'+':'')+predictedNow.toFixed(Math.abs(predictedNow)%1?1:0)}°</strong>`;
   document.getElementById('ic-faz').textContent=Math.round(feedAzDerived)+'°';
 }
 
@@ -957,7 +1006,10 @@ function drawTopScene(){
   const nt=getNestTopPos(),ft=getFeedTopPos();
   const dx=ft.x-nt.x,dy=ft.y-nt.y;
   const outAngle=Math.atan2(dy,dx);
-  const correctHome=outAngle+Math.PI,actualHome=ep.usesPol?correctHome+d2r(ep.filtRot):correctHome;
+  const correctHome=outAngle+Math.PI;
+  const totalShift=d2r(totalFilterShiftDeg(A.phase==='idle'||A.phase==='done'?ep.filtRot:A.filtCurrentAngle));
+  const shiftedHome=correctHome+totalShift;
+  const actualHome=blendHeadingAngles(correctHome,shiftedHome,ep.polWeight);
 
   tctx.clearRect(0,0,TCW,TCH);
   tctx.fillStyle='#EAF7EE';tctx.beginPath();
@@ -970,7 +1022,7 @@ function drawTopScene(){
   // Correct home ref line
   tctx.save();tctx.setLineDash([4,4]);tctx.strokeStyle='rgba(5,150,105,0.35)';tctx.lineWidth=1;
   tctx.beginPath();tctx.moveTo(ft.x,ft.y);tctx.lineTo(ft.x+220*Math.cos(correctHome),ft.y+220*Math.sin(correctHome));tctx.stroke();tctx.restore();
-  if((A.phase==='exit'||A.phase==='done')&&ep.usesPol&&Math.abs(ep.filtRot)>1){
+  if((A.phase==='exit'||A.phase==='done')&&ep.polWeight>0&&Math.abs(r2d(shortestAngleDelta(correctHome,actualHome)))>1){
     tctx.save();tctx.font='bold 9px var(--font-sans,sans-serif)';tctx.fillStyle='rgba(5,150,105,0.65)';tctx.textAlign='center';tctx.textBaseline='middle';
     const gx=ft.x+75*Math.cos(correctHome),gy=ft.y+75*Math.sin(correctHome);
     tctx.fillText('correct',gx+16*Math.cos(correctHome+Math.PI/2),gy+16*Math.sin(correctHome+Math.PI/2));tctx.restore();
@@ -987,13 +1039,14 @@ function drawTopScene(){
   if(A.trailErr.length>1){
     tctx.save();tctx.strokeStyle='rgba(220,38,38,0.8)';tctx.lineWidth=2.2;tctx.lineCap='round';tctx.setLineDash([5,3]);
     tctx.beginPath();tctx.moveTo(A.trailErr[0].x,A.trailErr[0].y);A.trailErr.forEach(p=>tctx.lineTo(p.x,p.y));tctx.stroke();tctx.restore();
-    if(A.trailErr.length>4&&ep.usesPol&&Math.abs(ep.filtRot)>1){
+    if(A.trailErr.length>4&&ep.polWeight>0&&Math.abs(r2d(shortestAngleDelta(A.correctExitAngle,A.actualExitAngle)))>1){
       const arcR=52,cH=A.correctExitAngle,aH=A.actualExitAngle;
       tctx.save();tctx.strokeStyle='rgba(220,38,38,0.45)';tctx.lineWidth=1.2;tctx.setLineDash([3,2]);
-      tctx.beginPath();tctx.arc(ft.x,ft.y,arcR,cH,aH,ep.filtRot<0);tctx.stroke();
+      const errDeg=r2d(shortestAngleDelta(cH,aH));
+      tctx.beginPath();tctx.arc(ft.x,ft.y,arcR,cH,aH,errDeg<0);tctx.stroke();
       const mA=(cH+aH)/2;tctx.globalAlpha=0.9;tctx.setLineDash([]);tctx.font='bold 10px var(--font-sans,sans-serif)';tctx.fillStyle='#DC2626';
       tctx.textAlign='center';tctx.textBaseline='middle';
-      tctx.fillText((ep.filtRot>=0?'+':'')+ep.filtRot+'° error',ft.x+(arcR+22)*Math.cos(mA),ft.y+(arcR+22)*Math.sin(mA));tctx.restore();
+      tctx.fillText((errDeg>=0?'+':'')+Math.round(errDeg)+'° shift',ft.x+(arcR+22)*Math.cos(mA),ft.y+(arcR+22)*Math.sin(mA));tctx.restore();
     }
   }
   // Filter circle
@@ -1023,7 +1076,8 @@ function drawTopScene(){
   if(A.phase==='done'){
     tctx.save();tctx.font='bold 11px var(--font-sans,sans-serif)';tctx.fillStyle='#1E3A8A';tctx.textAlign='center';tctx.textBaseline='top';tctx.globalAlpha=0.85;
     const ep2=getEP();
-    tctx.fillText(ep2.usesPol?(Math.abs(ep2.filtRot)>1?`Nav error: ${(ep2.filtRot>=0?'+':'')+ep2.filtRot}°`:'No error — aligned'):'No polarization use — correct exit',TCW/2,8);tctx.restore();
+    const finalShiftDeg=r2d(shortestAngleDelta(correctHome,actualHome));
+    tctx.fillText(ep2.polWeight>0?(Math.abs(finalShiftDeg)>1?`Predicted shift: ${(finalShiftDeg>=0?'+':'')+Math.round(finalShiftDeg)}°`:'No measurable shift'):'Sun-only prediction — correct exit',TCW/2,8);tctx.restore();
   }
   drawAngleDiagram(v,A);
 }
@@ -1099,12 +1153,14 @@ function startAnim(){
   const ep=getEP();
   const nt=getNestTopPos(),ft=getFeedTopPos();
   const dx=ft.x-nt.x,dy=ft.y-nt.y,outAngle=Math.atan2(dy,dx);
-  const correctHome=outAngle+Math.PI,actualHome=ep.usesPol?correctHome+d2r(ep.filtRot):correctHome;
+  const correctHome=outAngle+Math.PI;
+  const shiftedHome=correctHome+d2r(totalFilterShiftDeg(ep.filtRot));
+  const actualHome=blendHeadingAngles(correctHome,shiftedHome,ep.polWeight);
   const restX=ft.x-ANT_HEAD*Math.cos(outAngle),restY=ft.y-ANT_HEAD*Math.sin(outAngle);
   A={phase:'outbound',antX:nt.x,antY:nt.y,antAngle:outAngle,phaseT:0,
     filtCurrentAngle:0,filtEndAngle:ep.filtRot,correctExitAngle:correctHome,actualExitAngle:actualHome,
     trailOut:[{x:nt.x,y:nt.y}],trailErr:[],raf:null,lastTs:null,
-    speedMult:ep.speedMult,usesPol:ep.usesPol,restX,restY,outAngle};
+    speedMult:ep.speedMult,polWeight:ep.polWeight,restX,restY,outAngle};
   document.getElementById('btn-go').disabled=true;
   setPhaseUI('outbound');
   if(A.raf)cancelAnimationFrame(A.raf);
@@ -1129,7 +1185,8 @@ function animLoop(ts){
   }else if(A.phase==='rotating'){
     const pg=Math.min(A.phaseT/BASE_DUR.rotating,1),ea=ease(pg);
     A.filtCurrentAngle=A.filtEndAngle*ea;
-    A.antAngle=A.outAngle+d2r(A.filtCurrentAngle);
+    const currentShiftedHome=A.correctExitAngle+d2r(totalFilterShiftDeg(A.filtCurrentAngle));
+    A.antAngle=blendHeadingAngles(A.correctExitAngle,currentShiftedHome,A.polWeight);
     A.antX=ft.x-ANT_HEAD*Math.cos(A.antAngle);A.antY=ft.y-ANT_HEAD*Math.sin(A.antAngle);
     if(pg>=1){A.filtCurrentAngle=A.filtEndAngle;A.phase='exit';A.phaseT=0;A.trailErr=[{x:ft.x,y:ft.y}];setPhaseUI('exit');}
   }else if(A.phase==='exit'){
@@ -1144,7 +1201,7 @@ function animLoop(ts){
 
 function resetAnim(){
   if(A.raf)cancelAnimationFrame(A.raf);
-  A={phase:'idle',antX:0,antY:0,antAngle:0,phaseT:0,filtCurrentAngle:0,filtEndAngle:0,correctExitAngle:0,actualExitAngle:0,trailOut:[],trailErr:[],raf:null,lastTs:null,speedMult:1,usesPol:true,restX:0,restY:0,outAngle:0};
+  A={phase:'idle',antX:0,antY:0,antAngle:0,phaseT:0,filtCurrentAngle:0,filtEndAngle:0,correctExitAngle:0,actualExitAngle:0,trailOut:[],trailErr:[],raf:null,lastTs:null,speedMult:1,polWeight:1,restX:0,restY:0,outAngle:0};
   document.getElementById('btn-go').disabled=false;setPhaseUI('idle');drawTopScene();
 }
 
