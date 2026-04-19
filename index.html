@@ -3,15 +3,15 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Topic Overviews</title>
-<meta name="description" content="Interactive topic overviews, simulations, and teaching tools by Jessie Ebie.">
+<title>Scientific Models and Analysis</title>
+<meta name="description" content="Scientific models, simulations, and analysis tools by Jessie Ebie for teaching, exploration, and data interpretation.">
 <meta property="og:type" content="website">
-<meta property="og:title" content="Topic Overviews">
-<meta property="og:description" content="A growing collection of interactive topic overviews, simulations, and teaching tools.">
-<meta property="og:site_name" content="Topic Overviews">
+<meta property="og:title" content="Scientific Models and Analysis">
+<meta property="og:description" content="Scientific models, simulations, and analysis tools for teaching, exploration, and data interpretation.">
+<meta property="og:site_name" content="Scientific Models and Analysis">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Topic Overviews">
-<meta name="twitter:description" content="A growing collection of interactive topic overviews, simulations, and teaching tools.">
+<meta name="twitter:title" content="Scientific Models and Analysis">
+<meta name="twitter:description" content="Scientific models, simulations, and analysis tools for teaching, exploration, and data interpretation.">
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
 :root{
@@ -32,10 +32,13 @@
   --teal-wash:#E7F7F6;
   --blue-wash:#EAF2FB;
   --shadow:0 24px 60px rgba(16,32,51,0.08);
+  --focus:#F4C84A;
 }
 html{min-height:100%;background:var(--bg);scroll-behavior:smooth;}
 body{min-height:100%;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--ink);background:var(--bg);line-height:1.5;}
 a{color:inherit;}
+.skip-link{position:absolute;left:18px;top:-48px;z-index:100;padding:10px 14px;border-radius:12px;background:var(--ink);color:#fff;font-size:14px;font-weight:700;text-decoration:none;transition:top 160ms ease;}
+.skip-link:focus-visible{top:14px;outline:3px solid var(--focus);outline-offset:3px;}
 .site-header{border-bottom:1px solid rgba(217,227,238,0.82);background:rgba(247,250,252,0.9);position:sticky;top:0;z-index:10;backdrop-filter:blur(16px);}
 .header-inner{width:min(1180px,100%);margin:0 auto;padding:11px clamp(18px,4vw,34px);display:flex;align-items:center;justify-content:space-between;gap:24px;}
 .brand{display:flex;flex-direction:column;gap:1px;text-decoration:none;}
@@ -44,8 +47,7 @@ a{color:inherit;}
 .header-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end;}
 .nav-link{font-size:13px;font-weight:700;color:var(--accent);text-decoration:none;}
 .nav-link:hover,.nav-link:focus-visible{text-decoration:underline;}
-.nav-chip{display:inline-flex;align-items:center;gap:8px;border:1px solid rgba(234,242,251,0.8);border-radius:999px;padding:8px 12px;background:rgba(255,255,255,0.74);font-size:12px;font-weight:750;color:var(--navy);text-decoration:none;transition:transform 180ms ease,background 180ms ease,border-color 180ms ease;}
-.nav-chip span{display:inline-flex;align-items:center;justify-content:center;min-width:22px;height:22px;padding:0 7px;border-radius:999px;background:var(--blue-wash);color:var(--accent-dark);font-size:11px;font-weight:800;}
+.nav-chip{display:inline-flex;align-items:center;border:1px solid rgba(234,242,251,0.8);border-radius:999px;padding:8px 12px;background:rgba(255,255,255,0.74);font-size:12px;font-weight:750;color:var(--navy);text-decoration:none;transition:transform 180ms ease,background 180ms ease,border-color 180ms ease;}
 .nav-chip:hover,.nav-chip:focus-visible{transform:translateY(-1px);background:#fff;border-color:rgba(20,103,184,0.18);}
 .hero{position:relative;min-height:360px;overflow:hidden;display:flex;align-items:stretch;background:#10251F;}
 .hero-media{position:absolute;inset:0;background-image:linear-gradient(90deg,rgba(9,30,23,0.9) 0%,rgba(9,30,23,0.76) 36%,rgba(9,30,23,0.18) 74%),url("https://images.unsplash.com/photo-1473773508845-188df298d2d1?auto=format&fit=crop&w=1800&q=82");background-size:cover;background-position:center;transform:scale(1.02);animation:heroDrift 12s ease-out forwards;}
@@ -54,18 +56,12 @@ a{color:inherit;}
 .hero-kicker{font-size:11px;font-weight:800;letter-spacing:0.16em;text-transform:uppercase;color:#9DD7C8;margin-bottom:10px;}
 h1{font-size:clamp(38px,6vw,72px);line-height:0.94;font-weight:790;letter-spacing:0;color:#fff;max-width:640px;}
 .hero-copy p{font-size:clamp(15px,1.6vw,18px);line-height:1.55;color:rgba(255,255,255,0.82);max-width:520px;margin-top:18px;}
-.hero-summary{display:flex;gap:12px;flex-wrap:wrap;margin-top:24px;}
-.hero-pill{display:flex;align-items:center;gap:10px;padding:10px 14px;border:1px solid rgba(255,255,255,0.16);border-radius:16px;background:rgba(255,255,255,0.08);backdrop-filter:blur(10px);}
-.hero-pill strong{display:block;font-size:18px;line-height:1;color:#fff;}
-.hero-pill span{display:block;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:rgba(255,255,255,0.74);}
-.hero-note{align-self:end;color:rgba(255,255,255,0.82);border-left:1px solid rgba(255,255,255,0.34);padding-left:18px;animation:fadeIn 900ms ease-out 160ms both;}
-.hero-note strong{display:block;color:#fff;font-size:14px;margin-bottom:6px;}
-.hero-note span{display:block;font-size:13px;line-height:1.6;max-width:330px;}
 main{width:min(1180px,100%);margin:0 auto;padding:clamp(44px,7vw,76px) clamp(18px,4vw,34px) 58px;}
 .section-top{display:grid;grid-template-columns:minmax(0,0.95fr) minmax(260px,0.55fr);gap:clamp(26px,6vw,72px);align-items:end;margin-bottom:28px;}
 .section-label{font-size:12px;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;color:var(--accent);margin-bottom:10px;}
 .section-top h2{font-size:clamp(30px,4.6vw,58px);line-height:0.98;font-weight:780;letter-spacing:0;max-width:720px;}
 .section-top p{font-size:15px;color:var(--muted);line-height:1.7;max-width:390px;}
+.section-label,.section-top h2,.app-section h3{scroll-margin-top:88px;}
 .browse-grid{display:grid;gap:28px;}
 .app-section{position:relative;border:1px solid rgba(217,227,238,0.92);border-radius:28px;padding:26px;background:linear-gradient(180deg,rgba(255,255,255,0.96) 0%,rgba(255,255,255,0.92) 100%);box-shadow:var(--shadow);overflow:hidden;}
 .app-section::after{content:"";position:absolute;inset:auto -50px -80px auto;width:220px;height:220px;border-radius:50%;opacity:0.8;pointer-events:none;}
@@ -80,10 +76,6 @@ main{width:min(1180px,100%);margin:0 auto;padding:clamp(44px,7vw,76px) clamp(18p
 .analysis .section-tag{background:var(--blue-wash);color:var(--accent-dark);}
 .app-section-heading h3{font-size:clamp(24px,3.1vw,38px);line-height:1.02;font-weight:760;color:var(--ink);}
 .app-section-heading p{font-size:15px;color:var(--muted);max-width:520px;margin-top:10px;}
-.section-stats{display:grid;grid-template-columns:repeat(2,minmax(90px,1fr));gap:10px;min-width:min(220px,100%);}
-.stat-box{padding:14px 16px;border-radius:18px;background:rgba(255,255,255,0.78);border:1px solid rgba(217,227,238,0.96);text-align:left;}
-.stat-box strong{display:block;font-size:22px;line-height:1;color:var(--ink);}
-.stat-box span{display:block;font-size:11px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:var(--soft);margin-top:8px;}
 .app-list{display:grid;gap:16px;padding-top:20px;}
 .app-link{position:relative;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:24px;align-items:end;padding:20px 22px;border:1px solid rgba(217,227,238,0.96);border-radius:22px;background:rgba(255,255,255,0.88);text-decoration:none;transition:transform 180ms ease,box-shadow 180ms ease,border-color 180ms ease;}
 .app-link::before{content:"";position:absolute;left:0;top:16px;bottom:16px;width:4px;border-radius:999px;opacity:1;transform:none;}
@@ -97,7 +89,7 @@ main{width:min(1180px,100%);margin:0 auto;padding:clamp(44px,7vw,76px) clamp(18p
 .analysis .app-type{background:var(--blue-wash);color:var(--accent-dark);}
 .app-link p{font-size:15px;color:var(--muted);max-width:760px;}
 .app-meta{display:grid;gap:8px;justify-items:end;align-self:stretch;min-width:165px;}
-.sort-label{font-size:11px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:var(--soft);}
+.sort-label{font-size:11px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:var(--navy);}
 .open-label{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:0 18px;border-radius:999px;background:var(--ink);color:#fff;font-size:13px;font-weight:800;text-transform:none;letter-spacing:0;transition:transform 180ms ease,background 180ms ease;}
 .simulations .open-label{background:var(--teal);}
 .analysis .open-label{background:var(--accent);}
@@ -105,6 +97,13 @@ main{width:min(1180px,100%);margin:0 auto;padding:clamp(44px,7vw,76px) clamp(18p
 .app-link:hover .open-label,.app-link:focus-visible .open-label{transform:translateX(2px);}
 .simulations .app-link:hover,.simulations .app-link:focus-visible{border-color:rgba(13,140,147,0.28);}
 .analysis .app-link:hover,.analysis .app-link:focus-visible{border-color:rgba(20,103,184,0.28);}
+.brand:focus-visible,
+.nav-link:focus-visible,
+.nav-chip:focus-visible,
+.app-link:focus-visible{
+  outline:3px solid var(--focus);
+  outline-offset:4px;
+}
 footer{width:min(1180px,100%);margin:0 auto;padding:0 clamp(18px,4vw,34px) 30px;color:var(--soft);font-size:12px;}
 @keyframes riseIn{
   from{opacity:0;transform:translateY(16px);}
@@ -131,13 +130,9 @@ footer{width:min(1180px,100%);margin:0 auto;padding:0 clamp(18px,4vw,34px) 30px;
   .hero-inner{grid-template-columns:1fr;padding:38px 18px;gap:30px;}
   h1{font-size:clamp(38px,13vw,58px);}
   .hero-copy p{font-size:16px;}
-  .hero-summary{gap:10px;}
-  .hero-pill{width:100%;}
-  .hero-note{border-left:none;border-top:1px solid rgba(255,255,255,0.3);padding-left:0;padding-top:15px;}
   .section-top{grid-template-columns:1fr;gap:14px;}
   .app-section{padding:20px 18px;border-radius:24px;}
   .app-section-heading{grid-template-columns:1fr;align-items:flex-start;}
-  .section-stats{grid-template-columns:repeat(2,minmax(0,1fr));width:100%;}
   .app-link{grid-template-columns:1fr;gap:16px;padding:18px;}
   .app-header{flex-direction:column;align-items:flex-start;}
   .app-meta{justify-items:start;min-width:0;}
@@ -146,16 +141,17 @@ footer{width:min(1180px,100%);margin:0 auto;padding:0 clamp(18px,4vw,34px) 30px;
 </style>
 </head>
 <body>
+<a class="skip-link" href="#main-content">Skip to main content</a>
 <header class="site-header">
   <div class="header-inner">
-    <a class="brand" href="index.html" aria-label="Topic Overviews home">
+    <a class="brand" href="index.html" aria-label="Scientific Models and Analysis home">
       <span class="eyebrow">Jessie Ebie</span>
-      <span class="brand-title">Topic Overviews</span>
+      <span class="brand-title">Scientific Models and Analysis</span>
     </a>
     <div class="header-actions">
       <a class="nav-link" href="#apps">Available apps</a>
-      <a class="nav-chip" href="#simulations-title">Simulations <span>1</span></a>
-      <a class="nav-chip" href="#analysis-tools-title">Analysis <span>1</span></a>
+      <a class="nav-chip" href="#simulations-title">Simulations</a>
+      <a class="nav-chip" href="#analysis-tools-title">Analysis</a>
     </div>
   </div>
 </header>
@@ -165,37 +161,13 @@ footer{width:min(1180px,100%);margin:0 auto;padding:0 clamp(18px,4vw,34px) 30px;
   <div class="hero-inner">
     <div class="hero-copy">
       <div class="hero-kicker">Interactive science tools</div>
-      <h1 id="page-title">Topic Overviews</h1>
+      <h1 id="page-title">Scientific Models and Analysis</h1>
       <p>Interactive models and data tools for exploring behavior, testing assumptions, and making scientific ideas easier to see.</p>
-      <div class="hero-summary" aria-label="Collection summary">
-        <div class="hero-pill">
-          <div>
-            <strong>2</strong>
-            <span>Total apps</span>
-          </div>
-        </div>
-        <div class="hero-pill">
-          <div>
-            <strong>1</strong>
-            <span>Simulation</span>
-          </div>
-        </div>
-        <div class="hero-pill">
-          <div>
-            <strong>1</strong>
-            <span>Analysis tool</span>
-          </div>
-        </div>
-      </div>
     </div>
-    <aside class="hero-note" aria-label="Collection note">
-      <strong>One focused tool at a time.</strong>
-      <span>Each overview is designed to make a concept visible enough to test, tweak, and teach without extra setup.</span>
-    </aside>
   </div>
 </section>
 
-<main>
+<main id="main-content">
   <section class="section-top" aria-labelledby="overview-title">
     <div>
       <div class="section-label" id="apps">Available apps</div>
@@ -211,16 +183,6 @@ footer{width:min(1180px,100%);margin:0 auto;padding:0 clamp(18px,4vw,34px) 30px;
           <div class="section-tag">Manipulate the system</div>
           <h3 id="simulations-title">Simulations</h3>
           <p>Interactive models for testing ideas by changing conditions and watching the system respond.</p>
-        </div>
-        <div class="section-stats" aria-label="Simulation stats">
-          <div class="stat-box">
-            <strong>1</strong>
-            <span>App</span>
-          </div>
-          <div class="stat-box">
-            <strong>A-Z</strong>
-            <span>Sorted</span>
-          </div>
         </div>
       </div>
       <div class="app-list">
@@ -246,16 +208,6 @@ footer{width:min(1180px,100%);margin:0 auto;padding:0 clamp(18px,4vw,34px) 30px;
           <div class="section-tag">Read the evidence</div>
           <h3 id="analysis-tools-title">Analysis tools</h3>
           <p>Browser-based tools for reviewing uploaded data, interpreting results, and organizing scientific observations.</p>
-        </div>
-        <div class="section-stats" aria-label="Analysis tool stats">
-          <div class="stat-box">
-            <strong>1</strong>
-            <span>App</span>
-          </div>
-          <div class="stat-box">
-            <strong>A-Z</strong>
-            <span>Sorted</span>
-          </div>
         </div>
       </div>
       <div class="app-list">
