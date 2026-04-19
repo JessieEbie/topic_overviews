@@ -1,0 +1,952 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ant Navigation with Polarized Light Simulation</title>
+<meta name="description" content="An interactive polarized-light navigation simulator for exploring how desert ants use sky polarization cues, filter rotation, and sun position to predict heading errors.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Ant Navigation with Polarized Light Simulation">
+<meta property="og:description" content="Run a linked sky-dome and top-down experiment that models ant navigation under rotated polarizing filters, with Phoenix sun position controls and responsive guided instructions.">
+<meta property="og:site_name" content="Ant Navigation with Polarized Light Simulation">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Ant Navigation with Polarized Light Simulation">
+<meta name="twitter:description" content="Explore ant polarized-light navigation with an interactive sky-dome, filter rotation controls, and animated heading-error predictions.">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --font-sans:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  --color-background-primary:#F8FAFC;
+  --color-background-secondary:#EEF2F7;
+  --color-text-primary:#102033;
+  --color-text-secondary:#475569;
+  --color-text-tertiary:#64748B;
+  --color-border-secondary:#CBD5E1;
+  --color-border-tertiary:#E2E8F0;
+}
+html{min-height:100%;background:#F8FAFC;}
+body{min-height:100%;font-family:var(--font-sans);color:var(--color-text-primary);background:#F8FAFC;line-height:1.5;}
+button,input,select{font:inherit;}
+.site-header{border-bottom:1px solid var(--color-border-tertiary);background:rgba(248,250,252,0.94);position:sticky;top:0;z-index:50;backdrop-filter:blur(14px);}
+.site-header-inner{width:min(1180px,100%);margin:0 auto;padding:16px clamp(14px,3vw,28px);display:flex;align-items:flex-start;justify-content:space-between;gap:18px;}
+.eyebrow{font-size:11px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#1D4ED8;margin-bottom:2px;}
+h1{font-size:clamp(22px,3vw,34px);line-height:1.08;font-weight:750;letter-spacing:0;color:var(--color-text-primary);}
+.copyright{font-size:11px;color:var(--color-text-tertiary);margin-top:4px;}
+.intro{max-width:560px;font-size:13px;color:var(--color-text-secondary);text-align:right;margin-top:20px;}
+main{width:min(1180px,100%);margin:0 auto;padding:16px clamp(10px,2.5vw,28px) 32px;}
+#lab{width:100%;font-family:var(--font-sans,sans-serif);background:#fff;border:1px solid var(--color-border-tertiary);border-radius:8px;overflow:hidden;box-shadow:0 18px 45px rgba(15,23,42,0.08);}
+.top-tabs{display:flex;border-bottom:0.5px solid var(--color-border-tertiary);}
+.top-tab{padding:8px 18px;font-size:13px;font-weight:500;cursor:pointer;border:none;background:transparent;color:var(--color-text-secondary);border-bottom:2px solid transparent;}
+.top-tab.active{color:var(--color-text-primary);border-bottom:2px solid #1D4ED8;}
+.top-tab:hover:not(.active){color:var(--color-text-primary);}
+.panel-content{display:none;}
+.panel-content.active{display:block;}
+#exp-panel{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:0;}
+.exp-col{padding:12px clamp(8px,1.6vw,16px);}
+.exp-col:first-child{border-right:0.5px solid var(--color-border-tertiary);}
+.slabel{font-size:10px;font-weight:500;color:var(--color-text-tertiary);text-transform:uppercase;letter-spacing:0.05em;margin:8px 0 3px;}
+.divider{border:none;border-top:0.5px solid var(--color-border-tertiary);margin:7px 0;}
+.crow{display:flex;align-items:center;gap:8px;margin:4px 0;font-size:12px;color:var(--color-text-secondary);}
+.crow label{min-width:118px;font-size:11px;}
+.crow input[type=range]{flex:1;}
+.crow select,.crow input[type=number]{font-size:12px;padding:3px 5px;border:0.5px solid var(--color-border-secondary);border-radius:5px;background:var(--color-background-primary);color:var(--color-text-primary);}
+.crow input[type=number]{width:60px;}
+.val{min-width:42px;text-align:right;font-size:12px;font-weight:500;color:var(--color-text-primary);}
+.mode-tabs{display:flex;border:0.5px solid var(--color-border-secondary);border-radius:5px;overflow:hidden;width:100%;margin:4px 0 6px;}
+.mtab{flex:1;padding:4px 0;font-size:11px;cursor:pointer;border:none;background:transparent;color:var(--color-text-secondary);text-align:center;}
+.mtab.active{background:var(--color-background-secondary);color:var(--color-text-primary);font-weight:500;}
+canvas{border-radius:6px;display:block;max-width:100%;height:auto;}
+.canvas-wrap{position:relative;}
+#align-toast{position:absolute;top:8px;left:50%;transform:translateX(-50%);background:rgba(5,150,105,0.93);color:#fff;border-radius:7px;padding:5px 14px;font-size:12px;font-weight:500;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity 0.3s;z-index:20;}
+#align-toast.show{opacity:1;}
+.info-strip{display:flex;gap:5px;flex-wrap:wrap;margin:4px 0;}
+.ibadge{font-size:10px;padding:2px 7px;border-radius:4px;font-weight:500;}
+.ibadge.sun{background:#FEF3C7;color:#92400E;}
+.ibadge.pol{background:#DBEAFE;color:#1E40AF;}
+.ibadge.filt{background:#EDE9FE;color:#5B21B6;}
+.ibadge.loc{background:#D1FAE5;color:#065F46;}
+#status-txt{font-size:11px;color:var(--color-text-secondary);margin-top:3px;line-height:1.7;}
+.stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin:4px 0;}
+.scard{background:var(--color-background-secondary);border-radius:6px;padding:5px 8px;}
+.scard .sl{font-size:10px;color:var(--color-text-tertiary);}
+.scard .sv{font-size:14px;font-weight:500;color:var(--color-text-primary);}
+.btn-row{display:flex;gap:8px;margin:6px 0;align-items:center;}
+button.go-btn{background:#059669;color:#fff;border:none;border-radius:6px;padding:6px 16px;font-size:12px;font-weight:500;cursor:pointer;}
+button.go-btn:hover{background:#047857;}
+button.go-btn:disabled{background:var(--color-border-secondary);color:var(--color-text-tertiary);cursor:default;}
+button.rst-btn{background:transparent;border:0.5px solid var(--color-border-secondary);border-radius:6px;padding:6px 12px;font-size:12px;color:var(--color-text-primary);cursor:pointer;}
+button.rst-btn:hover{background:var(--color-background-secondary);}
+#phase-lbl{font-size:11px;color:var(--color-text-secondary);font-style:italic;}
+.legend-row{display:flex;gap:8px;flex-wrap:wrap;margin:4px 0;font-size:10px;color:var(--color-text-secondary);}
+.legend-row span{display:flex;align-items:center;gap:3px;}
+.ldot{width:8px;height:8px;border-radius:50%;display:inline-block;flex-shrink:0;}
+#below-h{display:none;font-size:11px;color:var(--color-text-secondary);background:var(--color-background-secondary);border-radius:6px;padding:5px 10px;margin:3px 0;}
+.exp-input-box{background:var(--color-background-secondary);border-radius:8px;padding:8px 10px;margin:6px 0;}
+.phase-indicator{display:flex;gap:5px;margin:5px 0;align-items:center;}
+.phase-dot{width:8px;height:8px;border-radius:50%;background:var(--color-border-secondary);flex-shrink:0;}
+.phase-dot.active{background:#059669;}
+.phase-dot.done{background:#1D4ED8;}
+.phase-name{font-size:10px;color:var(--color-text-tertiary);}
+.phase-name.active{color:var(--color-text-primary);font-weight:500;}
+.hint{font-size:10px;color:var(--color-text-tertiary);font-style:italic;margin:2px 0 4px;}
+#guide-panel{padding:14px 4px;overflow-y:auto;max-height:900px;}
+.guide-section{margin-bottom:18px;}
+.guide-section h3{font-size:13px;font-weight:500;color:var(--color-text-primary);margin-bottom:8px;padding-bottom:4px;border-bottom:0.5px solid var(--color-border-tertiary);}
+.guide-section p,.guide-section li{font-size:12px;color:var(--color-text-secondary);line-height:1.7;margin-bottom:5px;}
+.guide-section ul{padding-left:18px;}
+.guide-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px;}
+.gcard{background:var(--color-background-secondary);border-radius:8px;padding:10px 12px;}
+.gcard .gtitle{font-size:11px;font-weight:500;color:var(--color-text-primary);margin-bottom:5px;}
+.gcard p{font-size:11px;color:var(--color-text-secondary);line-height:1.6;margin:0;}
+.gbadge{display:inline-block;padding:1px 7px;border-radius:4px;font-size:10px;font-weight:500;margin-right:3px;vertical-align:middle;}
+.gbadge.blue{background:#DBEAFE;color:#1E40AF;}
+.gbadge.green{background:#D1FAE5;color:#065F46;}
+.gbadge.purple{background:#EDE9FE;color:#5B21B6;}
+.gbadge.red{background:#FEE2E2;color:#991B1B;}
+.gbadge.amber{background:#FEF3C7;color:#92400E;}
+.gbadge.brown{background:#FEF3C7;color:#78350F;}
+.step-list{counter-reset:steps;padding-left:0;list-style:none;}
+.step-list li{counter-increment:steps;padding-left:28px;position:relative;margin-bottom:6px;}
+.step-list li::before{content:counter(steps);position:absolute;left:0;top:0;width:18px;height:18px;background:#1D4ED8;color:#fff;border-radius:50%;font-size:10px;font-weight:500;display:flex;align-items:center;justify-content:center;line-height:1;}
+@media (max-width:760px){
+  .site-header{position:static;}
+  .site-header-inner{align-items:flex-start;flex-direction:column;padding:18px 14px 14px;}
+  .intro{text-align:left;font-size:12px;margin-top:0;}
+  main{padding:10px 8px 24px;}
+  #lab{border-radius:0;border-left:none;border-right:none;box-shadow:none;}
+  .top-tabs{position:sticky;top:0;background:#fff;z-index:30;}
+  .top-tab{flex:1;padding:10px 8px;}
+  #exp-panel{grid-template-columns:1fr;}
+  .exp-col:first-child{border-right:none;border-bottom:0.5px solid var(--color-border-tertiary);}
+  .crow{align-items:flex-start;gap:6px;flex-wrap:wrap;}
+  .crow label{min-width:100%;font-size:10px;}
+  .crow input[type=range]{min-width:0;flex:1 1 155px;}
+  .crow select{max-width:100%;}
+  .val{min-width:40px;}
+  .stat-grid{grid-template-columns:1fr 1fr;}
+  .scard:last-child{grid-column:1/-1;}
+  .phase-indicator{display:grid;grid-template-columns:auto 1fr;gap:5px 7px;align-items:center;}
+  .phase-indicator>span[style]{display:none;}
+  .btn-row{flex-wrap:wrap;}
+  .canvas-wrap,#top-c,#angle-c{width:100%;max-width:310px;margin-left:auto;margin-right:auto;}
+  .legend-row{justify-content:center;}
+  .guide-row{grid-template-columns:1fr;}
+  #guide-panel{padding:14px 12px;max-height:none;}
+}
+@media (max-width:380px){
+  .stat-grid{grid-template-columns:1fr;}
+  .scard:last-child{grid-column:auto;}
+  h1{font-size:21px;}
+}
+</style>
+</head>
+
+<body>
+<header class="site-header">
+  <div class="site-header-inner">
+    <div>
+      <div class="eyebrow">Interactive lab</div>
+      <h1>Ant Navigation with Polarized Light Simulation</h1>
+      <div class="copyright">&copy; 2026 Jessie Ebie</div>
+    </div>
+    <p class="intro">Model how a rotated polarizing filter shifts an ant's celestial compass, then compare the predicted exit heading against the unshifted homeward route.</p>
+  </div>
+</header>
+
+<main>
+
+<div id="lab">
+<div class="top-tabs">
+  <button class="top-tab active" onclick="showTab('exp')">Experiment</button>
+  <button class="top-tab" onclick="showTab('guide')">Guide</button>
+</div>
+
+<div id="exp-panel" class="panel-content active">
+  <div class="exp-col">
+    <div class="slabel">Window 1 — Sky dome (Phoenix AZ)</div>
+    <div class="hint">Drag the nest (blue dot) or feeder (green dot) anywhere on the sky canvas</div>
+    <div class="mode-tabs">
+      <button class="mtab active" id="tab-dt" onclick="setMode('datetime')">Real date/time</button>
+      <button class="mtab" id="tab-man" onclick="setMode('manual')">Manual az/el</button>
+    </div>
+    <div id="pane-dt">
+      <div class="crow">
+        <select id="dt-month" onchange="update()">
+          <option value="1">Jan</option><option value="2">Feb</option><option value="3">Mar</option>
+          <option value="4">Apr</option><option value="5">May</option><option value="6">Jun</option>
+          <option value="7">Jul</option><option value="8">Aug</option><option value="9">Sep</option>
+          <option value="10">Oct</option><option value="11">Nov</option><option value="12">Dec</option>
+        </select>
+        <input type="number" id="dt-day" min="1" max="31" oninput="update()">
+        <input type="number" id="dt-year" min="2000" max="2099" oninput="update()">
+      </div>
+      <div class="crow">
+        <label>Time (MST)</label>
+        <select id="dt-hour" onchange="update()"></select>
+        <select id="dt-min" onchange="update()"></select>
+      </div>
+      <div id="below-h">Sun below horizon — twilight polarization pattern shown</div>
+    </div>
+    <div id="pane-man" style="display:none;">
+      <div class="crow"><label>Sun azimuth</label><input type="range" id="sun-az" min="0" max="359" value="200" step="1" oninput="update()"><span class="val" id="sun-az-v">200°</span></div>
+      <div class="crow"><label>Sun elevation</label><input type="range" id="sun-el" min="-18" max="90" value="18" step="1" oninput="update()"><span class="val" id="sun-el-v">18°</span></div>
+    </div>
+    <div class="divider"></div>
+    <div class="slabel">Polarizing filter</div>
+    <div class="crow"><label>Initial filter angle</label><input type="range" id="filt-init" min="-45" max="45" value="0" step="1" oninput="update()"><span class="val" id="filt-init-v">0°</span></div>
+    <div class="crow"><label>Filter opacity</label><input type="range" id="filt-op" min="20" max="100" value="75" step="1" oninput="update()"><span class="val" id="filt-op-v">75%</span></div>
+    <div class="divider"></div>
+    <div class="info-strip" id="info-strip"></div>
+    <div id="status-txt"></div>
+    <div class="canvas-wrap">
+      <canvas id="sky-c" width="310" height="310" style="cursor:grab;"></canvas>
+      <div id="align-toast">Filter aligned — control condition</div>
+    </div>
+    <div class="legend-row" style="margin-top:5px;">
+      <span><span class="ldot" style="background:#F59E0B;border:1px solid #92400E;"></span>Sun</span>
+      <span><span class="ldot" style="background:#1D4ED8;"></span>Ambient E-vector</span>
+      <span><span class="ldot" style="background:#7C3AED;"></span>Filter E-vector</span>
+      <span><span class="ldot" style="background:#059669;"></span>Feeder</span>
+      <span><span class="ldot" style="background:#1E3A8A;"></span>Nest</span>
+      <span><span class="ldot" style="background:#DC2626;"></span>Solar meridian</span>
+    </div>
+  </div>
+
+  <div class="exp-col">
+    <div class="slabel">Window 2 — Top-down experiment view</div>
+    <div class="hint">Nest and feeder positions mirror Window 1 — drag either dot in Window 1 to reposition</div>
+    <div class="exp-input-box">
+      <div class="slabel" style="margin-top:0;">Experiment parameters</div>
+      <div class="crow"><label>Filter rotation during trial</label><input type="range" id="e-filt-rot" min="-45" max="45" value="45" step="1" oninput="syncExp()"><span class="val" id="e-filt-rot-v">+45°</span></div>
+      <div class="crow"><label>Ant uses polarized light?</label>
+        <select id="e-uses-pol" onchange="syncExp()">
+          <option value="1">Yes — show navigation error</option>
+          <option value="0">No — exits on correct heading</option>
+        </select>
+      </div>
+      <div class="crow">
+        <label>Animation speed</label>
+        <input type="range" id="e-speed" min="0" max="8" value="4" step="1" oninput="syncExp()">
+        <span class="val" id="e-speed-v">1×</span>
+      </div>
+    </div>
+    <div class="stat-grid">
+      <div class="scard"><div class="sl">Feeder azimuth</div><div class="sv" id="ic-faz">—</div></div>
+      <div class="scard"><div class="sl">Filter rotated by</div><div class="sv" id="ic-frot">+45°</div></div>
+      <div class="scard"><div class="sl">Predicted error</div><div class="sv" id="ic-err" style="color:#DC2626;">45°</div></div>
+    </div>
+    <div class="phase-indicator">
+      <span class="phase-dot" id="pd-out"></span><span class="phase-name" id="pn-out">Outbound</span>
+      <span style="font-size:10px;color:var(--color-border-secondary);">—</span>
+      <span class="phase-dot" id="pd-feed"></span><span class="phase-name" id="pn-feed">Feeding</span>
+      <span style="font-size:10px;color:var(--color-border-secondary);">—</span>
+      <span class="phase-dot" id="pd-rot"></span><span class="phase-name" id="pn-rot">Filter rotates</span>
+      <span style="font-size:10px;color:var(--color-border-secondary);">—</span>
+      <span class="phase-dot" id="pd-exit"></span><span class="phase-name" id="pn-exit">Exit</span>
+    </div>
+    <div class="btn-row">
+      <button class="go-btn" id="btn-go" onclick="startAnim()">Run experiment</button>
+      <button class="rst-btn" onclick="resetAnim()">Reset</button>
+      <span id="phase-lbl">Ready</span>
+    </div>
+    <canvas id="top-c" width="310" height="295" style="cursor:default;"></canvas>
+    <canvas id="angle-c" width="310" height="90" style="margin-top:4px;"></canvas>
+  </div>
+</div>
+
+<div id="guide-panel" class="panel-content">
+
+  <div class="guide-section">
+    <h3>Overview</h3>
+    <p>This tool simulates a polarized light manipulation experiment based on Freas et al. (2019, <em>Journal of Comparative Physiology A</em>). A linear polarizing filter is placed over a foraging ant at a feeder and rotated while she feeds. If the ant uses the sky's polarization pattern as a compass, her exit heading will be offset by the same angle as the filter rotation — a measurable navigation error that confirms use of the celestial polarization compass.</p>
+    <p>The tool has two windows side by side. Window 1 is the sky dome — the view looking straight up from the ground. Window 2 is a top-down ground view showing the ant's movement. Both windows are linked: dragging the nest or feeder in Window 1 updates Window 2 automatically.</p>
+  </div>
+
+  <div class="guide-section">
+    <h3>How to use the tool — step by step</h3>
+    <ul class="step-list">
+      <li>Set the date and time in Window 1 to match your planned field session (or use Manual mode to set the sun position directly). The sky color and E-vector pattern update to reflect the real sun position for Phoenix AZ.</li>
+      <li>Drag the <strong>nest dot</strong> (dark blue, labeled "Nest") on the sky canvas to any position inside the dome. This represents the nest's location relative to the sky reference frame.</li>
+      <li>Drag the <strong>feeder dot</strong> (green, labeled "Feeder") to set where the feeder is. The direction from nest to feeder is the ant's outbound heading. The filter circle appears at the feeder position.</li>
+      <li>Check the E-vector tick marks (blue lines) in and around the filter circle to see what polarization angle the ant will perceive at the feeder location.</li>
+      <li>Adjust the <strong>initial filter angle</strong> slider if you want the filter pre-rotated. At 0° the filter aligns with the ambient E-vector — a green glow appears indicating this is the control condition.</li>
+      <li>In Window 2, set the <strong>filter rotation during trial</strong> — this is the angle the filter will rotate while the ant feeds. Freas et al. used ±45°.</li>
+      <li>Choose whether the ant uses polarized light and set the animation speed.</li>
+      <li>Click <strong>Run experiment</strong> to watch the full trial: outbound walk → feeding pause → filter rotation → exit on error heading.</li>
+      <li>Use <strong>Reset</strong> to clear the trails and run again with different settings.</li>
+    </ul>
+  </div>
+
+  <div class="guide-section">
+    <h3>Window 1 — Sky dome controls</h3>
+    <div class="guide-row">
+      <div class="gcard">
+        <div class="gtitle"><span class="gbadge amber">Date and time</span></div>
+        <p>Defaults to today's date and current hour in Phoenix MST (UTC−7, no daylight saving). The NOAA solar position algorithm computes the exact sun azimuth and elevation for that date and time. Adjust to match your planned field session. The sky color changes with sun elevation: bright blue at high elevation, warm orange near sunset/sunrise, deep navy during twilight.</p>
+      </div>
+      <div class="gcard">
+        <div class="gtitle"><span class="gbadge amber">Manual sun azimuth and elevation</span></div>
+        <p>Switch to "Manual az/el" mode to set the sun position directly using sliders rather than a date and time. Azimuth is the compass bearing of the sun (0° = north, 90° = east, 180° = south, 270° = west). Elevation is the height above the horizon in degrees (0° = horizon, 90° = directly overhead). The polarization pattern is strongest and most useful to ants at low sun elevations (0–20°), matching the twilight and pre-sunset conditions used in Freas et al.</p>
+      </div>
+      <div class="gcard">
+        <div class="gtitle"><span class="gbadge brown">Nest position — drag on sky canvas</span></div>
+        <p>The dark blue "Nest" dot on the sky canvas is fully draggable. Move it anywhere inside the dome circle. In the sky dome, the nest is at the center of the ant's reference frame — dragging it changes which part of the polarization pattern is overhead at the nest location. The feeder moves with it to preserve the trail direction. Window 2 mirrors this position automatically.</p>
+      </div>
+      <div class="gcard">
+        <div class="gtitle"><span class="gbadge green">Feeder position — drag on sky canvas</span></div>
+        <p>The green "Feeder" dot is also freely draggable on the sky canvas. Drag it independently of the nest to set the feeder's azimuth and distance. The filter circle appears at the feeder location and shows the local E-vector angle at that point in the sky. The direction from nest to feeder is the ant's outbound heading, which becomes its homeward heading in reverse when it exits. Window 2 mirrors this position automatically.</p>
+      </div>
+      <div class="gcard">
+        <div class="gtitle"><span class="gbadge purple">Initial filter angle (−45° to +45°)</span></div>
+        <p>The orientation of the polarizing filter before the experiment trial begins. At 0°, the filter transmission axis aligns with the ambient E-vector at the feeder location — this is the control condition, indicated by a green glow around the filter circle. Rotating it pre-shifts the E-vector the ant perceives before the trial rotation occurs. In most experiments this is left at 0°.</p>
+      </div>
+      <div class="gcard">
+        <div class="gtitle"><span class="gbadge purple">Filter opacity</span></div>
+        <p>Controls how visible the filter E-vector tick marks appear on the canvas. This is a display-only setting and does not affect the physics or the ant's behavior. Reduce it if the filter ticks are obscuring the ambient E-vector pattern underneath; increase it to make the filter manipulation more visible.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="guide-section">
+    <h3>Window 2 — Experiment controls</h3>
+    <div class="guide-row">
+      <div class="gcard">
+        <div class="gtitle"><span class="gbadge red">Filter rotation during trial (−45° to +45°)</span></div>
+        <p>The number of degrees the filter physically rotates while the ant is feeding at the feeder. This is the core experimental manipulation. +45° rotates clockwise, −45° counterclockwise. If the ant uses the polarization pattern for navigation, her exit heading will be offset by exactly this angle. Freas et al. used ±45° in all conditions. The filter circle E-vector lines visibly rotate during the animation.</p>
+      </div>
+      <div class="gcard">
+        <div class="gtitle">Ant uses polarized light?</div>
+        <p>Toggle between two conditions. "Yes" shows the experimental prediction: the ant exits on a heading offset by the filter rotation angle, shown as a dashed red trail with an error arc and label. "No" shows the null hypothesis: the ant exits on the correct homeward heading regardless of filter rotation. Running both in sequence lets you compare what a positive result vs. a negative result would look like visually.</p>
+      </div>
+      <div class="gcard">
+        <div class="gtitle">Animation speed</div>
+        <p>Ranges from 0.25× (very slow) through 1× (normal) to 5× (fast). Sub-1× speeds are especially useful for demonstrations — at 0.25× you can clearly see the filter E-vector lines rotate step by step and watch the ant's body reorient before it steps away from the feeder. Use faster speeds for quick trial previews when adjusting parameters.</p>
+      </div>
+      <div class="gcard">
+        <div class="gtitle">Phase indicator</div>
+        <p>The four dots at the top of Window 2 light up as the animation progresses: Outbound (ant walks to feeder) → Feeding (ant pauses, filter in place) → Filter rotates (filter turns, ant reorients) → Exit (ant departs on shifted heading). Completed phases turn blue; the active phase is green.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="guide-section">
+    <h3>Reading the sky dome</h3>
+    <p>The dome is a view looking straight up. The center is the zenith (directly overhead) and the rim is the horizon. N, E, S, W are marked around the edge. The short blue tick marks show the local E-vector (polarization angle) across the sky — they run perpendicular to the direction toward the sun and form concentric arcs around it. The red dashed line is the solar meridian passing through the sun, zenith, and anti-solar point. The purple circle is the filter at the feeder location, with its own E-vector tick marks showing what the ant perceives through the filter.</p>
+    <p>The polarization pattern persists through twilight (sun 0° to −18° below the horizon), which is why ants continue to use it after sunset. During twilight the sky darkens but the E-vector ticks remain visible, and the sun is shown as a dashed circle at the horizon point.</p>
+  </div>
+
+  <div class="guide-section">
+    <h3>Reading the angle diagram</h3>
+    <p>The three circles at the bottom of Window 2 show E-vector orientation at the feeder location. The left circle (blue) shows the ambient E-vector — what the ant perceives without any filter. The middle circle (purple) shows the filter at its starting angle before the trial rotation. The right circle (red) shows the filter after rotation — the ant perceives this as if it were the natural sky direction and calculates its homeward heading accordingly, producing the navigation error shown by the red trail.</p>
+  </div>
+
+  <div class="guide-section">
+    <h3>Tips for realistic field conditions</h3>
+    <ul>
+      <li>Set the time to early morning (6–8 AM) or late afternoon (4–6 PM) in November or April — these match the seasons and times used in Freas et al. (October–November 2018 and April 2019).</li>
+      <li>Sun elevation of 0–20° gives the strongest polarization pattern and is when V. pergandei is most active near the nest.</li>
+      <li>With feeder azimuth 90° (feeder due east of nest), the ant's homeward heading is 270° (west). A +45° filter rotation predicts exit at 315° (NW).</li>
+      <li>Drag the nest to a corner and the feeder toward the opposite side to maximize the visible trail length in Window 2.</li>
+      <li>Use 0.25× speed during presentations so the audience can see the filter rotate and the ant reorient before it exits.</li>
+    </ul>
+  </div>
+
+</div>
+</div>
+
+<script>
+const SC=document.getElementById('sky-c'),sctx=SC.getContext('2d');
+const TC=document.getElementById('top-c'),tctx=TC.getContext('2d');
+const AC=document.getElementById('angle-c'),actx=AC.getContext('2d');
+const SW=310,SH=310,TCW=310,TCH=295;
+const SR=134; // sky dome radius in canvas px
+const SCX=SW/2,SCY=SH/2;
+const LAT=33.45,LON=-112.07;
+const ANT_HEAD=10;
+const SPEED_MAP=[0.25,0.4,0.6,0.75,1,1.5,2,3,5];
+const SPEED_LABELS=['0.25×','0.4×','0.6×','0.75×','1×','1.5×','2×','3×','5×'];
+let activeDpr=1;
+
+function setupHiDPICanvas(canvas,ctx,w,h,dpr){
+  canvas.width=Math.round(w*dpr);
+  canvas.height=Math.round(h*dpr);
+  canvas.style.width=w+'px';
+  canvas.style.height='auto';
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+}
+
+function setupHiDPI(){
+  activeDpr=Math.max(1,Math.min(window.devicePixelRatio||1,3));
+  setupHiDPICanvas(SC,sctx,SW,SH,activeDpr);
+  setupHiDPICanvas(TC,tctx,TCW,TCH,activeDpr);
+  setupHiDPICanvas(AC,actx,310,90,activeDpr);
+}
+
+setupHiDPI();
+
+// Sky canvas: nest and feeder in sky-canvas coordinates
+// Nest starts at center, feeder offset east
+let skyNestX=SCX, skyNestY=SCY;
+let skyFeedX=SCX+90, skyFeedY=SCY;
+let skyDragTarget=null;
+let toastTimer=null,lastAligned=false;
+let curMode='datetime';
+
+let A={phase:'idle',antX:0,antY:0,antAngle:0,phaseT:0,
+  filtCurrentAngle:0,filtEndAngle:0,correctExitAngle:0,actualExitAngle:0,
+  trailOut:[],trailErr:[],raf:null,lastTs:null,speedMult:1,usesPol:true,
+  restX:0,restY:0,outAngle:0};
+
+function formatHourLabel(hr){
+  if(hr===0)return '12 AM';
+  if(hr<12)return hr+' AM';
+  if(hr===12)return '12 PM';
+  return (hr-12)+' PM';
+}
+
+function populateTimeMenus(){
+  const hourSel=document.getElementById('dt-hour'),minSel=document.getElementById('dt-min');
+  hourSel.innerHTML='';
+  minSel.innerHTML='';
+  for(let h=0;h<24;h++){
+    const opt=document.createElement('option');
+    opt.value=h;
+    opt.textContent=formatHourLabel(h);
+    hourSel.appendChild(opt);
+  }
+  for(let m=0;m<60;m++){
+    const opt=document.createElement('option');
+    opt.value=m;
+    opt.textContent=':'+String(m).padStart(2,'0');
+    minSel.appendChild(opt);
+  }
+}
+
+function currentPhoenixParts(){
+  try{
+    const parts=new Intl.DateTimeFormat('en-US',{
+      timeZone:'America/Phoenix',
+      year:'numeric',
+      month:'numeric',
+      day:'numeric',
+      hour:'numeric',
+      minute:'numeric',
+      hourCycle:'h23'
+    }).formatToParts(new Date());
+    return Object.fromEntries(parts.filter(p=>p.type!=='literal').map(p=>[p.type,parseInt(p.value,10)]));
+  }catch(err){
+    const phx=new Date(Date.now()-7*3600000);
+    return{
+      month:phx.getUTCMonth()+1,
+      day:phx.getUTCDate(),
+      year:phx.getUTCFullYear(),
+      hour:phx.getUTCHours(),
+      minute:phx.getUTCMinutes()
+    };
+  }
+}
+
+// Init date/time to the visitor's current moment in Phoenix, Arizona.
+(function(){
+  populateTimeMenus();
+  const phx=currentPhoenixParts();
+  document.getElementById('dt-month').value=phx.month;
+  document.getElementById('dt-day').value=phx.day;
+  document.getElementById('dt-year').value=phx.year;
+  document.getElementById('dt-hour').value=phx.hour;
+  document.getElementById('dt-min').value=phx.minute;
+})();
+
+function showTab(t){
+  document.querySelectorAll('.top-tab').forEach((b,i)=>b.classList.toggle('active',i===(t==='exp'?0:1)));
+  document.getElementById('exp-panel').classList.toggle('active',t==='exp');
+  document.getElementById('guide-panel').classList.toggle('active',t==='guide');
+}
+function d2r(d){return d*Math.PI/180;}
+function r2d(r){return r*180/Math.PI;}
+
+function solarPos(yr,mo,dy,hr,mn){
+  const utc=hr+7+mn/60;
+  const AA=Math.floor((14-mo)/12),Y=yr+4800-AA,M=mo+12*AA-3;
+  let JD=dy+Math.floor((153*M+2)/5)+365*Y+Math.floor(Y/4)-Math.floor(Y/100)+Math.floor(Y/400)-32045;
+  JD=JD-0.5+utc/24;
+  const n=JD-2451545.0,L0=(280.46646+36000.76983*(n/36525))%360;
+  const M0=d2r((357.52911+35999.05029*(n/36525))%360);
+  const C=(1.914602-0.004817*(n/36525))*Math.sin(M0)+(0.019993-0.000101*(n/36525))*Math.sin(2*M0)+0.000289*Math.sin(3*M0);
+  const sL=d2r(L0+C),ob=d2r(23.439291-0.013004*(n/36525));
+  const sinDec=Math.sin(ob)*Math.sin(sL),dec=Math.asin(sinDec);
+  const e2=0.016708634,y2=Math.tan(ob/2)**2,L0r=d2r(L0);
+  const EqT=4*r2d(y2*Math.sin(2*L0r)-2*e2*Math.sin(M0)+4*e2*y2*Math.sin(M0)*Math.cos(2*L0r)-0.5*y2*y2*Math.sin(4*L0r)-1.25*e2*e2*Math.sin(2*M0));
+  const TST=utc*60+4*LON+EqT,HA=d2r(TST/4-180),latR=d2r(LAT);
+  const sinEl=Math.sin(latR)*Math.sin(dec)+Math.cos(latR)*Math.cos(dec)*Math.cos(HA),el=r2d(Math.asin(sinEl));
+  let az=r2d(Math.acos(Math.max(-1,Math.min(1,(Math.sin(latR)*sinEl-Math.sin(dec))/(Math.cos(latR)*Math.cos(Math.asin(sinEl)))))));
+  if(HA>0)az=360-az;
+  return{az:az%360,el};
+}
+
+function getV(){
+  let sunAz,sunEl;
+  if(curMode==='datetime'){
+    const p=solarPos(parseInt(document.getElementById('dt-year').value)||2025,parseInt(document.getElementById('dt-month').value),parseInt(document.getElementById('dt-day').value)||1,parseInt(document.getElementById('dt-hour').value),parseInt(document.getElementById('dt-min').value));
+    sunAz=p.az;sunEl=p.el;
+  }else{sunAz=+document.getElementById('sun-az').value;sunEl=+document.getElementById('sun-el').value;}
+  return{sunAz,sunEl,filtInit:+document.getElementById('filt-init').value,filtOp:+document.getElementById('filt-op').value/100};
+}
+function getEP(){
+  const si=+document.getElementById('e-speed').value;
+  return{filtRot:+document.getElementById('e-filt-rot').value,speedMult:SPEED_MAP[si],usesPol:document.getElementById('e-uses-pol').value==='1'};
+}
+
+// Convert sky canvas coords → sky-relative azimuth & elevation
+// The sky dome: center=zenith, rim=horizon, radius=SR
+// azimuth: angle from north clockwise; in canvas, north is UP (y negative)
+function skyXYtoAzEl(x,y){
+  const dx=x-SCX,dy=y-SCY,r=Math.sqrt(dx*dx+dy*dy);
+  const el=Math.max(0,90*(1-r/SR));
+  const az=((r2d(Math.atan2(dy,dx))+90+360)%360);
+  return{az,el,r};
+}
+
+// Convert nest/feeder sky canvas positions → top-canvas positions
+// We map the relative vector (feeder-nest) in sky canvas to top canvas
+function skyToTop(sx,sy){
+  // Scale sky canvas coords proportionally to top canvas
+  const scaleX=TCW/SW, scaleY=TCH/SH;
+  return{x:sx*scaleX, y:sy*scaleY};
+}
+
+function getNestTopPos(){return skyToTop(skyNestX,skyNestY);}
+function getFeedTopPos(){return skyToTop(skyFeedX,skyFeedY);}
+
+// Derived azimuth from nest→feeder in sky canvas
+function derivedAzimuth(){
+  const dx=skyFeedX-skyNestX,dy=skyFeedY-skyNestY;
+  return((r2d(Math.atan2(dy,dx))+90+360)%360);
+}
+
+// Local polarization angle at a sky canvas point
+function localPolAngle(sx,sy,sunAz){
+  const ptAz=(r2d(Math.atan2(sy-SCY,sx-SCX))+90+360)%360;
+  return d2r(ptAz-sunAz+90);
+}
+
+function setMode(m){
+  curMode=m;
+  document.getElementById('pane-dt').style.display=m==='datetime'?'block':'none';
+  document.getElementById('pane-man').style.display=m==='manual'?'block':'none';
+  document.getElementById('tab-dt').classList.toggle('active',m==='datetime');
+  document.getElementById('tab-man').classList.toggle('active',m==='manual');
+  update();
+}
+
+function syncExp(){
+  const ep=getEP(),si=+document.getElementById('e-speed').value;
+  document.getElementById('e-filt-rot-v').textContent=(ep.filtRot>=0?'+':'')+ep.filtRot+'°';
+  document.getElementById('e-speed-v').textContent=SPEED_LABELS[si];
+  document.getElementById('ic-frot').textContent=(ep.filtRot>=0?'+':'')+ep.filtRot+'°';
+  document.getElementById('ic-err').textContent=Math.abs(ep.filtRot)+'°';
+  if(A.phase==='idle'||A.phase==='done')drawTopScene();
+}
+
+function azElToSkyXY(az,el){
+  const r=SR*(1-el/90),a=d2r(az-90);
+  return{x:SCX+r*Math.cos(a),y:SCY+r*Math.sin(a)};
+}
+
+function drawSky(v){
+  const{sunAz,sunEl,filtInit,filtOp}=v;
+  const bh=sunEl<0,tw=sunEl>=-18&&sunEl<0;
+  document.getElementById('below-h').style.display=(bh&&curMode==='datetime')?'block':'none';
+  sctx.clearRect(0,0,SW,SH);
+  // Sky gradient
+  let st,se;
+  if(sunEl>=20){st='#87CEEB';se='#4A9ED4';}
+  else if(sunEl>=5){st='#AADDEE';se='#6AAEC8';}
+  else if(sunEl>=0){st='#D4A96A';se='#C07840';}
+  else if(tw){st='#2B4F7A';se='#1A2E50';}
+  else{st='#0D1B2A';se='#05101A';}
+  const sg=sctx.createRadialGradient(SCX,SCY,0,SCX,SCY,SR);
+  sg.addColorStop(0,st);sg.addColorStop(1,se);
+  sctx.beginPath();sctx.arc(SCX,SCY,SR,0,Math.PI*2);sctx.fillStyle=sg;sctx.fill();
+  sctx.beginPath();sctx.arc(SCX,SCY,SR,0,Math.PI*2);sctx.strokeStyle=bh?'rgba(100,150,200,0.3)':'rgba(30,80,160,0.35)';sctx.lineWidth=2;sctx.stroke();
+  // Elevation rings
+  [30,60].forEach(el=>{
+    const pr=SR*(1-el/90);sctx.beginPath();sctx.arc(SCX,SCY,pr,0,Math.PI*2);
+    sctx.strokeStyle=bh?'rgba(180,210,255,0.15)':'rgba(30,80,160,0.15)';sctx.lineWidth=0.75;sctx.stroke();
+    sctx.fillStyle=bh?'rgba(180,210,255,0.5)':'rgba(20,60,130,0.45)';
+    sctx.font='9px var(--font-sans,sans-serif)';sctx.textAlign='left';sctx.textBaseline='middle';
+    sctx.fillText(el+'°',SCX+pr+3,SCY);
+  });
+  // E-vector ticks
+  {
+    const night=sunEl<-18;
+    const ea=sunEl>=0?0.75:night?0.42:Math.max(0.5,0.78*(1+sunEl/24));
+    const ec=bh?'#F8FAFC':'#1D4ED8';
+    const endColor=bh?'#BAE6FD':'#93C5FD';
+    for(let px=-SR+8;px<=SR-8;px+=28){
+      for(let py=-SR+8;py<=SR-8;py+=28){
+        const dist=Math.sqrt(px*px+py*py);if(dist>SR-12)continue;
+        const x=SCX+px,y=SCY+py;
+        const lp=localPolAngle(x,y,sunAz),len=11,ca=Math.cos(lp),sa=Math.sin(lp);
+        sctx.save();sctx.strokeStyle=ec;sctx.lineWidth=2;sctx.lineCap='round';sctx.globalAlpha=ea;
+        sctx.beginPath();sctx.moveTo(x-ca*len/2,y-sa*len/2);sctx.lineTo(x+ca*len/2,y+sa*len/2);sctx.stroke();
+        sctx.globalAlpha=ea*0.58;sctx.strokeStyle=endColor;sctx.lineWidth=0.8;
+        sctx.beginPath();sctx.arc(x-ca*len/2,y-sa*len/2,1.4,0,Math.PI*2);sctx.stroke();
+        sctx.beginPath();sctx.arc(x+ca*len/2,y+sa*len/2,1.4,0,Math.PI*2);sctx.stroke();
+        sctx.restore();
+      }
+    }
+    // Solar meridian
+    const sp2=azElToSkyXY(sunAz,Math.max(0,sunEl));
+    const asp=azElToSkyXY((sunAz+180)%360,0);
+    sctx.save();sctx.setLineDash([5,3]);sctx.strokeStyle=bh?'#FCA5A5':'#DC2626';sctx.lineWidth=1.5;sctx.globalAlpha=bh?0.8:0.7;
+    sctx.beginPath();sctx.moveTo(sp2.x,sp2.y);sctx.lineTo(SCX,SCY);sctx.lineTo(asp.x,asp.y);sctx.stroke();sctx.restore();
+  }
+  // Cardinals
+  ['N','E','S','W'].forEach((lbl,i)=>{
+    const a=d2r(i*90-90),ox=SCX+(SR+13)*Math.cos(a),oy=SCY+(SR+13)*Math.sin(a);
+    sctx.save();sctx.font='bold 11px var(--font-sans,sans-serif)';sctx.textAlign='center';sctx.textBaseline='middle';
+    const tw2=sctx.measureText(lbl).width+8;
+    sctx.fillStyle='#1E3A8A';sctx.globalAlpha=0.85;
+    sctx.beginPath();if(sctx.roundRect)sctx.roundRect(ox-tw2/2,oy-8,tw2,16,3);else sctx.rect(ox-tw2/2,oy-8,tw2,16);sctx.fill();
+    sctx.globalAlpha=1;sctx.fillStyle='#E0F2FF';sctx.fillText(lbl,ox,oy);sctx.restore();
+  });
+  // Trail between nest and feeder
+  sctx.save();sctx.setLineDash([4,3]);sctx.strokeStyle='rgba(5,150,105,0.45)';sctx.lineWidth=1.2;sctx.globalAlpha=0.7;
+  sctx.beginPath();sctx.moveTo(skyNestX,skyNestY);sctx.lineTo(skyFeedX,skyFeedY);sctx.stroke();sctx.restore();
+  // Sun
+  if(sunEl>=0){
+    const sp=azElToSkyXY(sunAz,sunEl),ssz=7+Math.min(sunEl,20)*0.1;
+    const sgg=sctx.createRadialGradient(sp.x,sp.y,0,sp.x,sp.y,ssz*2.2);
+    sgg.addColorStop(0,'rgba(255,245,80,1)');sgg.addColorStop(0.35,'rgba(255,200,30,0.85)');sgg.addColorStop(1,'rgba(255,160,0,0)');
+    sctx.beginPath();sctx.arc(sp.x,sp.y,ssz*2.2,0,Math.PI*2);sctx.fillStyle=sgg;sctx.fill();
+    sctx.beginPath();sctx.arc(sp.x,sp.y,ssz,0,Math.PI*2);sctx.fillStyle='#FDE047';sctx.strokeStyle='#D97706';sctx.lineWidth=1.2;sctx.fill();sctx.stroke();
+    sctx.font='bold 9px var(--font-sans,sans-serif)';sctx.fillStyle='#92400E';sctx.textAlign='center';sctx.textBaseline='bottom';sctx.fillText('Sun',sp.x,sp.y-ssz*2.3);
+  }else if(sunEl>=-18){
+    const bsp=azElToSkyXY(sunAz,0);
+    sctx.save();sctx.globalAlpha=0.4;sctx.beginPath();sctx.arc(bsp.x,bsp.y,7,0,Math.PI*2);sctx.setLineDash([3,2]);sctx.strokeStyle='#FDE047';sctx.lineWidth=1.5;sctx.stroke();sctx.restore();
+  }
+  // Filter at feeder
+  const lp=localPolAngle(skyFeedX,skyFeedY,sunAz);
+  const filtPol=lp+d2r(filtInit);
+  const isAligned=Math.abs(filtInit)<=1;
+  const fR=32;
+  sctx.save();sctx.globalAlpha=0.14;sctx.fillStyle='#7C3AED';sctx.beginPath();sctx.arc(skyFeedX,skyFeedY,fR,0,Math.PI*2);sctx.fill();sctx.restore();
+  for(let ox=-fR+6;ox<=fR-6;ox+=10){
+    for(let oy=-fR+6;oy<=fR-6;oy+=10){
+      if(Math.sqrt(ox*ox+oy*oy)>fR-6)continue;
+      const cf=Math.cos(filtPol),sf=Math.sin(filtPol),len=9;
+      sctx.save();sctx.strokeStyle='#7C3AED';sctx.lineWidth=1.8;sctx.lineCap='round';sctx.globalAlpha=filtOp*0.8;
+      sctx.beginPath();sctx.moveTo(skyFeedX+ox-cf*len/2,skyFeedY+oy-sf*len/2);sctx.lineTo(skyFeedX+ox+cf*len/2,skyFeedY+oy+sf*len/2);sctx.stroke();sctx.restore();
+    }
+  }
+  sctx.save();sctx.globalAlpha=0.8;sctx.strokeStyle=isAligned?'#059669':'#6D28D9';sctx.lineWidth=isAligned?2.5:1.5;sctx.setLineDash([4,2]);
+  sctx.beginPath();sctx.arc(skyFeedX,skyFeedY,fR,0,Math.PI*2);sctx.stroke();sctx.restore();
+  if(isAligned){sctx.save();sctx.globalAlpha=0.22;sctx.strokeStyle='#10B981';sctx.lineWidth=4;sctx.beginPath();sctx.arc(skyFeedX,skyFeedY,fR+3,0,Math.PI*2);sctx.stroke();sctx.restore();}
+  // Ambient E-vec at feeder
+  const ll=22,ca=Math.cos(lp),sa=Math.sin(lp);
+  sctx.save();sctx.strokeStyle='#1D4ED8';sctx.lineWidth=2.5;sctx.lineCap='round';sctx.globalAlpha=0.9;
+  sctx.beginPath();sctx.moveTo(skyFeedX-ca*ll,skyFeedY-sa*ll);sctx.lineTo(skyFeedX+ca*ll,skyFeedY+sa*ll);sctx.stroke();sctx.restore();
+  if(!isAligned){
+    const cf2=Math.cos(filtPol),sf2=Math.sin(filtPol);
+    sctx.save();sctx.strokeStyle='#7C3AED';sctx.lineWidth=2.5;sctx.lineCap='round';sctx.globalAlpha=filtOp;
+    sctx.beginPath();sctx.moveTo(skyFeedX-cf2*ll,skyFeedY-sf2*ll);sctx.lineTo(skyFeedX+cf2*ll,skyFeedY+sf2*ll);sctx.stroke();sctx.restore();
+  }
+  // Feeder dot
+  sctx.beginPath();sctx.arc(skyFeedX,skyFeedY,7,0,Math.PI*2);sctx.fillStyle='#059669';sctx.globalAlpha=1;sctx.fill();sctx.strokeStyle='#fff';sctx.lineWidth=2;sctx.stroke();
+  sctx.font='bold 9px var(--font-sans,sans-serif)';sctx.fillStyle='#064E3B';sctx.textAlign='center';sctx.textBaseline='top';sctx.fillText('Feeder',skyFeedX,skyFeedY+9);
+  // Nest dot — drawn on top
+  sctx.beginPath();sctx.arc(skyNestX,skyNestY,8,0,Math.PI*2);sctx.fillStyle='#1E3A8A';sctx.globalAlpha=1;sctx.fill();sctx.strokeStyle='#fff';sctx.lineWidth=2;sctx.stroke();
+  sctx.font='bold 9px var(--font-sans,sans-serif)';sctx.fillStyle='#1E3A8A';sctx.textAlign='center';sctx.textBaseline='top';sctx.fillText('Nest',skyNestX,skyNestY+10);
+  // Toast
+  const toast=document.getElementById('align-toast');
+  if(isAligned&&!lastAligned){toast.classList.add('show');if(toastTimer)clearTimeout(toastTimer);toastTimer=setTimeout(()=>toast.classList.remove('show'),3000);}
+  if(!isAligned){toast.classList.remove('show');if(toastTimer)clearTimeout(toastTimer);}
+  lastAligned=isAligned;
+  // Status
+  const sunAzV=v.sunAz,sunElV=v.sunEl;
+  const feedAzDerived=derivedAzimuth();
+  const lpolDeg=((r2d(localPolAngle(skyFeedX,skyFeedY,sunAz))%180)+180)%180;
+  const filtPolDeg=((lpolDeg+filtInit)%180+180)%180;
+  let strips=`<span class="ibadge sun">Sun</span> Az ${sunAzV.toFixed(1)}° El ${sunElV.toFixed(1)}°&nbsp;`;
+  if(curMode==='datetime'){
+    const mo2=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const mm=+document.getElementById('dt-month').value,hr2=+document.getElementById('dt-hour').value,mn2=+document.getElementById('dt-min').value;
+    const hs=hr2>12?hr2-12:hr2,ap=hr2>=12?'PM':'AM';
+    strips=`<span class="ibadge loc">Phoenix MST</span> ${mo2[mm-1]} ${document.getElementById('dt-day').value} ${document.getElementById('dt-year').value} ${hs}:${String(mn2).padStart(2,'0')}${ap}&nbsp;`+strips;
+  }
+  document.getElementById('info-strip').innerHTML=strips+`<span class="ibadge pol">E-vec at feeder ~${Math.round(lpolDeg)}°</span>&nbsp;<span class="ibadge filt">Filter E-vec ~${Math.round(filtPolDeg)}°</span>`;
+  document.getElementById('status-txt').innerHTML=isAligned?'<span style="color:#059669;font-weight:500">Filter aligned — control condition</span>':`Filter shifted <strong>${(filtInit>=0?'+':'')+filtInit}°</strong> — expected heading change: <strong>${(filtInit>=0?'+':'')+filtInit}°</strong>`;
+  document.getElementById('ic-faz').textContent=Math.round(feedAzDerived)+'°';
+}
+
+// Top canvas drawing
+function drawTopScene(){
+  const v=getV(),ep=getEP();
+  const nt=getNestTopPos(),ft=getFeedTopPos();
+  const dx=ft.x-nt.x,dy=ft.y-nt.y;
+  const outAngle=Math.atan2(dy,dx);
+  const correctHome=outAngle+Math.PI,actualHome=ep.usesPol?correctHome+d2r(ep.filtRot):correctHome;
+
+  tctx.clearRect(0,0,TCW,TCH);
+  tctx.fillStyle='#EAF7EE';tctx.beginPath();
+  if(tctx.roundRect)tctx.roundRect(0,0,TCW,TCH,8);else tctx.rect(0,0,TCW,TCH);tctx.fill();
+  tctx.save();tctx.strokeStyle='rgba(0,0,0,0.04)';tctx.lineWidth=0.8;
+  for(let x=0;x<=TCW;x+=30){tctx.beginPath();tctx.moveTo(x,0);tctx.lineTo(x,TCH);tctx.stroke();}
+  for(let y=0;y<=TCH;y+=30){tctx.beginPath();tctx.moveTo(0,y);tctx.lineTo(TCW,y);tctx.stroke();}
+  tctx.restore();
+  drawTopCompass(TCW-40,40,20);
+  // Correct home ref line
+  tctx.save();tctx.setLineDash([4,4]);tctx.strokeStyle='rgba(5,150,105,0.35)';tctx.lineWidth=1;
+  tctx.beginPath();tctx.moveTo(ft.x,ft.y);tctx.lineTo(ft.x+220*Math.cos(correctHome),ft.y+220*Math.sin(correctHome));tctx.stroke();tctx.restore();
+  if((A.phase==='exit'||A.phase==='done')&&ep.usesPol&&Math.abs(ep.filtRot)>1){
+    tctx.save();tctx.font='bold 9px var(--font-sans,sans-serif)';tctx.fillStyle='rgba(5,150,105,0.65)';tctx.textAlign='center';tctx.textBaseline='middle';
+    const gx=ft.x+75*Math.cos(correctHome),gy=ft.y+75*Math.sin(correctHome);
+    tctx.fillText('correct',gx+16*Math.cos(correctHome+Math.PI/2),gy+16*Math.sin(correctHome+Math.PI/2));tctx.restore();
+  }
+  // Trail guide
+  tctx.save();tctx.setLineDash([4,3]);tctx.strokeStyle='rgba(5,150,105,0.22)';tctx.lineWidth=1.5;
+  tctx.beginPath();tctx.moveTo(nt.x,nt.y);tctx.lineTo(ft.x,ft.y);tctx.stroke();tctx.restore();
+  // Outbound trail
+  if(A.trailOut.length>1){
+    tctx.save();tctx.strokeStyle='rgba(5,150,105,0.7)';tctx.lineWidth=2;tctx.lineCap='round';
+    tctx.beginPath();tctx.moveTo(A.trailOut[0].x,A.trailOut[0].y);A.trailOut.forEach(p=>tctx.lineTo(p.x,p.y));tctx.stroke();tctx.restore();
+  }
+  // Error trail
+  if(A.trailErr.length>1){
+    tctx.save();tctx.strokeStyle='rgba(220,38,38,0.8)';tctx.lineWidth=2.2;tctx.lineCap='round';tctx.setLineDash([5,3]);
+    tctx.beginPath();tctx.moveTo(A.trailErr[0].x,A.trailErr[0].y);A.trailErr.forEach(p=>tctx.lineTo(p.x,p.y));tctx.stroke();tctx.restore();
+    if(A.trailErr.length>4&&ep.usesPol&&Math.abs(ep.filtRot)>1){
+      const arcR=52,cH=A.correctExitAngle,aH=A.actualExitAngle;
+      tctx.save();tctx.strokeStyle='rgba(220,38,38,0.45)';tctx.lineWidth=1.2;tctx.setLineDash([3,2]);
+      tctx.beginPath();tctx.arc(ft.x,ft.y,arcR,cH,aH,ep.filtRot<0);tctx.stroke();
+      const mA=(cH+aH)/2;tctx.globalAlpha=0.9;tctx.setLineDash([]);tctx.font='bold 10px var(--font-sans,sans-serif)';tctx.fillStyle='#DC2626';
+      tctx.textAlign='center';tctx.textBaseline='middle';
+      tctx.fillText((ep.filtRot>=0?'+':'')+ep.filtRot+'° error',ft.x+(arcR+22)*Math.cos(mA),ft.y+(arcR+22)*Math.sin(mA));tctx.restore();
+    }
+  }
+  // Filter circle
+  const fR=32,fDA=d2r(A.filtCurrentAngle);
+  tctx.save();tctx.globalAlpha=0.14;tctx.fillStyle='#7C3AED';tctx.beginPath();tctx.arc(ft.x,ft.y,fR,0,Math.PI*2);tctx.fill();tctx.restore();
+  for(let ox=-fR+6;ox<=fR-6;ox+=10){
+    for(let oy=-fR+6;oy<=fR-6;oy+=10){
+      if(Math.sqrt(ox*ox+oy*oy)>fR-6)continue;
+      const cf=Math.cos(fDA),sf=Math.sin(fDA),len=9;
+      tctx.save();tctx.strokeStyle='#7C3AED';tctx.lineWidth=1.8;tctx.lineCap='round';tctx.globalAlpha=0.7;
+      tctx.beginPath();tctx.moveTo(ft.x+ox-cf*len/2,ft.y+oy-sf*len/2);tctx.lineTo(ft.x+ox+cf*len/2,ft.y+oy+sf*len/2);tctx.stroke();tctx.restore();
+    }
+  }
+  tctx.save();tctx.strokeStyle='#6D28D9';tctx.lineWidth=1.5;tctx.setLineDash([4,2]);tctx.globalAlpha=0.75;
+  tctx.beginPath();tctx.arc(ft.x,ft.y,fR,0,Math.PI*2);tctx.stroke();tctx.restore();
+  tctx.font='bold 9px var(--font-sans,sans-serif)';tctx.fillStyle='#5B21B6';tctx.globalAlpha=0.8;tctx.textAlign='center';tctx.textBaseline='bottom';tctx.fillText('Filter',ft.x,ft.y-fR-3);
+  if(A.phase==='rotating'&&Math.abs(A.filtCurrentAngle)>0.5){
+    tctx.save();tctx.font='bold 10px var(--font-sans,sans-serif)';tctx.fillStyle='#6D28D9';tctx.textAlign='center';tctx.textBaseline='top';tctx.globalAlpha=0.9;
+    tctx.fillText((A.filtCurrentAngle>=0?'+':'')+Math.round(A.filtCurrentAngle)+'°',ft.x,ft.y+fR+4);tctx.restore();
+  }
+  // Feeder
+  tctx.beginPath();tctx.arc(ft.x,ft.y,7,0,Math.PI*2);tctx.fillStyle='#059669';tctx.globalAlpha=1;tctx.fill();tctx.strokeStyle='#fff';tctx.lineWidth=1.5;tctx.stroke();
+  tctx.font='bold 9px var(--font-sans,sans-serif)';tctx.fillStyle='#064E3B';tctx.textAlign='center';tctx.textBaseline='top';tctx.fillText('Feeder',ft.x,ft.y+10);
+  // Nest
+  tctx.beginPath();tctx.arc(nt.x,nt.y,9,0,Math.PI*2);tctx.fillStyle='#1E3A8A';tctx.fill();tctx.strokeStyle='#fff';tctx.lineWidth=2;tctx.stroke();
+  tctx.font='bold 9px var(--font-sans,sans-serif)';tctx.fillStyle='#1E3A8A';tctx.textAlign='center';tctx.textBaseline='top';tctx.fillText('Nest',nt.x,nt.y+12);
+  // Trail info
+  const dist=Math.sqrt(dx*dx+dy*dy);
+  tctx.save();tctx.font='9px var(--font-sans,sans-serif)';tctx.fillStyle='rgba(0,0,0,0.3)';tctx.textAlign='left';tctx.textBaseline='bottom';
+  tctx.fillText(`Az: ${Math.round(derivedAzimuth())}°  trail: ${Math.round(dist)}px`,5,TCH-3);tctx.restore();
+  if(A.phase!=='idle') drawAnt(tctx,A.antX,A.antY,A.antAngle);
+  if(A.phase==='done'){
+    tctx.save();tctx.font='bold 11px var(--font-sans,sans-serif)';tctx.fillStyle='#1E3A8A';tctx.textAlign='center';tctx.textBaseline='top';tctx.globalAlpha=0.85;
+    const ep2=getEP();
+    tctx.fillText(ep2.usesPol?(Math.abs(ep2.filtRot)>1?`Nav error: ${(ep2.filtRot>=0?'+':'')+ep2.filtRot}°`:'No error — aligned'):'No polarization use — correct exit',TCW/2,8);tctx.restore();
+  }
+  drawAngleDiagram(v,A);
+}
+
+function drawAnt(ctx2,x,y,angle){
+  ctx2.save();ctx2.translate(x,y);ctx2.rotate(angle+Math.PI/2);
+  ctx2.fillStyle='#1a1a1a';ctx2.strokeStyle='rgba(255,255,255,0.75)';ctx2.lineWidth=0.7;
+  ctx2.beginPath();ctx2.ellipse(0,3,3,4.5,0,0,Math.PI*2);ctx2.fill();ctx2.stroke();
+  ctx2.beginPath();ctx2.ellipse(0,-2,2.5,2.5,0,0,Math.PI*2);ctx2.fill();ctx2.stroke();
+  ctx2.beginPath();ctx2.ellipse(0,-8,2.5,2.5,0,0,Math.PI*2);ctx2.fill();ctx2.stroke();
+  ctx2.strokeStyle='#1a1a1a';ctx2.lineWidth=0.8;ctx2.lineCap='round';
+  ctx2.beginPath();ctx2.moveTo(-1.5,-9.5);ctx2.lineTo(-4,-14);ctx2.stroke();
+  ctx2.beginPath();ctx2.moveTo(1.5,-9.5);ctx2.lineTo(4,-14);ctx2.stroke();
+  [-1,1,3].forEach(ly=>{ctx2.beginPath();ctx2.moveTo(-2.5,ly);ctx2.lineTo(-7,ly+2.5);ctx2.stroke();ctx2.beginPath();ctx2.moveTo(2.5,ly);ctx2.lineTo(7,ly+2.5);ctx2.stroke();});
+  ctx2.restore();
+}
+
+function drawTopCompass(cx,cy,r){
+  tctx.save();tctx.fillStyle='rgba(255,255,255,0.7)';tctx.beginPath();tctx.arc(cx,cy,r+3,0,Math.PI*2);tctx.fill();
+  tctx.strokeStyle='rgba(0,0,0,0.1)';tctx.lineWidth=0.5;tctx.stroke();
+  ['N','E','S','W'].forEach((l,i)=>{
+    const a=(i*90-90)*Math.PI/180;
+    tctx.font=`bold ${l==='N'?10:9}px var(--font-sans,sans-serif)`;tctx.fillStyle=l==='N'?'#DC2626':'#374151';
+    tctx.textAlign='center';tctx.textBaseline='middle';tctx.fillText(l,cx+(r-5)*Math.cos(a),cy+(r-5)*Math.sin(a));
+  });
+  tctx.restore();
+}
+
+function drawAngleDiagram(v,s){
+  const cy=44,ll2=30;
+  actx.clearRect(0,0,310,90);
+  const lp=localPolAngle(skyFeedX,skyFeedY,v.sunAz);
+  const lpolNorm=((r2d(lp)%180)+180)%180*Math.PI/180;
+  const initF=lpolNorm+d2r(v.filtInit),rotF=initF+d2r(s.filtCurrentAngle);
+  [{label:'Ambient E-vec',angle:lpolNorm,color:'#1D4ED8',x:52},{label:'Filter at start',angle:initF,color:'#7C3AED',x:155},{label:'Filter rotated',angle:rotF,color:'#DC2626',x:258}].forEach(p=>{
+    actx.save();actx.beginPath();actx.arc(p.x,cy,28,0,Math.PI*2);actx.fillStyle='rgba(0,0,0,0.04)';actx.fill();
+    actx.strokeStyle='rgba(0,0,0,0.1)';actx.lineWidth=0.5;actx.stroke();
+    actx.strokeStyle='rgba(0,0,0,0.08)';actx.lineWidth=0.6;
+    actx.beginPath();actx.moveTo(p.x,cy-28);actx.lineTo(p.x,cy+28);actx.stroke();
+    actx.beginPath();actx.moveTo(p.x-28,cy);actx.lineTo(p.x+28,cy);actx.stroke();
+    const ca=Math.cos(p.angle),sa=Math.sin(p.angle);
+    actx.strokeStyle=p.color;actx.lineWidth=2.5;actx.lineCap='round';actx.globalAlpha=0.88;
+    actx.beginPath();actx.moveTo(p.x-ca*ll2*0.82,cy-sa*ll2*0.82);actx.lineTo(p.x+ca*ll2*0.82,cy+sa*ll2*0.82);actx.stroke();
+    actx.globalAlpha=0.5;actx.lineWidth=1;
+    actx.beginPath();actx.arc(p.x-ca*ll2*0.82,cy-sa*ll2*0.82,2.2,0,Math.PI*2);actx.stroke();
+    actx.beginPath();actx.arc(p.x+ca*ll2*0.82,cy+sa*ll2*0.82,2.2,0,Math.PI*2);actx.stroke();
+    actx.globalAlpha=1;actx.font='bold 9px var(--font-sans,sans-serif)';actx.fillStyle=p.color;actx.textAlign='center';actx.textBaseline='top';actx.fillText(p.label,p.x,cy+31);actx.restore();
+  });
+  if(Math.abs(s.filtCurrentAngle)>0.5){
+    actx.save();const a1=initF-Math.PI/2,a2=rotF-Math.PI/2;
+    actx.strokeStyle='#DC2626';actx.lineWidth=1;actx.setLineDash([2,2]);actx.globalAlpha=0.45;
+    actx.beginPath();actx.arc(258,cy,17,a1,a2,s.filtCurrentAngle<0);actx.stroke();
+    actx.globalAlpha=0.85;actx.setLineDash([]);actx.fillStyle='#DC2626';actx.font='bold 9px var(--font-sans,sans-serif)';actx.textAlign='center';actx.textBaseline='middle';
+    const mA=(a1+a2)/2;actx.fillText((s.filtCurrentAngle>=0?'+':'')+Math.round(s.filtCurrentAngle)+'°',258+25*Math.cos(mA+Math.PI/2),cy+25*Math.sin(mA+Math.PI/2));actx.restore();
+  }
+}
+
+function setPhaseUI(phase){
+  const map={outbound:0,feeding:1,rotating:2,exit:3,done:4},cur=map[phase]??-1;
+  ['out','feed','rot','exit'].forEach((id,i)=>{
+    document.getElementById('pd-'+id).className='phase-dot'+(i<cur?' done':i===cur?' active':'');
+    document.getElementById('pn-'+id).className='phase-name'+(i===cur?' active':'');
+  });
+  const labels={idle:'Ready',outbound:'Ant walking to feeder...',feeding:'Ant feeding — filter overhead...',rotating:'Filter rotating...',exit:'Ant exiting on shifted heading...',done:'Trial complete'};
+  document.getElementById('phase-lbl').textContent=labels[phase]||phase;
+}
+
+const BASE_DUR={outbound:2200,feeding:1800,rotating:1400,exit:2400};
+function ease(t){return t<0.5?2*t*t:-1+(4-2*t)*t;}
+
+function startAnim(){
+  if(A.phase!=='idle'&&A.phase!=='done')return;
+  const ep=getEP();
+  const nt=getNestTopPos(),ft=getFeedTopPos();
+  const dx=ft.x-nt.x,dy=ft.y-nt.y,outAngle=Math.atan2(dy,dx);
+  const correctHome=outAngle+Math.PI,actualHome=ep.usesPol?correctHome+d2r(ep.filtRot):correctHome;
+  const restX=ft.x-ANT_HEAD*Math.cos(outAngle),restY=ft.y-ANT_HEAD*Math.sin(outAngle);
+  A={phase:'outbound',antX:nt.x,antY:nt.y,antAngle:outAngle,phaseT:0,
+    filtCurrentAngle:0,filtEndAngle:ep.filtRot,correctExitAngle:correctHome,actualExitAngle:actualHome,
+    trailOut:[{x:nt.x,y:nt.y}],trailErr:[],raf:null,lastTs:null,
+    speedMult:ep.speedMult,usesPol:ep.usesPol,restX,restY,outAngle};
+  document.getElementById('btn-go').disabled=true;
+  setPhaseUI('outbound');
+  if(A.raf)cancelAnimationFrame(A.raf);
+  A.raf=requestAnimationFrame(animLoop);
+}
+
+function animLoop(ts){
+  if(!A.lastTs)A.lastTs=ts;
+  const dt=Math.min((ts-A.lastTs)*A.speedMult,120);A.lastTs=ts;A.phaseT+=dt;
+  const ft=getFeedTopPos();
+  if(A.phase==='outbound'){
+    const pg=Math.min(A.phaseT/BASE_DUR.outbound,1),ea=ease(pg);
+    const nt=getNestTopPos();
+    A.antX=nt.x+(A.restX-nt.x)*ea;A.antY=nt.y+(A.restY-nt.y)*ea;A.antAngle=A.outAngle;
+    A.trailOut.push({x:A.antX,y:A.antY});
+    if(pg>=1){A.phase='feeding';A.phaseT=0;setPhaseUI('feeding');A.antX=A.restX;A.antY=A.restY;}
+  }else if(A.phase==='feeding'){
+    const w=Math.sin(A.phaseT*0.012)*1.8;
+    A.antX=A.restX+Math.cos(A.outAngle+Math.PI/2)*w*0.25;A.antY=A.restY+Math.sin(A.outAngle+Math.PI/2)*w*0.25;
+    A.antAngle=A.outAngle+Math.sin(A.phaseT*0.009)*0.1;A.filtCurrentAngle=0;
+    if(A.phaseT>=BASE_DUR.feeding){A.phase='rotating';A.phaseT=0;setPhaseUI('rotating');}
+  }else if(A.phase==='rotating'){
+    const pg=Math.min(A.phaseT/BASE_DUR.rotating,1),ea=ease(pg);
+    A.filtCurrentAngle=A.filtEndAngle*ea;
+    A.antAngle=A.outAngle+d2r(A.filtCurrentAngle);
+    A.antX=ft.x-ANT_HEAD*Math.cos(A.antAngle);A.antY=ft.y-ANT_HEAD*Math.sin(A.antAngle);
+    if(pg>=1){A.filtCurrentAngle=A.filtEndAngle;A.phase='exit';A.phaseT=0;A.trailErr=[{x:ft.x,y:ft.y}];setPhaseUI('exit');}
+  }else if(A.phase==='exit'){
+    const pg=Math.min(A.phaseT/BASE_DUR.exit,1),ea=ease(pg),exitDist=200*ea;
+    A.antX=ft.x+(exitDist-ANT_HEAD)*Math.cos(A.actualExitAngle);A.antY=ft.y+(exitDist-ANT_HEAD)*Math.sin(A.actualExitAngle);
+    A.antAngle=A.actualExitAngle;A.trailErr.push({x:ft.x+exitDist*Math.cos(A.actualExitAngle),y:ft.y+exitDist*Math.sin(A.actualExitAngle)});
+    if(pg>=1){A.phase='done';document.getElementById('btn-go').disabled=false;setPhaseUI('done');}
+  }
+  drawTopScene();
+  if(A.phase!=='done')A.raf=requestAnimationFrame(animLoop);
+}
+
+function resetAnim(){
+  if(A.raf)cancelAnimationFrame(A.raf);
+  A={phase:'idle',antX:0,antY:0,antAngle:0,phaseT:0,filtCurrentAngle:0,filtEndAngle:0,correctExitAngle:0,actualExitAngle:0,trailOut:[],trailErr:[],raf:null,lastTs:null,speedMult:1,usesPol:true,restX:0,restY:0,outAngle:0};
+  document.getElementById('btn-go').disabled=false;setPhaseUI('idle');drawTopScene();
+}
+
+// ---- Sky canvas drag for BOTH nest and feeder ----
+function scCoords(e){
+  const rect=SC.getBoundingClientRect(),sx=SW/rect.width;
+  const src=e.touches?e.touches[0]:e;
+  return{x:(src.clientX-rect.left)*sx,y:(src.clientY-rect.top)*sx};
+}
+function hitSky(x,y,nx,ny,r){return Math.sqrt((x-nx)**2+(y-ny)**2)<=r;}
+function clampSky(x,y){
+  // keep within dome circle
+  const dx=x-SCX,dy=y-SCY,dist=Math.sqrt(dx*dx+dy*dy);
+  if(dist<=SR-8)return{x,y};
+  const scale=(SR-8)/dist;return{x:SCX+dx*scale,y:SCY+dy*scale};
+}
+
+SC.addEventListener('mousedown',e=>{
+  if(A.phase!=='idle'&&A.phase!=='done')return;
+  const{x,y}=scCoords(e);
+  // Nest has priority if overlapping
+  if(hitSky(x,y,skyNestX,skyNestY,14))skyDragTarget='nest';
+  else if(hitSky(x,y,skyFeedX,skyFeedY,12))skyDragTarget='feeder';
+  if(skyDragTarget)SC.style.cursor='grabbing';
+});
+SC.addEventListener('mousemove',e=>{
+  if(!skyDragTarget)return;
+  const{x,y}=scCoords(e),c=clampSky(x,y);
+  if(skyDragTarget==='nest'){
+    const dfx=skyFeedX-skyNestX,dfy=skyFeedY-skyNestY;
+    skyNestX=c.x;skyNestY=c.y;
+    const nc=clampSky(skyNestX+dfx,skyNestY+dfy);skyFeedX=nc.x;skyFeedY=nc.y;
+  }else{skyFeedX=c.x;skyFeedY=c.y;}
+  update();
+});
+SC.addEventListener('mouseup',()=>{if(skyDragTarget){skyDragTarget=null;SC.style.cursor='grab';}});
+SC.addEventListener('mouseleave',()=>{if(skyDragTarget){skyDragTarget=null;SC.style.cursor='grab';}});
+SC.addEventListener('mousemove',e=>{
+  if(skyDragTarget||(A.phase!=='idle'&&A.phase!=='done'))return;
+  const{x,y}=scCoords(e);
+  SC.style.cursor=(hitSky(x,y,skyNestX,skyNestY,14)||hitSky(x,y,skyFeedX,skyFeedY,12))?'grab':'default';
+},{passive:true});
+SC.addEventListener('touchstart',e=>{e.preventDefault();const{x,y}=scCoords(e);if(hitSky(x,y,skyNestX,skyNestY,14))skyDragTarget='nest';else if(hitSky(x,y,skyFeedX,skyFeedY,12))skyDragTarget='feeder';},{passive:false});
+SC.addEventListener('touchmove',e=>{e.preventDefault();if(!skyDragTarget)return;const{x,y}=scCoords(e),c=clampSky(x,y);if(skyDragTarget==='nest'){const dfx=skyFeedX-skyNestX,dfy=skyFeedY-skyNestY;skyNestX=c.x;skyNestY=c.y;const nc=clampSky(skyNestX+dfx,skyNestY+dfy);skyFeedX=nc.x;skyFeedY=nc.y;}else{skyFeedX=c.x;skyFeedY=c.y;}update();},{passive:false});
+SC.addEventListener('touchend',()=>{skyDragTarget=null;});
+
+window.addEventListener('resize',()=>{
+  const nextDpr=Math.max(1,Math.min(window.devicePixelRatio||1,3));
+  if(Math.abs(nextDpr-activeDpr)>0.01){
+    setupHiDPI();
+    drawSky(getV());
+    drawTopScene();
+  }
+});
+
+function update(){
+  const v=getV();
+  if(curMode==='datetime'){document.getElementById('sun-az').value=Math.round(v.sunAz);document.getElementById('sun-el').value=Math.round(v.sunEl);}
+  document.getElementById('sun-az-v').textContent=v.sunAz.toFixed(1)+'°';
+  document.getElementById('sun-el-v').textContent=v.sunEl.toFixed(1)+'°';
+  document.getElementById('filt-init-v').textContent=(v.filtInit>=0?'+':'')+v.filtInit+'°';
+  document.getElementById('filt-op-v').textContent=Math.round(v.filtOp*100)+'%';
+  drawSky(v);
+  if(A.phase==='idle'||A.phase==='done')drawTopScene();
+}
+
+syncExp();update();resetAnim();
+</script>
+</main>
+</body>
+</html>
