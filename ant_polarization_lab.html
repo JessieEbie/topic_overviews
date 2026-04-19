@@ -115,6 +115,8 @@ button.rst-btn:hover{background:var(--color-background-secondary);}
 .step-list{counter-reset:steps;padding-left:0;list-style:none;}
 .step-list li{counter-increment:steps;padding-left:28px;position:relative;margin-bottom:6px;}
 .step-list li::before{content:counter(steps);position:absolute;left:0;top:0;width:18px;height:18px;background:#1D4ED8;color:#fff;border-radius:50%;font-size:10px;font-weight:500;display:flex;align-items:center;justify-content:center;line-height:1;}
+.sr-only{position:absolute !important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;}
+button:focus-visible,input:focus-visible,select:focus-visible,canvas:focus-visible,a:focus-visible{outline:3px solid #2563EB;outline-offset:2px;}
 @media (max-width:760px){
   .site-header{position:static;}
   .site-header-inner{align-items:flex-start;flex-direction:column;padding:18px 14px 14px;}
@@ -169,56 +171,63 @@ button.rst-btn:hover{background:var(--color-background-secondary);}
 <main>
 
 <div id="lab">
-<div class="top-tabs">
-  <button class="top-tab active" onclick="showTab('exp')">Experiment</button>
-  <button class="top-tab" onclick="showTab('guide')">Guide</button>
-  <button class="top-tab" onclick="showTab('learn')">Polarized light</button>
+<div class="top-tabs" role="tablist" aria-label="Ant navigation panels">
+  <button class="top-tab active" id="tab-exp" role="tab" aria-selected="true" aria-controls="exp-panel" tabindex="0" onclick="showTab('exp')">Experiment</button>
+  <button class="top-tab" id="tab-guide" role="tab" aria-selected="false" aria-controls="guide-panel" tabindex="-1" onclick="showTab('guide')">Guide</button>
+  <button class="top-tab" id="tab-learn" role="tab" aria-selected="false" aria-controls="learn-panel" tabindex="-1" onclick="showTab('learn')">Polarized light</button>
 </div>
 
-<div id="exp-panel" class="panel-content active">
+<div id="exp-panel" class="panel-content active" role="tabpanel" aria-labelledby="tab-exp">
   <div class="exp-col">
     <div class="slabel">Window 1 — Sky dome (Phoenix AZ)</div>
     <div class="hint">Drag the nest (blue dot) or feeder (green dot) anywhere on the sky canvas</div>
-    <div class="mode-tabs">
-      <button class="mtab active" id="tab-dt" onclick="setMode('datetime')">Real date/time</button>
-      <button class="mtab" id="tab-man" onclick="setMode('manual')">Manual az/el</button>
+    <div class="mode-tabs" role="tablist" aria-label="Sun position mode">
+      <button class="mtab active" id="tab-dt" role="tab" aria-selected="true" aria-controls="pane-dt" tabindex="0" onclick="setMode('datetime')">Real date/time</button>
+      <button class="mtab" id="tab-man" role="tab" aria-selected="false" aria-controls="pane-man" tabindex="-1" onclick="setMode('manual')">Manual az/el</button>
     </div>
-    <div id="pane-dt">
+    <div id="pane-dt" role="tabpanel" aria-labelledby="tab-dt">
       <div class="crow">
-        <select id="dt-month" onchange="update()">
+        <label class="sr-only" for="dt-month">Month</label>
+        <select id="dt-month" aria-label="Month" onchange="update()">
           <option value="1">Jan</option><option value="2">Feb</option><option value="3">Mar</option>
           <option value="4">Apr</option><option value="5">May</option><option value="6">Jun</option>
           <option value="7">Jul</option><option value="8">Aug</option><option value="9">Sep</option>
           <option value="10">Oct</option><option value="11">Nov</option><option value="12">Dec</option>
         </select>
-        <input type="number" id="dt-day" min="1" max="31" oninput="update()">
-        <input type="number" id="dt-year" min="2000" max="2099" oninput="update()">
+        <label class="sr-only" for="dt-day">Day</label>
+        <input type="number" id="dt-day" aria-label="Day" min="1" max="31" oninput="update()">
+        <label class="sr-only" for="dt-year">Year</label>
+        <input type="number" id="dt-year" aria-label="Year" min="2000" max="2099" oninput="update()">
       </div>
       <div class="crow">
-        <label>Time (MST)</label>
-        <select id="dt-hour" onchange="update()"></select>
-        <select id="dt-min" onchange="update()"></select>
+        <label for="dt-hour">Time (MST)</label>
+        <select id="dt-hour" aria-label="Hour" onchange="update()"></select>
+        <label class="sr-only" for="dt-min">Minute</label>
+        <select id="dt-min" aria-label="Minute" onchange="update()"></select>
       </div>
-      <div id="below-h">Sun below horizon — twilight polarization pattern shown</div>
+      <div id="below-h" aria-live="polite">Sun below horizon — twilight polarization pattern shown</div>
     </div>
-    <div id="pane-man" style="display:none;">
-      <div class="crow"><label>Sun azimuth</label><input type="range" id="sun-az" min="0" max="359" value="200" step="1" oninput="update()"><span class="val" id="sun-az-v">200°</span></div>
-      <div class="crow"><label>Sun elevation</label><input type="range" id="sun-el" min="-18" max="90" value="18" step="1" oninput="update()"><span class="val" id="sun-el-v">18°</span></div>
+    <div id="pane-man" role="tabpanel" aria-labelledby="tab-man" hidden style="display:none;">
+      <div class="crow"><label for="sun-az">Sun azimuth</label><input type="range" id="sun-az" min="0" max="359" value="200" step="1" oninput="update()"><span class="val" id="sun-az-v">200°</span></div>
+      <div class="crow"><label for="sun-el">Sun elevation</label><input type="range" id="sun-el" min="-18" max="90" value="18" step="1" oninput="update()"><span class="val" id="sun-el-v">18°</span></div>
     </div>
     <div class="divider"></div>
     <div class="slabel">Polarizing filter</div>
-    <div class="crow"><label>Initial filter angle</label><input type="range" id="filt-init" min="-45" max="45" value="0" step="1" oninput="update()"><span class="val" id="filt-init-v">0°</span></div>
-    <div class="crow"><label>Filter opacity</label><input type="range" id="filt-op" min="20" max="100" value="75" step="1" oninput="update()"><span class="val" id="filt-op-v">75%</span></div>
+    <div class="crow"><label for="filt-init">Initial filter angle</label><input type="range" id="filt-init" min="-45" max="45" value="0" step="1" oninput="update()"><span class="val" id="filt-init-v">0°</span></div>
+    <div class="crow"><label for="filt-op">Filter opacity</label><input type="range" id="filt-op" min="20" max="100" value="75" step="1" oninput="update()"><span class="val" id="filt-op-v">75%</span></div>
     <div class="divider"></div>
-    <div class="info-strip" id="info-strip"></div>
-    <div id="status-txt"></div>
+    <div class="info-strip" id="info-strip" aria-hidden="true"></div>
+    <div id="status-txt" aria-live="polite"></div>
+    <p id="sky-c-instructions" class="sr-only">Interactive sky dome. Press N to select the nest or F to select the feeder. Use the arrow keys to move the selected point within the dome. Hold Shift while pressing an arrow key for larger steps.</p>
+    <p id="sky-c-summary" class="sr-only"></p>
     <div class="canvas-wrap">
-      <canvas id="sky-c" width="380" height="380" style="cursor:grab;"></canvas>
-      <div id="align-toast">Filter near center alignment</div>
+      <canvas id="sky-c" width="380" height="380" tabindex="0" role="img" aria-describedby="sky-c-instructions sky-c-summary" style="cursor:grab;"></canvas>
+      <div id="align-toast" aria-hidden="true">Filter near center alignment</div>
     </div>
     <figure class="sky-mini" aria-labelledby="sky-mini-caption">
-      <canvas id="sky-side-c" width="310" height="128"></canvas>
+      <canvas id="sky-side-c" width="310" height="128" role="img" aria-describedby="sky-mini-caption sky-side-summary"></canvas>
       <figcaption id="sky-mini-caption">Small Phoenix south-sky view: the gold arc is the Sun's daily path for the selected date, the yellow point is the current Sun, and the red dashed line marks local solar noon on that path.</figcaption>
+      <p id="sky-side-summary" class="sr-only"></p>
     </figure>
     <div class="legend-row" style="margin-top:5px;">
       <span><span class="ldot" style="background:#F59E0B;border:1px solid #92400E;"></span>Sun</span>
@@ -235,8 +244,8 @@ button.rst-btn:hover{background:var(--color-background-secondary);}
     <div class="hint">Nest and feeder positions mirror Window 1 — drag either dot in Window 1 to reposition</div>
     <div class="exp-input-box">
       <div class="slabel" style="margin-top:0;">Experiment parameters</div>
-      <div class="crow"><label>Filter rotation during trial</label><input type="range" id="e-filt-rot" min="-45" max="45" value="45" step="1" oninput="syncExp()"><span class="val" id="e-filt-rot-v">+45°</span></div>
-      <div class="crow"><label>Compass cue model</label>
+      <div class="crow"><label for="e-filt-rot">Filter rotation during trial</label><input type="range" id="e-filt-rot" min="-45" max="45" value="45" step="1" oninput="syncExp()"><span class="val" id="e-filt-rot-v">+45°</span></div>
+      <div class="crow"><label for="e-uses-pol">Compass cue model</label>
         <select id="e-uses-pol" onchange="syncExp()">
           <option value="1">Polarization only</option>
           <option value="0.5">Sun + polarization (equal weight)</option>
@@ -244,7 +253,7 @@ button.rst-btn:hover{background:var(--color-background-secondary);}
         </select>
       </div>
       <div class="crow">
-        <label>Animation speed</label>
+        <label for="e-speed">Animation speed</label>
         <input type="range" id="e-speed" min="0" max="8" value="4" step="1" oninput="syncExp()">
         <span class="val" id="e-speed-v">1×</span>
       </div>
@@ -254,7 +263,7 @@ button.rst-btn:hover{background:var(--color-background-secondary);}
       <div class="scard"><div class="sl">Filter rotated by</div><div class="sv" id="ic-frot">+45°</div></div>
       <div class="scard"><div class="sl">Predicted shift</div><div class="sv" id="ic-err" style="color:#DC2626;">45°</div></div>
     </div>
-    <div class="phase-indicator">
+    <div class="phase-indicator" aria-hidden="true">
       <span class="phase-dot" id="pd-out"></span><span class="phase-name" id="pn-out">Outbound</span>
       <span style="font-size:10px;color:var(--color-border-secondary);">—</span>
       <span class="phase-dot" id="pd-feed"></span><span class="phase-name" id="pn-feed">Feeding</span>
@@ -266,14 +275,16 @@ button.rst-btn:hover{background:var(--color-background-secondary);}
     <div class="btn-row">
       <button class="go-btn" id="btn-go" onclick="startAnim()">Run experiment</button>
       <button class="rst-btn" onclick="resetAnim()">Reset</button>
-      <span id="phase-lbl">Ready</span>
+      <span id="phase-lbl" aria-live="polite">Ready</span>
     </div>
-    <canvas id="top-c" width="620" height="295" style="cursor:default;"></canvas>
-    <canvas id="angle-c" width="310" height="90" style="margin-top:4px;"></canvas>
+    <p id="top-c-summary" class="sr-only"></p>
+    <canvas id="top-c" width="620" height="295" role="img" aria-describedby="top-c-summary" style="cursor:default;"></canvas>
+    <p id="angle-c-summary" class="sr-only"></p>
+    <canvas id="angle-c" width="310" height="90" role="img" aria-describedby="angle-c-summary" style="margin-top:4px;"></canvas>
   </div>
 </div>
 
-<div id="guide-panel" class="panel-content">
+<div id="guide-panel" class="panel-content" role="tabpanel" aria-labelledby="tab-guide" hidden>
 
   <div class="guide-section">
     <h3>Overview</h3>
@@ -373,7 +384,7 @@ button.rst-btn:hover{background:var(--color-background-secondary);}
 
 </div>
 
-<div id="learn-panel" class="panel-content">
+<div id="learn-panel" class="panel-content" role="tabpanel" aria-labelledby="tab-learn" hidden>
 
   <div class="guide-section">
     <h3>What polarized skylight means</h3>
@@ -447,6 +458,7 @@ let skyFeedX=SCX+90, skyFeedY=SCY;
 let skyDragTarget=null;
 let toastTimer=null,lastAligned=false;
 let curMode='datetime';
+let skyKeyboardTarget='nest';
 
 let A={phase:'idle',antX:0,antY:0,antAngle:0,phaseT:0,
   filtCurrentAngle:0,filtEndAngle:0,correctExitAngle:0,actualExitAngle:0,
@@ -514,10 +526,20 @@ function currentPhoenixParts(){
 })();
 
 function showTab(t){
-  document.querySelectorAll('.top-tab').forEach((b,i)=>b.classList.toggle('active',(t==='exp'&&i===0)||(t==='guide'&&i===1)||(t==='learn'&&i===2)));
-  document.getElementById('exp-panel').classList.toggle('active',t==='exp');
-  document.getElementById('guide-panel').classList.toggle('active',t==='guide');
-  document.getElementById('learn-panel').classList.toggle('active',t==='learn');
+  const tabs=[
+    {key:'exp',btn:'tab-exp',panel:'exp-panel'},
+    {key:'guide',btn:'tab-guide',panel:'guide-panel'},
+    {key:'learn',btn:'tab-learn',panel:'learn-panel'}
+  ];
+  tabs.forEach(({key,btn,panel})=>{
+    const active=key===t;
+    const el=document.getElementById(btn),panelEl=document.getElementById(panel);
+    el.classList.toggle('active',active);
+    el.setAttribute('aria-selected',String(active));
+    el.tabIndex=active?0:-1;
+    panelEl.classList.toggle('active',active);
+    panelEl.hidden=!active;
+  });
 }
 function d2r(d){return d*Math.PI/180;}
 function r2d(r){return r*180/Math.PI;}
@@ -633,10 +655,19 @@ function derivedAzimuth(){
 // Local polarization angle at a sky canvas point
 function setMode(m){
   curMode=m;
-  document.getElementById('pane-dt').style.display=m==='datetime'?'block':'none';
-  document.getElementById('pane-man').style.display=m==='manual'?'block':'none';
-  document.getElementById('tab-dt').classList.toggle('active',m==='datetime');
-  document.getElementById('tab-man').classList.toggle('active',m==='manual');
+  const dtBtn=document.getElementById('tab-dt'),manBtn=document.getElementById('tab-man');
+  const dtPane=document.getElementById('pane-dt'),manPane=document.getElementById('pane-man');
+  const dtActive=m==='datetime',manActive=m==='manual';
+  dtPane.style.display=dtActive?'block':'none';
+  manPane.style.display=manActive?'block':'none';
+  dtPane.hidden=!dtActive;
+  manPane.hidden=!manActive;
+  dtBtn.classList.toggle('active',dtActive);
+  manBtn.classList.toggle('active',manActive);
+  dtBtn.setAttribute('aria-selected',String(dtActive));
+  manBtn.setAttribute('aria-selected',String(manActive));
+  dtBtn.tabIndex=dtActive?0:-1;
+  manBtn.tabIndex=manActive?0:-1;
   update();
 }
 
@@ -647,8 +678,73 @@ function syncExp(){
   document.getElementById('ic-frot').textContent=(ep.filtRot>=0?'+':'')+ep.filtRot+'°';
   const predictedShift=Math.abs(totalFilterShiftDeg(ep.filtRot)*ep.polWeight);
   document.getElementById('ic-err').textContent=predictedShift.toFixed(predictedShift%1?1:0)+'°';
+  document.getElementById('e-filt-rot').setAttribute('aria-valuetext',(ep.filtRot>=0?'+':'')+ep.filtRot+' degrees');
+  document.getElementById('e-speed').setAttribute('aria-valuetext',SPEED_LABELS[si]+' speed');
   if(A.phase==='idle'||A.phase==='done')drawTopScene();
 }
+
+function updateScreenReaderText(v=getV()){
+  const sunModeText=curMode==='datetime'?'Phoenix real date and time mode':'manual sun position mode';
+  const sunText=`Sun azimuth ${v.sunAz.toFixed(1)} degrees and elevation ${v.sunEl.toFixed(1)} degrees`;
+  const nestAzEl=skyXYtoAzEl(skyNestX,skyNestY);
+  const feedAzEl=skyXYtoAzEl(skyFeedX,skyFeedY);
+  const feederPol=localPolData(skyFeedX,skyFeedY,v.sunAz,v.sunEl);
+  const ambientDeg=((r2d(feederPol.angle)%180)+180)%180;
+  const filterDeg=((ambientDeg+v.filtInit)%180+180)%180;
+  const dist=Math.hypot(skyFeedX-skyNestX,skyFeedY-skyNestY);
+  const selected=skyKeyboardTarget==='nest'?'nest':'feeder';
+  document.getElementById('sky-c-summary').textContent=
+    `${sunModeText}. ${sunText}. Selected point: ${selected}. Nest at azimuth ${nestAzEl.az.toFixed(0)} degrees, elevation ${nestAzEl.el.toFixed(0)} degrees. Feeder at azimuth ${feedAzEl.az.toFixed(0)} degrees, elevation ${feedAzEl.el.toFixed(0)} degrees. Feeder azimuth from nest ${derivedAzimuth().toFixed(0)} degrees, dome distance ${dist.toFixed(0)} pixels. Ambient e-vector at the feeder is about ${ambientDeg.toFixed(0)} degrees. Filter transmission axis is about ${filterDeg.toFixed(0)} degrees.`;
+  document.getElementById('sky-side-summary').textContent=
+    `South-facing Phoenix sky helper. The daily Sun path is shown for the selected date. The current Sun is at azimuth ${v.sunAz.toFixed(1)} degrees and elevation ${Math.max(v.sunEl,0).toFixed(1)} degrees. North is behind the viewer in this helper diagram.`;
+  const ep=getEP();
+  const layout=getTopLayout(),nt=layout.nest,ft=layout.feed;
+  const dx=ft.x-nt.x,dy=ft.y-nt.y;
+  const outAngle=Math.atan2(dy,dx);
+  const correctHome=(r2d(outAngle+Math.PI)+360)%360;
+  const shiftedHome=correctHome+totalFilterShiftDeg(A.phase==='idle'||A.phase==='done'?ep.filtRot:A.filtCurrentAngle);
+  const actualHome=(r2d(blendHeadingAngles(d2r(correctHome),d2r(shiftedHome),ep.polWeight))+360)%360;
+  document.getElementById('top-c-summary').textContent=
+    `Top-down experiment view. Nest and feeder stay centered in this panel while preserving their relative spacing and heading from the dome. Feeder azimuth is ${derivedAzimuth().toFixed(0)} degrees. Correct homeward heading is ${correctHome.toFixed(0)} degrees. Predicted exit heading is ${actualHome.toFixed(0)} degrees. Current animation phase: ${document.getElementById('phase-lbl').textContent}.`;
+  const startDeg=(((ambientDeg+v.filtInit)%180)+180)%180;
+  const rotatedDeg=(((startDeg+A.filtCurrentAngle)%180)+180)%180;
+  document.getElementById('angle-c-summary').textContent=
+    `Angle diagram at the feeder. Ambient e-vector is ${ambientDeg.toFixed(0)} degrees. Filter at start is ${startDeg.toFixed(0)} degrees. Filter after trial rotation is ${rotatedDeg.toFixed(0)} degrees.`;
+}
+
+function setupTabKeyboard(containerSelector,buttonSelector,keys,activate){
+  const buttons=[...document.querySelectorAll(`${containerSelector} ${buttonSelector}`)];
+  buttons.forEach((btn,index)=>{
+    btn.addEventListener('keydown',e=>{
+      let next=index;
+      if(keys.includes(e.key)){
+        e.preventDefault();
+        if(e.key==='ArrowRight'||e.key==='ArrowDown')next=(index+1)%buttons.length;
+        if(e.key==='ArrowLeft'||e.key==='ArrowUp')next=(index-1+buttons.length)%buttons.length;
+        if(e.key==='Home')next=0;
+        if(e.key==='End')next=buttons.length-1;
+        buttons[next].focus();
+        buttons[next].click();
+      }
+      if(e.key==='Enter'||e.key===' '){
+        e.preventDefault();
+        activate(btn);
+      }
+    });
+  });
+}
+
+function moveSkyTarget(dx,dy){
+  const step=12;
+  const current=skyKeyboardTarget==='nest'?{x:skyNestX,y:skyNestY}:{x:skyFeedX,y:skyFeedY};
+  const c=clampSky(current.x+dx*step,current.y+dy*step);
+  if(skyKeyboardTarget==='nest'){skyNestX=c.x;skyNestY=c.y;}
+  else{skyFeedX=c.x;skyFeedY=c.y;}
+  update();
+}
+
+setupTabKeyboard('.top-tabs','.top-tab',['ArrowRight','ArrowLeft','Home','End'],btn=>btn.click());
+setupTabKeyboard('.mode-tabs','.mtab',['ArrowRight','ArrowLeft','Home','End'],btn=>btn.click());
 
 function azElToSkyXY(az,el){
   const r=SR*(1-el/90),a=d2r(az-90);
@@ -1150,6 +1246,7 @@ function drawTopScene(){
     tctx.fillText(ep2.polWeight>0?(Math.abs(finalShiftDeg)>1?`Predicted shift: ${(finalShiftDeg>=0?'+':'')+Math.round(finalShiftDeg)}°`:'No measurable shift'):'Sun-only prediction — correct exit',TCW/2,8);tctx.restore();
   }
   drawAngleDiagram(v,A);
+  updateScreenReaderText(v);
 }
 
 function drawAnt(ctx2,x,y,angle){
@@ -1213,6 +1310,7 @@ function setPhaseUI(phase){
   });
   const labels={idle:'Ready',outbound:'Ant walking to feeder...',feeding:'Ant feeding — filter overhead...',rotating:'Filter rotating...',exit:'Ant exiting on shifted heading...',done:'Trial complete'};
   document.getElementById('phase-lbl').textContent=labels[phase]||phase;
+  updateScreenReaderText();
 }
 
 const BASE_DUR={outbound:2200,feeding:1800,rotating:1400,exit:2400};
@@ -1316,6 +1414,26 @@ SC.addEventListener('mousemove',e=>{
 SC.addEventListener('touchstart',e=>{e.preventDefault();const{x,y}=scCoords(e);if(hitSky(x,y,skyNestX,skyNestY,14))skyDragTarget='nest';else if(hitSky(x,y,skyFeedX,skyFeedY,12))skyDragTarget='feeder';},{passive:false});
 SC.addEventListener('touchmove',e=>{e.preventDefault();if(!skyDragTarget)return;const{x,y}=scCoords(e),c=clampSky(x,y);if(skyDragTarget==='nest'){skyNestX=c.x;skyNestY=c.y;}else{skyFeedX=c.x;skyFeedY=c.y;}update();},{passive:false});
 SC.addEventListener('touchend',()=>{skyDragTarget=null;});
+SC.addEventListener('keydown',e=>{
+  if(A.phase!=='idle'&&A.phase!=='done')return;
+  if(e.key==='n'||e.key==='N'){
+    e.preventDefault();
+    skyKeyboardTarget='nest';
+    updateScreenReaderText();
+    return;
+  }
+  if(e.key==='f'||e.key==='F'){
+    e.preventDefault();
+    skyKeyboardTarget='feeder';
+    updateScreenReaderText();
+    return;
+  }
+  const step=e.shiftKey?2:1;
+  if(e.key==='ArrowUp'){e.preventDefault();moveSkyTarget(0,-step);}
+  if(e.key==='ArrowDown'){e.preventDefault();moveSkyTarget(0,step);}
+  if(e.key==='ArrowLeft'){e.preventDefault();moveSkyTarget(-step,0);}
+  if(e.key==='ArrowRight'){e.preventDefault();moveSkyTarget(step,0);}
+});
 
 window.addEventListener('resize',()=>{
   const nextDpr=Math.max(1,Math.min(window.devicePixelRatio||1,3));
@@ -1334,9 +1452,14 @@ function update(){
   document.getElementById('sun-el-v').textContent=v.sunEl.toFixed(1)+'°';
   document.getElementById('filt-init-v').textContent=(v.filtInit>=0?'+':'')+v.filtInit+'°';
   document.getElementById('filt-op-v').textContent=Math.round(v.filtOp*100)+'%';
+  document.getElementById('sun-az').setAttribute('aria-valuetext',v.sunAz.toFixed(1)+' degrees');
+  document.getElementById('sun-el').setAttribute('aria-valuetext',v.sunEl.toFixed(1)+' degrees');
+  document.getElementById('filt-init').setAttribute('aria-valuetext',(v.filtInit>=0?'+':'')+v.filtInit+' degrees');
+  document.getElementById('filt-op').setAttribute('aria-valuetext',Math.round(v.filtOp*100)+' percent');
   drawSky(v);
   drawSkyMini(v);
   if(A.phase==='idle'||A.phase==='done')drawTopScene();
+  else updateScreenReaderText(v);
 }
 
 syncExp();update();resetAnim();
