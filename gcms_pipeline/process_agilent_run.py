@@ -183,7 +183,13 @@ def spectrum_from_scan_window(scans: list[Scan], left: int, right: int, center_i
         for mz, intensity in scans[i].ions:
             key = round(mz)
             bins[key] = bins.get(key, 0.0) + intensity * weight
-    ions = sorted(bins.items(), key=lambda item: item[1], reverse=True)[:22]
+    ranked = sorted(bins.items(), key=lambda item: item[1], reverse=True)
+    top_by_intensity = ranked[:22]
+    high_mz_tail = sorted(bins.items(), key=lambda item: item[0], reverse=True)[:8]
+    keep: dict[int, float] = {}
+    for mz, intensity in [*top_by_intensity, *high_mz_tail]:
+        keep[int(mz)] = max(intensity, keep.get(int(mz), 0.0))
+    ions = list(keep.items())
     if not ions:
         return ""
     max_intensity = max(intensity for _, intensity in ions)
