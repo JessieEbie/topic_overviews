@@ -165,6 +165,19 @@ tr.selected{background:#EAF3EF;}
 .export-box{border:1px solid var(--line);border-radius:8px;padding:10px;background:#FBFCFD;margin-top:12px;}
 .export-box h3{font-size:13px;margin-bottom:5px;}
 .export-box p{font-size:12px;color:var(--muted);}
+.compare-shell{padding:16px;display:grid;gap:14px;background:#fff;}
+.compare-grid{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(320px,0.85fr);gap:14px;align-items:start;}
+.compare-card{border:1px solid var(--line);border-radius:8px;background:#fff;overflow:hidden;}
+.compare-card-body{padding:14px;}
+.compare-controls{display:grid;gap:10px;}
+.compare-inline{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+.compare-inline select,.compare-inline input{border:1px solid var(--line-strong);border-radius:6px;padding:6px 8px;background:#fff;font-size:12px;}
+.legend-list{display:grid;gap:8px;padding:10px;border-top:1px solid var(--line);background:#FBFCFD;}
+.legend-row{display:flex;justify-content:space-between;gap:10px;align-items:center;font-size:12px;}
+.legend-swatch{display:inline-flex;align-items:center;gap:8px;}
+.legend-dot{width:12px;height:12px;border-radius:999px;display:inline-block;}
+.compare-status{font-size:12px;color:var(--muted);}
+.compare-table-wrap{max-height:520px;overflow:auto;border-top:1px solid var(--line);}
 .guide-layout,.pipeline-layout,.tutorial-layout{display:grid;grid-template-columns:1fr;gap:0;}
 .guide-content,.pipeline-content,.tutorial-content{padding:18px;display:grid;gap:12px;}
 .guide-card,.pipeline-card,.tutorial-card{border:1px solid var(--line);border-radius:8px;padding:13px;background:#fff;}
@@ -224,6 +237,7 @@ tr.selected{background:#EAF3EF;}
 .status{min-height:18px;font-size:12px;color:var(--muted);}
 @media (max-width:1050px){
   .review-lower{grid-template-columns:1fr;}
+  .compare-grid{grid-template-columns:1fr;}
 }
 @media (max-width:760px){
   .site-header{position:static;}
@@ -261,6 +275,7 @@ tr.selected{background:#EAF3EF;}
 <div class="lab">
   <div class="tabs" role="tablist" aria-label="GC-MS workspace tabs">
     <button class="tab active" data-tab="review">Review peaks</button>
+    <button class="tab" data-tab="compare">Compare runs</button>
     <button class="tab" data-tab="pipeline">Import help</button>
     <button class="tab" data-tab="guide">Pattern guide</button>
     <button class="tab" data-tab="tutorials">Tutorials</button>
@@ -335,6 +350,7 @@ tr.selected{background:#EAF3EF;}
               <h3>Total ion chromatogram</h3>
               <div class="chart-meta">
                 <p>Drag to zoom. Click a peak to inspect it.</p>
+                <button class="btn" id="export-tic-png" type="button">Export PNG</button>
                 <button class="btn" id="reset-tic-zoom" type="button">Reset zoom</button>
               </div>
             </div>
@@ -384,7 +400,10 @@ tr.selected{background:#EAF3EF;}
               <div class="visual-card wide-spectrum">
                 <div class="chart-toolbar">
                   <h3>Mass spectrum</h3>
-                  <p>Selected peak ion pattern and major ions</p>
+                  <div class="chart-meta">
+                    <p>Selected peak ion pattern and major ions</p>
+                    <button class="btn" id="export-spectrum-png" type="button">Export PNG</button>
+                  </div>
                 </div>
                 <div class="chart-shell">
                   <canvas id="spectrum" width="1080" height="360"></canvas>
@@ -497,6 +516,78 @@ tr.selected{background:#EAF3EF;}
               </div>
             </div>
           </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel" id="compare-panel">
+    <div class="compare-shell">
+      <div class="start-card">
+        <div class="pane-title">
+          <h2>Compare runs</h2>
+          <span class="small-note" id="compare-count">1 run loaded</span>
+        </div>
+        <p>This workspace is for overlays, presentation exports, and quick relative-area analysis. The current review run is included automatically, and you can add more peak tables to compare against it.</p>
+      </div>
+      <div class="compare-grid">
+        <div class="compare-card">
+          <div class="context-strip">
+            <p>Overlay multiple chromatograms, normalize them for visual comparison, or invert alternating traces to compare patterns cleanly across samples.</p>
+          </div>
+          <div class="chart-toolbar">
+            <h3>Chromatogram overlay</h3>
+            <div class="chart-meta">
+              <button class="btn" id="compare-export-png" type="button">Export PNG</button>
+              <button class="btn" id="compare-export-svg" type="button">Export SVG</button>
+            </div>
+          </div>
+          <div class="chart-shell">
+            <canvas id="compare-canvas" width="1100" height="480"></canvas>
+          </div>
+          <div class="legend-list" id="compare-legend"></div>
+        </div>
+        <div class="compare-card">
+          <div class="compare-card-body">
+            <div class="pane-title">
+              <h2>Overlay controls</h2>
+              <span class="small-note">presentation + comparison</span>
+            </div>
+            <div class="compare-controls">
+              <div class="file-row">
+                <input id="compare-files" type="file" accept=".csv,.CSV,.tsv,.TSV,.txt,.TXT" multiple>
+              </div>
+              <div class="compare-inline">
+                <label for="compare-normalize">Scale</label>
+                <select id="compare-normalize">
+                  <option value="raw">Raw area</option>
+                  <option value="max" selected>Normalize to max</option>
+                  <option value="total">Normalize to total area</option>
+                </select>
+              </div>
+              <div class="compare-inline">
+                <label><input id="compare-invert" type="checkbox"> Invert alternating traces</label>
+              </div>
+              <div class="compare-inline">
+                <label for="quant-run-select">Percent area table</label>
+                <select id="quant-run-select"></select>
+                <button class="btn" id="quant-export-csv" type="button">Export CSV</button>
+              </div>
+              <div class="compare-status" id="compare-status">The current review run is ready to compare. Add more peak-table files to build overlays.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="compare-card">
+        <div class="candidate-workbench-head">
+          <h3>Relative area table</h3>
+          <p>Percent area is calculated from the currently selected run using its listed peak areas.</p>
+        </div>
+        <div class="compare-table-wrap">
+          <table class="candidate-table">
+            <thead><tr><th>RT</th><th>Peak</th><th>Class</th><th>Area</th><th>% Area</th></tr></thead>
+            <tbody id="quant-rows"></tbody>
+          </table>
         </div>
       </div>
     </div>
@@ -751,6 +842,8 @@ const tic=document.getElementById("tic");
 const ticCtx=tic.getContext("2d");
 const spec=document.getElementById("spectrum");
 const specCtx=spec.getContext("2d");
+const compareCanvas=document.getElementById("compare-canvas");
+const compareCtx=compareCanvas.getContext("2d");
 const gcmsSimCanvas=document.getElementById("gcmssim");
 const gcmsSimCtx=gcmsSimCanvas.getContext("2d");
 const ionCanvas=document.getElementById("ion-canvas");
@@ -774,6 +867,8 @@ let dataSourceLabel="Demo data loaded";
 const rawStatus=document.getElementById("raw-import-status");
 let ticZoom=null;
 let ticDrag=null;
+const comparePalette=["#1D5E9E","#177E63","#A23A32","#A66A12","#6856A6","#0F7C8D","#8B5CF6","#D97706"];
+let compareRuns=[];
 const gcmsStages=[
   {
     key:"injector",
@@ -1552,6 +1647,7 @@ function renderSelected(){
     list.appendChild(el);
   });
   drawTic();drawSpectrum(peak);renderIonReadout(peak);renderRows();
+  syncCurrentRunToCompare();
 }
 function selectPeak(id){selectedId=id;renderSelected();}
 function parseDelimited(text){
@@ -1576,6 +1672,160 @@ function downloadCsv(){
   const rows=peaks.map(p=>[p.id,p.rt,p.area,p.name,p.formula,p.class,p.match,p.annotation?.name,p.annotation?.class,p.annotation?.confidence,p.annotation?.notes].map(esc).join(","));
   const blob=new Blob([[headers.join(","),...rows].join("\n")],{type:"text/csv"});
   const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="gcms_cuticle_annotations.csv";a.click();URL.revokeObjectURL(a.href);
+}
+function downloadCanvasPng(canvas,filename){
+  const a=document.createElement("a");
+  a.href=canvas.toDataURL("image/png");
+  a.download=filename;
+  a.click();
+}
+function makeRun(name,peakList,kind="table"){
+  return {
+    id:`run-${Math.random().toString(36).slice(2,9)}`,
+    name,
+    kind,
+    color:comparePalette[compareRuns.length%comparePalette.length],
+    peaks:peakList.map(p=>({...p}))
+  };
+}
+function syncCurrentRunToCompare(){
+  const current={
+    id:"current-run",
+    name:dataSourceLabel,
+    kind:"review",
+    color:comparePalette[0],
+    peaks:peaks.map(p=>({...p}))
+  };
+  const idx=compareRuns.findIndex(run=>run.id==="current-run");
+  if(idx>=0)compareRuns[idx]=current;
+  else compareRuns.unshift(current);
+  compareRuns.forEach((run,index)=>{run.color=comparePalette[index%comparePalette.length];});
+  renderCompareWorkspace();
+}
+function compareDomain(){
+  const source=compareRuns.flatMap(run=>run.peaks);
+  if(!source.length)return{minRt:0,maxRt:1};
+  return {
+    minRt:Math.min(...source.map(p=>p.rt))-0.5,
+    maxRt:Math.max(...source.map(p=>p.rt))+0.5
+  };
+}
+function normalizedArea(run,peak,mode){
+  if(mode==="raw")return peak.area;
+  if(mode==="total"){
+    const total=run.peaks.reduce((sum,p)=>sum+p.area,0)||1;
+    return peak.area/total;
+  }
+  const max=Math.max(...run.peaks.map(p=>p.area),1);
+  return peak.area/max;
+}
+function traceValue(run,rt,mode){
+  return run.peaks.reduce((sum,peak)=>{
+    const sigma=Math.max(0.035,(compareDomain().maxRt-compareDomain().minRt)/240);
+    const amp=normalizedArea(run,peak,mode);
+    return sum + amp*Math.exp(-((rt-peak.rt)**2)/(2*sigma*sigma));
+  },0);
+}
+function drawCompareOverlay(){
+  const ctx=compareCtx, canvas=compareCanvas, w=canvas.width, h=canvas.height, p=40;
+  ctx.clearRect(0,0,w,h);
+  ctx.fillStyle="#fff";ctx.fillRect(0,0,w,h);
+  ctx.strokeStyle="#D8E0E6";ctx.lineWidth=1;
+  const inverted=document.getElementById("compare-invert")?.checked;
+  const mode=document.getElementById("compare-normalize")?.value || "max";
+  const {minRt,maxRt}=compareDomain();
+  const baseline=inverted ? h/2 : h-p;
+  ctx.beginPath();ctx.moveTo(p,p);ctx.lineTo(p,h-p);ctx.lineTo(w-p,h-p);ctx.stroke();
+  if(inverted){
+    ctx.strokeStyle="#E4E9ED";
+    ctx.beginPath();ctx.moveTo(p,baseline);ctx.lineTo(w-p,baseline);ctx.stroke();
+  }
+  const steps=520;
+  compareRuns.forEach((run,index)=>{
+    if(!run.peaks.length)return;
+    ctx.strokeStyle=run.color;
+    ctx.lineWidth=2;
+    ctx.beginPath();
+    for(let i=0;i<=steps;i+=1){
+      const rt=minRt+((maxRt-minRt)/steps)*i;
+      const x=p+((rt-minRt)/(maxRt-minRt))*(w-p*2);
+      const val=traceValue(run,rt,mode);
+      const sign=(inverted && index%2===1)?-1:1;
+      const scale=inverted?(h/2-p-20):(h-p*2);
+      const y=baseline-sign*val*scale;
+      if(i===0)ctx.moveTo(x,y); else ctx.lineTo(x,y);
+    }
+    ctx.stroke();
+  });
+  const tickCount=8;
+  ctx.fillStyle="#758594";ctx.font="12px Inter, sans-serif";
+  for(let i=0;i<=tickCount;i+=1){
+    const rt=minRt+((maxRt-minRt)/tickCount)*i;
+    const x=p+((rt-minRt)/(maxRt-minRt))*(w-p*2);
+    ctx.strokeStyle="#C7D1D8";ctx.lineWidth=1;
+    ctx.beginPath();ctx.moveTo(x,h-p);ctx.lineTo(x,h-p+6);ctx.stroke();
+    ctx.fillText(rt.toFixed(1),x-12,h-10);
+  }
+  ctx.fillText("retention time (min)",w/2-50,h-10);
+}
+function overlaySvg(){
+  const w=compareCanvas.width,h=compareCanvas.height,p=40;
+  const inverted=document.getElementById("compare-invert")?.checked;
+  const mode=document.getElementById("compare-normalize")?.value || "max";
+  const {minRt,maxRt}=compareDomain();
+  const baseline=inverted ? h/2 : h-p;
+  const steps=520;
+  const paths=compareRuns.map((run,index)=>{
+    const d=[];
+    for(let i=0;i<=steps;i+=1){
+      const rt=minRt+((maxRt-minRt)/steps)*i;
+      const x=p+((rt-minRt)/(maxRt-minRt))*(w-p*2);
+      const val=traceValue(run,rt,mode);
+      const sign=(inverted && index%2===1)?-1:1;
+      const scale=inverted?(h/2-p-20):(h-p*2);
+      const y=baseline-sign*val*scale;
+      d.push(`${i===0?"M":"L"} ${x.toFixed(2)} ${y.toFixed(2)}`);
+    }
+    return `<path d="${d.join(" ")}" fill="none" stroke="${run.color}" stroke-width="2"/>`;
+  }).join("");
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}"><rect width="${w}" height="${h}" fill="white"/><path d="M ${p} ${p} L ${p} ${h-p} L ${w-p} ${h-p}" fill="none" stroke="#D8E0E6" stroke-width="1"/>${paths}</svg>`;
+}
+function downloadTextFile(content,filename,type="text/plain"){
+  const blob=new Blob([content],{type});
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download=filename;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+function renderCompareLegend(){
+  const holder=document.getElementById("compare-legend");
+  if(!holder)return;
+  holder.innerHTML=compareRuns.map((run,index)=>`<div class="legend-row"><span class="legend-swatch"><span class="legend-dot" style="background:${run.color}"></span>${run.name}</span><span>${run.peaks.length} peaks${document.getElementById("compare-invert")?.checked && index%2===1?" · inverted":""}</span></div>`).join("");
+}
+function renderQuantControls(){
+  const select=document.getElementById("quant-run-select");
+  if(!select)return;
+  const current=select.value;
+  select.innerHTML=compareRuns.map(run=>`<option value="${run.id}">${run.name}</option>`).join("");
+  if(compareRuns.some(run=>run.id===current))select.value=current;
+}
+function renderQuantTable(){
+  const select=document.getElementById("quant-run-select");
+  const tbody=document.getElementById("quant-rows");
+  if(!select || !tbody)return;
+  const run=compareRuns.find(item=>item.id===select.value) || compareRuns[0];
+  if(!run){tbody.innerHTML="";return;}
+  const total=run.peaks.reduce((sum,p)=>sum+p.area,0)||1;
+  tbody.innerHTML=run.peaks.slice().sort((a,b)=>a.rt-b.rt).map(peak=>`<tr><td>${peak.rt.toFixed(2)}</td><td><strong>${peak.name||peak.id}</strong></td><td><span class="tag ${classMap[peak.class]||"unknown"}">${peak.class||"unknown"}</span></td><td>${peak.area.toLocaleString()}</td><td>${((peak.area/total)*100).toFixed(2)}</td></tr>`).join("");
+}
+function renderCompareWorkspace(){
+  document.getElementById("compare-count").textContent=`${compareRuns.length} run${compareRuns.length===1?"":"s"} loaded`;
+  document.getElementById("compare-status").textContent=compareRuns.length>1?"Overlay ready. You can export the figure or inspect percent area by run.":"The current review run is ready to compare. Add more peak-table files to build overlays.";
+  renderCompareLegend();
+  renderQuantControls();
+  renderQuantTable();
+  drawCompareOverlay();
 }
 function formulaText(carbons,hydrogens){
   return `C${carbons}H${hydrogens}`;
@@ -1661,6 +1911,8 @@ document.getElementById("reset-tic-zoom").addEventListener("click",()=>{
   ticDrag=null;
   drawTic();
 });
+document.getElementById("export-tic-png").addEventListener("click",()=>downloadCanvasPng(tic,"chromatogram.png"));
+document.getElementById("export-spectrum-png").addEventListener("click",()=>downloadCanvasPng(spec,"mass-spectrum.png"));
 document.getElementById("filter").addEventListener("input",renderRows);
 document.getElementById("class-filter").addEventListener("change",renderRows);
 document.getElementById("load-demo").addEventListener("click",()=>{peaks=demoPeaks.map(p=>({...p,annotation:{name:p.name,class:p.class,confidence:p.match>84?"probable compound":"tentative compound",notes:p.notes}}));selectedId=peaks[0].id;ticZoom=null;dataSourceLabel="Demo data loaded";renderSelected();});
@@ -1675,6 +1927,31 @@ document.getElementById("save-annotation").addEventListener("click",()=>{
   renderSelected();
 });
 document.getElementById("export-csv").addEventListener("click",downloadCsv);
+document.getElementById("compare-files").addEventListener("change",async event=>{
+  const files=[...(event.target.files||[])];
+  if(!files.length)return;
+  const loaded=[];
+  for(const file of files){
+    const text=await file.text();
+    const parsed=parseDelimited(text);
+    if(parsed.length)loaded.push(makeRun(file.name,parsed));
+  }
+  compareRuns=[...(compareRuns.filter(run=>run.id==="current-run")), ...loaded];
+  compareRuns.forEach((run,index)=>{run.color=comparePalette[index%comparePalette.length];});
+  renderCompareWorkspace();
+});
+document.getElementById("compare-normalize").addEventListener("change",renderCompareWorkspace);
+document.getElementById("compare-invert").addEventListener("change",renderCompareWorkspace);
+document.getElementById("quant-run-select").addEventListener("change",renderQuantTable);
+document.getElementById("compare-export-png").addEventListener("click",()=>downloadCanvasPng(compareCanvas,"chromatogram-overlay.png"));
+document.getElementById("compare-export-svg").addEventListener("click",()=>downloadTextFile(overlaySvg(),"chromatogram-overlay.svg","image/svg+xml"));
+document.getElementById("quant-export-csv").addEventListener("click",()=>{
+  const run=compareRuns.find(item=>item.id===document.getElementById("quant-run-select").value) || compareRuns[0];
+  if(!run)return;
+  const total=run.peaks.reduce((sum,p)=>sum+p.area,0)||1;
+  const rows=run.peaks.slice().sort((a,b)=>a.rt-b.rt).map(peak=>[`"${peak.rt.toFixed(2)}"`,`"${(peak.name||peak.id).replaceAll('"','""')}"`,`"${peak.class||"unknown"}"`,`"${peak.area}"`,`"${((peak.area/total)*100).toFixed(2)}"`].join(","));
+  downloadTextFile([`rt,peak,class,area,percent_area`,...rows].join("\n"),`${run.name.replace(/\s+/g,"_")}_percent_area.csv`,"text/csv");
+});
 chooseFolderBtn.addEventListener("click",()=>folderInput.click());
 folderInput.addEventListener("change",event=>{
   const files=event.target.files;
