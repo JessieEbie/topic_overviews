@@ -758,14 +758,18 @@ function drawSkyMini(v){
 
   ssctx.save();
   ssctx.font='9px var(--font-sans,sans-serif)';
-  ssctx.fillStyle='#64748B';
+  ssctx.fillStyle='#475569';
   ssctx.textAlign='center';
   ssctx.textBaseline='alphabetic';
   ssctx.fillText('East',box.cx-box.rx+8,box.baseY+15);
   ssctx.fillText('South',box.cx,box.baseY+15);
   ssctx.fillText('West',box.cx+box.rx-8,box.baseY+15);
   ssctx.textBaseline='top';
-  ssctx.fillText('Phoenix Sun path',box.cx,9);
+  ssctx.font='600 10px var(--font-sans,sans-serif)';
+  ssctx.fillText('Phoenix Sun path',box.cx,8);
+  ssctx.font='9px var(--font-sans,sans-serif)';
+  ssctx.fillStyle='#64748B';
+  ssctx.fillText('Facing south; north is behind you',box.cx,20);
   ssctx.restore();
 
   const dateIn=getDateInputs();
@@ -804,11 +808,11 @@ function drawSkyMini(v){
     ssctx.lineTo(noonPt.x,noonPt.y);
     ssctx.stroke();
     ssctx.setLineDash([]);
-    ssctx.font='9px var(--font-sans,sans-serif)';
+    ssctx.font='600 9px var(--font-sans,sans-serif)';
     ssctx.fillStyle='rgba(185,28,28,0.9)';
     ssctx.textAlign='center';
     ssctx.textBaseline='bottom';
-    ssctx.fillText('Solar noon meridian',box.cx,Math.min(noonPt.y,box.baseY)-4);
+    ssctx.fillText('Solar noon meridian',box.cx,Math.min(noonPt.y,box.baseY)-6);
     ssctx.restore();
   }
 
@@ -830,11 +834,11 @@ function drawSkyMini(v){
     ssctx.lineWidth=1;
     ssctx.fill();
     ssctx.stroke();
-    ssctx.font='bold 9px var(--font-sans,sans-serif)';
+    ssctx.font='700 9px var(--font-sans,sans-serif)';
     ssctx.fillStyle='#92400E';
     ssctx.textAlign='left';
     ssctx.textBaseline='middle';
-    ssctx.fillText('Sun',sunPt.x+8,sunPt.y);
+    ssctx.fillText('Current Sun',sunPt.x+10,sunPt.y);
     ssctx.restore();
   }else{
     const horizonPt=projectSouthSkyPoint(v.sunAz,0,box);
@@ -847,6 +851,58 @@ function drawSkyMini(v){
     ssctx.stroke();
     ssctx.restore();
   }
+}
+
+function drawSkyTextLabel(ctx,text,x,y,opt={}){
+  const padX=4,padY=2;
+  ctx.save();
+  ctx.font=opt.font||'600 9px var(--font-sans,sans-serif)';
+  ctx.textAlign=opt.align||'center';
+  ctx.textBaseline=opt.baseline||'middle';
+  const metrics=ctx.measureText(text);
+  const w=metrics.width+padX*2;
+  const h=14;
+  let left=x-w/2;
+  if((opt.align||'center')==='left')left=x;
+  if((opt.align||'center')==='right')left=x-w;
+  let top=y-h/2;
+  if((opt.baseline||'middle')==='top')top=y;
+  if((opt.baseline||'middle')==='bottom')top=y-h;
+  ctx.fillStyle=opt.bg||'rgba(248,250,252,0.82)';
+  ctx.strokeStyle=opt.border||'rgba(148,163,184,0.45)';
+  ctx.lineWidth=0.8;
+  ctx.beginPath();
+  if(ctx.roundRect)ctx.roundRect(left,top,w,h,4);
+  else ctx.rect(left,top,w,h);
+  ctx.fill();
+  ctx.stroke();
+  ctx.fillStyle=opt.color||'#102033';
+  ctx.fillText(text,x,y);
+  ctx.restore();
+}
+
+function drawSkyCallout(ctx,text,anchorX,anchorY,labelX,labelY,opt={}){
+  ctx.save();
+  ctx.strokeStyle=opt.lineColor||'rgba(71,85,105,0.75)';
+  ctx.lineWidth=opt.lineWidth||1;
+  ctx.setLineDash(opt.dash||[]);
+  ctx.beginPath();
+  ctx.moveTo(labelX,labelY);
+  ctx.lineTo(anchorX,anchorY);
+  ctx.stroke();
+  ctx.restore();
+  drawSkyTextLabel(ctx,text,labelX,labelY,opt.label||{});
+}
+
+function getDailySunTrack(){
+  const d=getDateInputs();
+  const pts=[];
+  for(let mins=0;mins<=24*60;mins+=10){
+    const hr=Math.floor(mins/60),mn=mins%60;
+    const p=solarPos(d.yr,d.mo,d.dy,hr,mn);
+    if(p.el>=0)pts.push(p);
+  }
+  return pts;
 }
 
 function drawSky(v){
@@ -866,22 +922,44 @@ function drawSky(v){
   sg.addColorStop(0,st);sg.addColorStop(1,se);
   sctx.beginPath();sctx.arc(SCX,SCY,SR,0,Math.PI*2);sctx.fillStyle=sg;sctx.fill();
   sctx.beginPath();sctx.arc(SCX,SCY,SR,0,Math.PI*2);sctx.strokeStyle=bh?'rgba(100,150,200,0.3)':'rgba(30,80,160,0.35)';sctx.lineWidth=2;sctx.stroke();
+  if(curMode==='datetime'){
+    const track=getDailySunTrack();
+    if(track.length>1){
+      sctx.save();
+      sctx.beginPath();
+      track.forEach((p,i)=>{
+        const pt=azElToSkyXY(p.az,p.el);
+        if(i===0)sctx.moveTo(pt.x,pt.y);else sctx.lineTo(pt.x,pt.y);
+      });
+      sctx.setLineDash([6,4]);
+      sctx.strokeStyle=bh?'rgba(253,224,71,0.9)':'rgba(245,158,11,0.9)';
+      sctx.lineWidth=2;
+      sctx.stroke();
+      sctx.restore();
+      const midPt=azElToSkyXY(track[Math.floor(track.length*0.55)].az,track[Math.floor(track.length*0.55)].el);
+      drawSkyCallout(sctx,'Daily Sun path',midPt.x,midPt.y,SCX-SR+40,SCY-SR+26,{
+        lineColor:'rgba(245,158,11,0.78)',
+        dash:[6,4],
+        label:{color:'#92400E',bg:'rgba(255,251,235,0.94)',border:'rgba(245,158,11,0.45)'}
+      });
+    }
+  }
   // Elevation rings
   [30,60].forEach(el=>{
     const pr=SR*(1-el/90);sctx.beginPath();sctx.arc(SCX,SCY,pr,0,Math.PI*2);
     sctx.strokeStyle=bh?'rgba(210,230,255,0.32)':'rgba(30,80,160,0.15)';sctx.lineWidth=darkSky?1:0.75;sctx.stroke();
-    sctx.fillStyle=bh?'rgba(235,245,255,0.88)':'rgba(20,60,130,0.45)';
-    sctx.font='9px var(--font-sans,sans-serif)';sctx.textAlign='left';sctx.textBaseline='middle';
-    sctx.fillText(el+'°',SCX+pr+3,SCY);
   });
-  sctx.save();
-  sctx.font='9px var(--font-sans,sans-serif)';
-  sctx.fillStyle=bh?'rgba(235,245,255,0.9)':'rgba(20,60,130,0.55)';
-  sctx.textAlign='left';
-  sctx.textBaseline='alphabetic';
-  sctx.fillText('30° elevation',SCX+SR*(1-30/90)+14,SCY-8);
-  sctx.fillText('60° elevation',SCX+SR*(1-60/90)+14,SCY-8);
-  sctx.restore();
+  {
+    const pr30=SR*(1-30/90),pr60=SR*(1-60/90);
+    drawSkyCallout(sctx,'30° elevation',SCX+pr30,SCY,SCX+SR+58,SCY-38,{
+      lineColor:bh?'rgba(226,232,240,0.95)':'rgba(71,85,105,0.78)',
+      label:{color:bh?'#0F172A':'#102A43',bg:bh?'rgba(239,246,255,0.94)':'rgba(248,250,252,0.9)',border:'rgba(148,163,184,0.45)'}
+    });
+    drawSkyCallout(sctx,'60° elevation',SCX+pr60,SCY,SCX+SR+58,SCY-16,{
+      lineColor:bh?'rgba(226,232,240,0.95)':'rgba(71,85,105,0.78)',
+      label:{color:bh?'#0F172A':'#102A43',bg:bh?'rgba(239,246,255,0.94)':'rgba(248,250,252,0.9)',border:'rgba(148,163,184,0.45)'}
+    });
+  }
   // E-vector ticks
   {
     const night=sunEl<-18;
@@ -909,15 +987,16 @@ function drawSky(v){
     const asp=azElToSkyXY((sunAz+180)%360,0);
     sctx.save();sctx.setLineDash([5,3]);sctx.strokeStyle=bh?'#FECACA':'#DC2626';sctx.lineWidth=bh?1.8:1.5;sctx.globalAlpha=bh?0.95:0.7;
     sctx.beginPath();sctx.moveTo(sp2.x,sp2.y);sctx.lineTo(SCX,SCY);sctx.lineTo(asp.x,asp.y);sctx.stroke();sctx.restore();
-    sctx.save();
-    sctx.font='9px var(--font-sans,sans-serif)';
-    sctx.fillStyle=bh?'rgba(254,202,202,0.95)':'rgba(185,28,28,0.75)';
-    sctx.textAlign='center';
-    sctx.textBaseline='bottom';
-    sctx.fillText('Solar meridian',SCX,SCY-6);
-    sctx.textBaseline='top';
-    sctx.fillText('Anti-solar point',asp.x,asp.y+8);
-    sctx.restore();
+    drawSkyCallout(sctx,'Current solar meridian',SCX,SCY,SCX-SR+44,SCY-SR+10,{
+      lineColor:'rgba(220,38,38,0.75)',
+      dash:[5,3],
+      label:{color:'#991B1B',bg:'rgba(255,241,242,0.94)',border:'rgba(248,113,113,0.45)'}
+    });
+    drawSkyCallout(sctx,'Anti-solar point',asp.x,asp.y,SCX-SR+44,SCY+SR-8,{
+      lineColor:'rgba(220,38,38,0.75)',
+      dash:[5,3],
+      label:{color:'#991B1B',bg:'rgba(255,241,242,0.94)',border:'rgba(248,113,113,0.45)'}
+    });
   }
   // Cardinals
   ['N','E','S','W'].forEach((lbl,i)=>{
@@ -928,13 +1007,10 @@ function drawSky(v){
     sctx.beginPath();if(sctx.roundRect)sctx.roundRect(ox-tw2/2,oy-8,tw2,16,3);else sctx.rect(ox-tw2/2,oy-8,tw2,16);sctx.fill();
     sctx.globalAlpha=1;sctx.fillStyle=bh?'#0F172A':'#E0F2FF';sctx.fillText(lbl,ox,oy);sctx.restore();
   });
-  sctx.save();
-  sctx.font='9px var(--font-sans,sans-serif)';
-  sctx.fillStyle=bh?'rgba(235,245,255,0.9)':'rgba(20,60,130,0.55)';
-  sctx.textAlign='center';
-  sctx.textBaseline='top';
-  sctx.fillText('Azimuth around rim',SCX,SCY+SR+18);
-  sctx.restore();
+  drawSkyCallout(sctx,'Azimuth around rim',SCX,SCY+SR,SCX,SCY+SR+30,{
+    lineColor:bh?'rgba(226,232,240,0.95)':'rgba(71,85,105,0.78)',
+    label:{color:bh?'#0F172A':'#102A43',bg:bh?'rgba(239,246,255,0.94)':'rgba(248,250,252,0.9)',border:'rgba(148,163,184,0.45)'}
+  });
   // Trail between nest and feeder
   sctx.save();sctx.setLineDash([4,3]);sctx.strokeStyle=bh?'rgba(167,243,208,0.82)':'rgba(5,150,105,0.45)';sctx.lineWidth=bh?1.5:1.2;sctx.globalAlpha=bh?0.9:0.7;
   sctx.beginPath();sctx.moveTo(skyNestX,skyNestY);sctx.lineTo(skyFeedX,skyFeedY);sctx.stroke();sctx.restore();
@@ -945,7 +1021,10 @@ function drawSky(v){
     sgg.addColorStop(0,'rgba(255,245,80,1)');sgg.addColorStop(0.35,'rgba(255,200,30,0.85)');sgg.addColorStop(1,'rgba(255,160,0,0)');
     sctx.beginPath();sctx.arc(sp.x,sp.y,ssz*2.2,0,Math.PI*2);sctx.fillStyle=sgg;sctx.fill();
     sctx.beginPath();sctx.arc(sp.x,sp.y,ssz,0,Math.PI*2);sctx.fillStyle='#FDE047';sctx.strokeStyle='#D97706';sctx.lineWidth=1.2;sctx.fill();sctx.stroke();
-    sctx.font='bold 9px var(--font-sans,sans-serif)';sctx.fillStyle='#92400E';sctx.textAlign='center';sctx.textBaseline='bottom';sctx.fillText('Sun',sp.x,sp.y-ssz*2.3);
+    drawSkyCallout(sctx,'Current Sun',sp.x,sp.y,sp.x+34,sp.y-18,{
+      lineColor:'rgba(245,158,11,0.78)',
+      label:{color:'#92400E',bg:'rgba(255,251,235,0.94)',border:'rgba(245,158,11,0.45)'}
+    });
   }else if(sunEl>=-18){
     const bsp=azElToSkyXY(sunAz,0);
     sctx.save();sctx.globalAlpha=0.4;sctx.beginPath();sctx.arc(bsp.x,bsp.y,7,0,Math.PI*2);sctx.setLineDash([3,2]);sctx.strokeStyle='#FDE047';sctx.lineWidth=1.5;sctx.stroke();sctx.restore();
@@ -1185,9 +1264,9 @@ function animLoop(ts){
   }else if(A.phase==='rotating'){
     const pg=Math.min(A.phaseT/BASE_DUR.rotating,1),ea=ease(pg);
     A.filtCurrentAngle=A.filtEndAngle*ea;
-    const currentShiftedHome=A.correctExitAngle+d2r(totalFilterShiftDeg(A.filtCurrentAngle));
-    A.antAngle=blendHeadingAngles(A.correctExitAngle,currentShiftedHome,A.polWeight);
-    A.antX=ft.x-ANT_HEAD*Math.cos(A.antAngle);A.antY=ft.y-ANT_HEAD*Math.sin(A.antAngle);
+    A.antX=A.restX;
+    A.antY=A.restY;
+    A.antAngle=A.outAngle;
     if(pg>=1){A.filtCurrentAngle=A.filtEndAngle;A.phase='exit';A.phaseT=0;A.trailErr=[{x:ft.x,y:ft.y}];setPhaseUI('exit');}
   }else if(A.phase==='exit'){
     const pg=Math.min(A.phaseT/BASE_DUR.exit,1),ea=ease(pg),exitDist=200*ea;
