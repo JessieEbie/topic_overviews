@@ -60,6 +60,7 @@ main{width:min(1180px,100%);margin:0 auto;padding:16px clamp(10px,2.5vw,28px) 32
 .mtab{flex:1;padding:4px 0;font-size:11px;cursor:pointer;border:none;background:transparent;color:var(--color-text-secondary);text-align:center;}
 .mtab.active{background:var(--color-background-secondary);color:var(--color-text-primary);font-weight:500;}
 canvas{border-radius:6px;display:block;max-width:100%;height:auto;}
+#sky-c{touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;}
 .canvas-wrap{position:relative;}
 #align-toast{position:absolute;top:8px;left:50%;transform:translateX(-50%);background:rgba(5,150,105,0.93);color:#fff;border-radius:7px;padding:5px 14px;font-size:12px;font-weight:500;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity 0.3s;z-index:20;}
 #align-toast.show{opacity:1;}
@@ -1386,6 +1387,13 @@ function scCoords(e){
   return{x:(src.clientX-rect.left)*sx,y:(src.clientY-rect.top)*sx};
 }
 function hitSky(x,y,nx,ny,r){return Math.sqrt((x-nx)**2+(y-ny)**2)<=r;}
+function pickSkyDragTarget(x,y,isTouch=false){
+  const nestRadius=isTouch?20:14;
+  const feederRadius=isTouch?18:12;
+  if(hitSky(x,y,skyNestX,skyNestY,nestRadius))return'nest';
+  if(hitSky(x,y,skyFeedX,skyFeedY,feederRadius))return'feeder';
+  return null;
+}
 function clampSky(x,y){
   // keep within dome circle
   const dx=x-SCX,dy=y-SCY,dist=Math.sqrt(dx*dx+dy*dy);
@@ -1396,9 +1404,8 @@ function clampSky(x,y){
 SC.addEventListener('mousedown',e=>{
   if(A.phase!=='idle'&&A.phase!=='done')return;
   const{x,y}=scCoords(e);
-  // Nest has priority if overlapping
-  if(hitSky(x,y,skyNestX,skyNestY,14))skyDragTarget='nest';
-  else if(hitSky(x,y,skyFeedX,skyFeedY,12))skyDragTarget='feeder';
+  skyDragTarget=pickSkyDragTarget(x,y,false);
+  if(skyDragTarget)skyKeyboardTarget=skyDragTarget;
   if(skyDragTarget)SC.style.cursor='grabbing';
 });
 SC.addEventListener('mousemove',e=>{
@@ -1414,11 +1421,18 @@ SC.addEventListener('mouseleave',()=>{if(skyDragTarget){skyDragTarget=null;SC.st
 SC.addEventListener('mousemove',e=>{
   if(skyDragTarget||(A.phase!=='idle'&&A.phase!=='done'))return;
   const{x,y}=scCoords(e);
-  SC.style.cursor=(hitSky(x,y,skyNestX,skyNestY,14)||hitSky(x,y,skyFeedX,skyFeedY,12))?'grab':'default';
+  SC.style.cursor=pickSkyDragTarget(x,y,false)?'grab':'default';
 },{passive:true});
-SC.addEventListener('touchstart',e=>{e.preventDefault();const{x,y}=scCoords(e);if(hitSky(x,y,skyNestX,skyNestY,14))skyDragTarget='nest';else if(hitSky(x,y,skyFeedX,skyFeedY,12))skyDragTarget='feeder';},{passive:false});
+SC.addEventListener('touchstart',e=>{
+  if(A.phase!=='idle'&&A.phase!=='done')return;
+  e.preventDefault();
+  const{x,y}=scCoords(e);
+  skyDragTarget=pickSkyDragTarget(x,y,true);
+  if(skyDragTarget)skyKeyboardTarget=skyDragTarget;
+},{passive:false});
 SC.addEventListener('touchmove',e=>{e.preventDefault();if(!skyDragTarget)return;const{x,y}=scCoords(e),c=clampSky(x,y);if(skyDragTarget==='nest'){skyNestX=c.x;skyNestY=c.y;}else{skyFeedX=c.x;skyFeedY=c.y;}update();},{passive:false});
 SC.addEventListener('touchend',()=>{skyDragTarget=null;});
+SC.addEventListener('touchcancel',()=>{skyDragTarget=null;});
 SC.addEventListener('keydown',e=>{
   if(A.phase!=='idle'&&A.phase!=='done')return;
   if(e.key==='n'||e.key==='N'){
@@ -1467,6 +1481,7 @@ function update(){
   else updateScreenReaderText(v);
 }
 
+document.getElementById('e-uses-pol').value='1';
 syncExp();update();resetAnim();
 </script>
 </main>
