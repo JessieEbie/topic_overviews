@@ -48,8 +48,9 @@ main{width:min(1260px,100%);margin:0 auto;padding:14px clamp(8px,2vw,28px) 34px;
 .panel{display:none;}
 .panel.active{display:block;}
 .review-shell{padding:16px;display:grid;gap:14px;background:#fff;}
-.review-grid{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:14px;align-items:start;}
+.review-grid{display:grid;grid-template-columns:1fr;gap:14px;align-items:start;}
 .review-main,.review-side{display:grid;gap:14px;align-items:start;}
+.review-lower{display:grid;grid-template-columns:minmax(0,0.95fr) minmax(320px,0.7fr);gap:14px;align-items:start;}
 .review-card{border:1px solid var(--line);border-radius:8px;background:#fff;overflow:hidden;}
 .review-card-body{padding:14px;}
 .pane-title{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:10px;}
@@ -117,6 +118,13 @@ tr.selected{background:#EAF3EF;}
 .score-number{font-size:32px;line-height:1;font-weight:800;color:var(--green);}
 .score-box span{display:block;font-size:11px;color:var(--muted);margin-top:3px;}
 .candidate-list{display:grid;gap:9px;margin-top:10px;}
+.suggestion-strip{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(180px,0.5fr);gap:10px;margin-bottom:10px;}
+.suggestion-card{border:1px solid var(--line);border-radius:8px;background:#F7FAF9;padding:10px;}
+.suggestion-card h3{font-size:12px;margin-bottom:4px;}
+.suggestion-card p,.suggestion-card li{font-size:12px;color:var(--muted);line-height:1.55;}
+.suggestion-card ul{padding-left:17px;margin-top:5px;}
+.suggestion-call{font-size:18px;font-weight:790;line-height:1.15;margin-bottom:4px;}
+.wide-spectrum canvas{min-height:340px;}
 .candidate{border:1px solid var(--line);border-left:4px solid var(--green);border-radius:8px;padding:10px;background:#fff;}
 .candidate h3{font-size:14px;line-height:1.2;margin-bottom:6px;}
 .candidate p,.candidate li{font-size:12px;color:var(--muted);line-height:1.55;}
@@ -192,7 +200,7 @@ tr.selected{background:#EAF3EF;}
 .code-box{white-space:pre-wrap;background:#14212B;color:#EDF5F2;border-radius:8px;padding:12px;font-size:12px;line-height:1.55;overflow:auto;}
 .status{min-height:18px;font-size:12px;color:var(--muted);}
 @media (max-width:1050px){
-  .review-grid{grid-template-columns:1fr;}
+  .review-lower{grid-template-columns:1fr;}
 }
 @media (max-width:760px){
   .site-header{position:static;}
@@ -298,7 +306,7 @@ tr.selected{background:#EAF3EF;}
         <div class="review-main">
           <div class="review-card">
             <div class="context-strip">
-              <p>Use the chromatogram to see where the strongest features are in the run, then compare that to the spectrum beside it. Drag across the chromatogram to zoom into a time window, then click peaks for closer review.</p>
+              <p>Use the chromatogram to see where the strongest features are in the run, then read the selected mass spectrum directly underneath it. Drag across the chromatogram to zoom into a time window, then click peaks for closer review.</p>
             </div>
             <div class="chart-toolbar">
               <h3>Total ion chromatogram</h3>
@@ -309,6 +317,86 @@ tr.selected{background:#EAF3EF;}
             </div>
             <div class="chart-shell">
               <canvas id="tic" width="960" height="380"></canvas>
+            </div>
+          </div>
+
+          <div class="review-card">
+            <div class="review-card-body">
+              <div class="next-step">
+                <h3>What happens here?</h3>
+                <p>When you click a peak, this panel shows the mass spectrum and a best first-pass suggestion for class or identity. It is meant to give you a starting point, then show the reasoning underneath so you can agree, refine it, or reject it.</p>
+              </div>
+              <div class="selected-peak">
+                <div>
+                  <div class="small-note" id="peak-subtitle">Peak review</div>
+                  <h2 id="peak-title">Select a peak</h2>
+                  <p id="peak-description">Click a chromatogram peak or a table row to inspect the spectrum and candidate interpretations.</p>
+                </div>
+                <div class="score-box">
+                  <div class="score-number" id="match-score">--</div>
+                  <span>working confidence</span>
+                </div>
+              </div>
+              <div class="suggestion-strip">
+                <div class="suggestion-card">
+                  <h3>Suggested call</h3>
+                  <div class="suggestion-call" id="suggested-call">Pick a peak to generate a suggestion.</div>
+                  <p id="suggested-reason">The app will use the spectrum, formula, and any source name it has to make a conservative first-pass suggestion.</p>
+                </div>
+                <div class="suggestion-card">
+                  <h3>Why suggestions stay cautious</h3>
+                  <ul>
+                    <li>Raw `DATA.MS` imports do not come with library IDs.</li>
+                    <li>EI often supports class-level calls more strongly than exact isomers.</li>
+                    <li>Branch and double-bond position usually need RI, derivatization, or standards.</li>
+                  </ul>
+                </div>
+              </div>
+              <div class="visual-card wide-spectrum">
+                <div class="chart-toolbar">
+                  <h3>Mass spectrum</h3>
+                  <p>Selected peak ion pattern</p>
+                </div>
+                <div class="chart-shell">
+                  <canvas id="spectrum" width="1080" height="360"></canvas>
+                </div>
+              </div>
+              <div class="candidate-list" id="candidate-list"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="review-lower">
+          <div class="review-card">
+            <div class="review-card-body">
+              <div class="pane-title">
+                <h2>Peaks to review</h2>
+                <span class="small-note">click a row or chromatogram peak</span>
+              </div>
+              <div class="controls">
+                <div class="control-row">
+                  <label for="filter">Filter</label>
+                  <input id="filter" type="search" placeholder="alkane, ester, C29, unknown">
+                </div>
+                <div class="control-row">
+                  <label for="class-filter">Class</label>
+                  <select id="class-filter">
+                    <option value="">All classes</option>
+                    <option>alkane</option>
+                    <option>methyl-branched alkane</option>
+                    <option>alkene</option>
+                    <option>ester</option>
+                    <option>other</option>
+                    <option>unknown</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+            <div class="peak-table">
+              <table>
+                <thead><tr><th>RT</th><th>Peak</th><th>Class</th><th>Confidence</th></tr></thead>
+                <tbody id="peak-rows"></tbody>
+              </table>
             </div>
           </div>
 
@@ -361,71 +449,6 @@ tr.selected{background:#EAF3EF;}
                   <button class="btn" id="export-csv">Download CSV</button>
                 </div>
               </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="review-side">
-          <div class="review-card">
-            <div class="review-card-body">
-              <div class="next-step">
-                <h3>What happens here?</h3>
-                <p>When you click a peak, this panel shows the mass spectrum and gives a plain-language interpretation of what the ion pattern might mean. It is meant to help you decide whether the peak is probably an alkane, alkene, ester, branched hydrocarbon, or still unresolved.</p>
-              </div>
-              <div class="selected-peak">
-                <div>
-                  <div class="small-note" id="peak-subtitle">Peak review</div>
-                  <h2 id="peak-title">Select a peak</h2>
-                  <p id="peak-description">Click a chromatogram peak or a table row to inspect the spectrum and candidate interpretations.</p>
-                </div>
-                <div class="score-box">
-                  <div class="score-number" id="match-score">--</div>
-                  <span>working confidence</span>
-                </div>
-              </div>
-              <div class="visual-card">
-                <div class="chart-toolbar">
-                  <h3>Mass spectrum</h3>
-                  <p>Selected peak ion pattern</p>
-                </div>
-                <div class="chart-shell">
-                  <canvas id="spectrum" width="760" height="380"></canvas>
-                </div>
-              </div>
-              <div class="candidate-list" id="candidate-list"></div>
-            </div>
-          </div>
-
-          <div class="review-card">
-            <div class="review-card-body">
-              <div class="pane-title">
-                <h2>Peaks to review</h2>
-                <span class="small-note">click a row or chromatogram peak</span>
-              </div>
-              <div class="controls">
-                <div class="control-row">
-                  <label for="filter">Filter</label>
-                  <input id="filter" type="search" placeholder="alkane, ester, C29, unknown">
-                </div>
-                <div class="control-row">
-                  <label for="class-filter">Class</label>
-                  <select id="class-filter">
-                    <option value="">All classes</option>
-                    <option>alkane</option>
-                    <option>methyl-branched alkane</option>
-                    <option>alkene</option>
-                    <option>ester</option>
-                    <option>other</option>
-                    <option>unknown</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-            <div class="peak-table">
-              <table>
-                <thead><tr><th>RT</th><th>Peak</th><th>Class</th><th>Confidence</th></tr></thead>
-                <tbody id="peak-rows"></tbody>
-              </table>
             </div>
           </div>
         </div>
@@ -903,6 +926,48 @@ function candidatesFor(peak){
   items.push({tone:"",title:"Current library/table call",body:`${peak.name||"No name supplied"}${peak.formula?` (${peak.formula})`:""} with match score ${peak.match||"--"}.`,points:[peak.notes||"Add notes as you review this peak."]});
   return items;
 }
+function suggestedCallFor(peak){
+  const cls=inferClass(peak);
+  const sourceName=(peak.name||"").trim();
+  const formula=(peak.formula||"").trim();
+  const highMz=parseSpectrum(peak.spectrum).reduce((a,p)=>p.intensity>3&&p.mz>a?p.mz:a,0);
+  const isRawUnknown=!sourceName || /^unknown raw peak$/i.test(sourceName) || /^unknown$/i.test(sourceName);
+  if(!isRawUnknown && peak.match>=80){
+    return {
+      call:`Tentative ${sourceName}`,
+      reason:`The source table already suggests ${sourceName}${formula?` (${formula})`:""}, and the available evidence is strong enough for a working tentative call.`
+    };
+  }
+  if(cls==="alkane"){
+    const carbonHint=formula.match(/^C(\d+)H\d+$/i)?.[1];
+    return {
+      call:carbonHint?`Likely C${carbonHint} alkane`:"Likely long-chain alkane",
+      reason:`The spectrum shows the classic alkane fragment series with strong 14 u spacing. ${highMz?`A weak high-mass ion near m/z ${highMz} may help anchor carbon number.`:"Without a clear molecular ion, this is best treated as a class-level or carbon-range suggestion until RI or standards are checked."}`
+    };
+  }
+  if(cls==="methyl-branched alkane"){
+    return {
+      call:"Likely methyl-branched alkane",
+      reason:"The spectrum is still hydrocarbon-like, but some fragments are stronger than expected for a straight-chain alkane. That supports a branched CHC, while exact branch position remains tentative."
+    };
+  }
+  if(cls==="alkene"){
+    return {
+      call:"Likely alkene",
+      reason:"The ion pattern shifts toward allylic fragments such as 55, 69, 83, and 97. That supports unsaturation, but not the exact double-bond position."
+    };
+  }
+  if(cls==="ester"){
+    return {
+      call:"Likely ester or FAME",
+      reason:"The oxygenated fragmentation pattern, especially m/z 74 with supportive ions such as 43 or 87, fits an ester-type compound better than a hydrocarbon."
+    };
+  }
+  return {
+    call:"No strong ID suggestion yet",
+    reason:"The available ions support a cautious review note more than a confident identity. This often happens with raw imports, weak spectra, or coeluting peaks."
+  };
+}
 function drawAxes(ctx,w,h,pad){
   ctx.clearRect(0,0,w,h);
   ctx.fillStyle="#fff";ctx.fillRect(0,0,w,h);
@@ -976,8 +1041,21 @@ function drawTic(){
     ticCtx.strokeRect(left,p,width,h-p*2);
   }
   ticCtx.fillStyle="#758594";
-  ticCtx.fillText(`${minRt.toFixed(1)} min`,p,h-9);
-  ticCtx.fillText(`${maxRt.toFixed(1)} min`,w-p-48,h-9);
+  const tickCount=Math.max(4,Math.min(8,Math.round((maxRt-minRt)/1.8)));
+  for(let i=0;i<=tickCount;i+=1){
+    const rt=minRt+((maxRt-minRt)/tickCount)*i;
+    const x=ticXFor(rt,w,p,minRt,maxRt);
+    ticCtx.strokeStyle="#C7D1D8";
+    ticCtx.lineWidth=1;
+    ticCtx.beginPath();
+    ticCtx.moveTo(x,h-p);
+    ticCtx.lineTo(x,h-p+6);
+    ticCtx.stroke();
+    ticCtx.fillStyle="#758594";
+    const label=rt.toFixed(1);
+    ticCtx.fillText(label,x-12,h-9);
+  }
+  ticCtx.fillText("retention time (min)",w/2-46,h-9);
 }
 function drawSpectrum(peak){
   drawSpectrumData(specCtx,spec,parseSpectrum(peak.spectrum),[],"relative abundance");
@@ -1225,6 +1303,9 @@ function renderSelected(){
   document.getElementById("assigned-class").value=peak.annotation?.class||peak.class||"unknown";
   document.getElementById("confidence").value=peak.annotation?.confidence||"unreviewed";
   document.getElementById("notes").value=peak.annotation?.notes||peak.notes||"";
+  const suggested=suggestedCallFor(peak);
+  document.getElementById("suggested-call").textContent=suggested.call;
+  document.getElementById("suggested-reason").textContent=suggested.reason;
   const list=document.getElementById("candidate-list");
   list.innerHTML="";
   candidatesFor(peak).forEach(c=>{
