@@ -884,8 +884,8 @@ function drawSkyTextLabel(ctx,text,x,y,opt={}){
 
 function drawSkyCallout(ctx,text,anchorX,anchorY,labelX,labelY,opt={}){
   ctx.save();
-  ctx.strokeStyle=opt.lineColor||'rgba(71,85,105,0.75)';
-  ctx.lineWidth=opt.lineWidth||1;
+  ctx.strokeStyle=opt.lineColor||'rgba(15,23,42,0.7)';
+  ctx.lineWidth=opt.lineWidth||0.9;
   ctx.setLineDash([]);
   ctx.beginPath();
   ctx.moveTo(labelX,labelY);
@@ -938,8 +938,8 @@ function drawSky(v){
       sctx.stroke();
       sctx.restore();
       const pathPt=azElToSkyXY(track[Math.max(1,Math.floor(track.length*0.18))].az,track[Math.max(1,Math.floor(track.length*0.18))].el);
-      drawSkyCallout(sctx,'Daily Sun path',pathPt.x,pathPt.y,SCX-SR+34,SCY-SR+18,{
-        lineColor:'rgba(100,116,139,0.7)',
+      drawSkyCallout(sctx,'Daily Sun path',pathPt.x,pathPt.y,pathPt.x-18,pathPt.y-18,{
+        lineColor:'rgba(15,23,42,0.7)',
         label:{color:'#92400E',bg:'rgba(255,251,235,0.94)',border:'rgba(245,158,11,0.45)'}
       });
     }
@@ -977,12 +977,12 @@ function drawSky(v){
     sctx.save();sctx.setLineDash([5,3]);sctx.strokeStyle=bh?'#FECACA':'#DC2626';sctx.lineWidth=bh?1.8:1.5;sctx.globalAlpha=bh?0.95:0.7;
     sctx.beginPath();sctx.moveTo(sp2.x,sp2.y);sctx.lineTo(SCX,SCY);sctx.lineTo(asp.x,asp.y);sctx.stroke();sctx.restore();
     const meridianAnchor=azElToSkyXY(sunAz,Math.max(45,Math.max(0,sunEl)));
-    drawSkyCallout(sctx,'Sun-to-antisun line',meridianAnchor.x,meridianAnchor.y,SCX-SR+42,SCY-SR+34,{
-      lineColor:'rgba(100,116,139,0.7)',
+    drawSkyCallout(sctx,'Sun-to-antisun line',meridianAnchor.x,meridianAnchor.y,meridianAnchor.x-26,meridianAnchor.y-18,{
+      lineColor:'rgba(15,23,42,0.7)',
       label:{color:'#991B1B',bg:'rgba(255,241,242,0.94)',border:'rgba(248,113,113,0.45)'}
     });
-    drawSkyCallout(sctx,'Anti-solar point',asp.x,asp.y,SCX-SR+40,SCY+SR-8,{
-      lineColor:'rgba(100,116,139,0.7)',
+    drawSkyCallout(sctx,'Anti-solar point',asp.x,asp.y,asp.x+8,asp.y-16,{
+      lineColor:'rgba(15,23,42,0.7)',
       label:{color:'#991B1B',bg:'rgba(255,241,242,0.94)',border:'rgba(248,113,113,0.45)'}
     });
   }
@@ -1005,10 +1005,6 @@ function drawSky(v){
     sgg.addColorStop(0,'rgba(255,245,80,1)');sgg.addColorStop(0.35,'rgba(255,200,30,0.85)');sgg.addColorStop(1,'rgba(255,160,0,0)');
     sctx.beginPath();sctx.arc(sp.x,sp.y,ssz*2.2,0,Math.PI*2);sctx.fillStyle=sgg;sctx.fill();
     sctx.beginPath();sctx.arc(sp.x,sp.y,ssz,0,Math.PI*2);sctx.fillStyle='#FDE047';sctx.strokeStyle='#D97706';sctx.lineWidth=1.2;sctx.fill();sctx.stroke();
-    drawSkyCallout(sctx,'Current Sun',sp.x,sp.y,sp.x+36,sp.y-16,{
-      lineColor:'rgba(100,116,139,0.7)',
-      label:{color:'#92400E',bg:'rgba(255,251,235,0.94)',border:'rgba(245,158,11,0.45)'}
-    });
   }else if(sunEl>=-18){
     const bsp=azElToSkyXY(sunAz,0);
     sctx.save();sctx.globalAlpha=0.4;sctx.beginPath();sctx.arc(bsp.x,bsp.y,7,0,Math.PI*2);sctx.setLineDash([3,2]);sctx.strokeStyle='#FDE047';sctx.lineWidth=1.5;sctx.stroke();sctx.restore();
