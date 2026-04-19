@@ -127,6 +127,10 @@ tr.selected{background:#EAF3EF;}
 .suggestion-evidence{margin-top:8px;padding-top:8px;border-top:1px solid var(--line);}
 .suggestion-evidence strong{display:block;font-size:11px;margin-bottom:4px;color:var(--ink);}
 .wide-spectrum canvas{min-height:340px;}
+.ion-readout{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;padding:10px;border-top:1px solid var(--line);background:#FBFCFD;}
+.ion-chip{border:1px solid var(--line);border-radius:8px;background:#fff;padding:8px;}
+.ion-chip strong{display:block;font-size:12px;line-height:1.1;}
+.ion-chip span{display:block;font-size:11px;color:var(--muted);margin-top:3px;}
 .candidate{border:1px solid var(--line);border-left:4px solid var(--green);border-radius:8px;padding:10px;background:#fff;}
 .candidate h3{font-size:14px;line-height:1.2;margin-bottom:6px;}
 .candidate p,.candidate li{font-size:12px;color:var(--muted);line-height:1.55;}
@@ -216,7 +220,7 @@ tr.selected{background:#EAF3EF;}
   .guide-layout,.pipeline-layout,.tutorial-layout{grid-template-columns:1fr;}
   .selected-peak{grid-template-columns:1fr;}
   .guide-grid{grid-template-columns:1fr;}
-  .step-strip,.story-grid,.fragment-grid,.ion-layout,.stage-list{grid-template-columns:1fr;}
+  .step-strip,.story-grid,.fragment-grid,.ion-layout,.stage-list,.ion-readout{grid-template-columns:1fr;}
   th,td{font-size:11px;padding:7px 5px;}
 }
 </style>
@@ -363,11 +367,12 @@ tr.selected{background:#EAF3EF;}
               <div class="visual-card wide-spectrum">
                 <div class="chart-toolbar">
                   <h3>Mass spectrum</h3>
-                  <p>Selected peak ion pattern</p>
+                  <p>Selected peak ion pattern and major ions</p>
                 </div>
                 <div class="chart-shell">
                   <canvas id="spectrum" width="1080" height="360"></canvas>
                 </div>
+                <div class="ion-readout" id="ion-readout"></div>
               </div>
               <div class="candidate-list" id="candidate-list"></div>
             </div>
@@ -701,6 +706,12 @@ const demoPeaks=[
   {id:"P07",rt:21.46,area:195000,name:"Unknown oxygenated",formula:"",class:"other",match:48,spectrum:"43:100 58:64 72:45 86:22 114:15 282:7",notes:"Carbonyl-like fragments possible; low confidence."},
   {id:"P08",rt:23.02,area:590000,name:"n-Hentriacontane",formula:"C31H64",class:"alkane",match:88,spectrum:"57:100 71:68 85:49 99:29 113:18 436:6",notes:"Long-chain alkane pattern."}
 ];
+const alkaneNames={
+  1:"methane",2:"ethane",3:"propane",4:"butane",5:"pentane",6:"hexane",7:"heptane",8:"octane",9:"nonane",10:"decane",
+  11:"undecane",12:"dodecane",13:"tridecane",14:"tetradecane",15:"pentadecane",16:"hexadecane",17:"heptadecane",18:"octadecane",19:"nonadecane",20:"eicosane",
+  21:"heneicosane",22:"docosane",23:"tricosane",24:"tetracosane",25:"pentacosane",26:"hexacosane",27:"heptacosane",28:"octacosane",29:"nonacosane",30:"triacontane",
+  31:"hentriacontane",32:"dotriacontane",33:"tritriacontane",34:"tetratriacontane",35:"pentatriacontane",36:"hexatriacontane",37:"heptatriacontane",38:"octatriacontane",39:"nonatriacontane",40:"tetracontane"
+};
 let peaks=demoPeaks.map(p=>({...p,annotation:{name:p.name,class:p.class,confidence:p.match>84?"probable compound":"tentative compound",notes:p.notes}}));
 let selectedId=peaks[0].id;
 const tic=document.getElementById("tic");
@@ -934,6 +945,45 @@ function candidatesFor(peak){
   items.push({tone:"",title:"Current library/table call",body:`${peak.name||"No name supplied"}${peak.formula?` (${peak.formula})`:""} with match score ${peak.match||"--"}.`,points:[peak.notes||"Add notes as you review this peak."]});
   return items;
 }
+function formulaInfo(formula){
+  const m=String(formula||"").trim().match(/^C(\d+)H(\d+)(O(\d+))?$/i);
+  if(!m)return null;
+  return {c:Number(m[1]),h:Number(m[2]),o:Number(m[4]||0)};
+}
+function alkeneNameForCarbons(c){
+  const base=alkaneNames[c];
+  return base?base.replace(/ane$/,"ene"):null;
+}
+function methylBranchedNameForTotalCarbons(c){
+  const parent=alkaneNames[c-1];
+  return parent?`methyl${parent}`:null;
+}
+function methylEsterNameForTotalCarbons(c){
+  const acid=alkaneNames[c-1];
+  if(!acid)return null;
+  return `methyl ${acid.replace(/ane$/,"anoate")}`;
+}
+function inferHomologName(peak,cls,highMz){
+  const info=formulaInfo(peak.formula);
+  if(info){
+    if(cls==="alkane" && info.o===0 && info.h===2*info.c+2)return alkaneNames[info.c]||null;
+    if(cls==="alkene" && info.o===0 && info.h===2*info.c)return alkeneNameForCarbons(info.c);
+    if(cls==="methyl-branched alkane" && info.o===0 && info.h===2*info.c+2)return methylBranchedNameForTotalCarbons(info.c);
+    if(cls==="ester" && info.o===2 && info.h===2*info.c)return methylEsterNameForTotalCarbons(info.c);
+    return null;
+  }
+  const nominal=Math.round(highMz||0);
+  if(!nominal)return null;
+  if(cls==="alkane" && (nominal-2)%14===0){
+    const c=(nominal-2)/14;
+    return Number.isInteger(c)&&alkaneNames[c]?`possible ${alkaneNames[c]}`:null;
+  }
+  if(cls==="alkene" && nominal%14===0){
+    const c=nominal/14;
+    return Number.isInteger(c)&&alkaneNames[c]?`possible ${alkeneNameForCarbons(c)}`:null;
+  }
+  return null;
+}
 function suggestedCallFor(peak){
   const s=parseSpectrum(peak.spectrum);
   const cls=inferClass(peak);
@@ -944,6 +994,7 @@ function suggestedCallFor(peak){
   const evidence=[];
   const cautions=[];
   const isRawUnknown=!sourceName || /^unknown raw peak$/i.test(sourceName) || /^unknown$/i.test(sourceName);
+  const homologName=inferHomologName(peak,cls,highMz);
   if(sourceName && !isRawUnknown)evidence.push(`Source table name: ${sourceName}.`);
   if(formula)evidence.push(`Reported formula: ${formula}.`);
   if(peak.match)evidence.push(`Match score available: ${peak.match}.`);
@@ -973,10 +1024,11 @@ function suggestedCallFor(peak){
       };
     }
     return {
-      call:carbonHint?`Likely C${carbonHint} alkane`:"Likely long-chain alkane",
+      call:homologName?`Likely ${homologName}`:(carbonHint?`Likely C${carbonHint} alkane`:"Likely long-chain alkane"),
       reason:`The spectrum shows the classic alkane fragment series with strong 14 u spacing. ${highMz?`A weak high-mass ion near m/z ${highMz} may help anchor carbon number.`:"Without a clear molecular ion, this is best treated as a class-level or carbon-range suggestion until RI or standards are checked."}`,
       evidence:[
         ...evidence,
+        ...(homologName?[`The formula or molecular-ion region is compatible with ${homologName}.`]:[]),
         "Suggestion is based on repeated hydrocarbon fragments rather than exact structural proof.",
         "Retention index or an alkane ladder would make this suggestion much stronger."
       ]
@@ -984,10 +1036,11 @@ function suggestedCallFor(peak){
   }
   if(cls==="methyl-branched alkane"){
     return {
-      call:"Likely methyl-branched alkane",
+      call:homologName?`Likely ${homologName} isomer`:"Likely methyl-branched alkane",
       reason:"The spectrum is still hydrocarbon-like, but some fragments are stronger than expected for a straight-chain alkane. That supports a branched CHC, while exact branch position remains tentative.",
       evidence:[
         ...evidence,
+        ...(homologName?[`The formula is compatible with a ${homologName} isomer, but not one exact branch position.`]:[]),
         "The app sees hydrocarbon-like ions, but the pattern is uneven enough to suggest branching.",
         "Branch position is not being assigned automatically here."
       ]
@@ -995,10 +1048,11 @@ function suggestedCallFor(peak){
   }
   if(cls==="alkene"){
     return {
-      call:"Likely alkene",
+      call:homologName?`Likely ${homologName}`:"Likely alkene",
       reason:"The ion pattern shifts toward allylic fragments such as 55, 69, 83, and 97. That supports unsaturation, but not the exact double-bond position.",
       evidence:[
         ...evidence,
+        ...(homologName?[`The formula or molecular-ion region is compatible with ${homologName}.`]:[]),
         "This suggestion depends on allylic-ion emphasis, not on a unique alkene fingerprint.",
         "Double-bond position still needs derivatization, standards, or stronger prior knowledge."
       ]
@@ -1006,10 +1060,11 @@ function suggestedCallFor(peak){
   }
   if(cls==="ester"){
     return {
-      call:"Likely ester or FAME",
+      call:homologName?`Likely ${homologName}`:"Likely ester or FAME",
       reason:"The oxygenated fragmentation pattern, especially m/z 74 with supportive ions such as 43 or 87, fits an ester-type compound better than a hydrocarbon.",
       evidence:[
         ...evidence,
+        ...(homologName?[`The formula is compatible with ${homologName}.`]:[]),
         "This suggestion is driven by oxygenated-fragment behavior rather than cuticle context alone."
       ]
     };
@@ -1036,13 +1091,19 @@ function drawSpectrumData(ctx,canvas,data,highlight,label){
   drawAxes(ctx,w,h,p);
   const maxMz=Math.max(120,...data.map(x=>x.mz))+20;
   const maxI=Math.max(100,...data.map(x=>x.intensity));
+  [0.25,0.5,0.75].forEach(frac=>{
+    const y=h-p-frac*(h-p*2);
+    ctx.strokeStyle="#E7EDF1";
+    ctx.lineWidth=1;
+    ctx.beginPath();ctx.moveTo(p,y);ctx.lineTo(w-p,y);ctx.stroke();
+  });
   data.forEach(ion=>{
     const x=p+(ion.mz/maxMz)*(w-p*2);
     const y=h-p-(ion.intensity/maxI)*(h-p*2);
-    ctx.strokeStyle=highlight.includes(Math.round(ion.mz))?"#A23A32":"#1D5E9E";
-    ctx.lineWidth=highlight.includes(Math.round(ion.mz))?3:2;
+    ctx.strokeStyle=highlight.includes(Math.round(ion.mz))?"#A23A32":"#243B53";
+    ctx.lineWidth=highlight.includes(Math.round(ion.mz))?2.5:1.6;
     ctx.beginPath();ctx.moveTo(x,h-p);ctx.lineTo(x,y);ctx.stroke();
-    if(ion.intensity>34||highlight.includes(Math.round(ion.mz))){
+    if(ion.intensity>45||highlight.includes(Math.round(ion.mz))){
       ctx.fillStyle="#14212B";ctx.font="11px Inter, sans-serif";
       ctx.fillText(String(Math.round(ion.mz)),x-8,y-6);
     }
@@ -1115,6 +1176,15 @@ function drawTic(){
 }
 function drawSpectrum(peak){
   drawSpectrumData(specCtx,spec,parseSpectrum(peak.spectrum),[],"relative abundance");
+}
+function renderIonReadout(peak){
+  const holder=document.getElementById("ion-readout");
+  if(!holder)return;
+  const top=parseSpectrum(peak.spectrum)
+    .slice()
+    .sort((a,b)=>b.intensity-a.intensity)
+    .slice(0,6);
+  holder.innerHTML=top.map(ion=>`<div class="ion-chip"><strong>m/z ${Math.round(ion.mz)}</strong><span>${Math.round(ion.intensity)}% rel. abundance</span></div>`).join("");
 }
 function renderIonButtons(){
   const holder=document.getElementById("ion-buttons");
@@ -1372,7 +1442,7 @@ function renderSelected(){
     el.innerHTML=`<h3>${c.title}</h3><p>${c.body}</p><ul>${c.points.map(x=>`<li>${x}</li>`).join("")}</ul>`;
     list.appendChild(el);
   });
-  drawTic();drawSpectrum(peak);renderRows();
+  drawTic();drawSpectrum(peak);renderIonReadout(peak);renderRows();
 }
 function selectPeak(id){selectedId=id;renderSelected();}
 function parseDelimited(text){
