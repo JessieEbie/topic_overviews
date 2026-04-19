@@ -869,9 +869,9 @@ function drawSkyTextLabel(ctx,text,x,y,opt={}){
   let top=y-h/2;
   if((opt.baseline||'middle')==='top')top=y;
   if((opt.baseline||'middle')==='bottom')top=y-h;
-  ctx.fillStyle=opt.bg||'rgba(248,250,252,0.82)';
-  ctx.strokeStyle=opt.border||'rgba(148,163,184,0.45)';
-  ctx.lineWidth=0.8;
+  ctx.fillStyle=opt.bg||'rgba(255,255,255,0.92)';
+  ctx.strokeStyle=opt.border||'rgba(15,23,42,0.18)';
+  ctx.lineWidth=0.9;
   ctx.beginPath();
   if(ctx.roundRect)ctx.roundRect(left,top,w,h,4);
   else ctx.rect(left,top,w,h);
@@ -940,7 +940,7 @@ function drawSky(v){
       const pathPt=azElToSkyXY(track[Math.max(1,Math.floor(track.length*0.18))].az,track[Math.max(1,Math.floor(track.length*0.18))].el);
       drawSkyCallout(sctx,'Daily Sun path',pathPt.x,pathPt.y,pathPt.x-18,pathPt.y-18,{
         lineColor:'rgba(15,23,42,0.7)',
-        label:{color:'#92400E',bg:'rgba(255,251,235,0.94)',border:'rgba(245,158,11,0.45)'}
+        label:{color:'#92400E',bg:'rgba(255,251,235,0.97)',border:'rgba(15,23,42,0.18)'}
       });
     }
   }
@@ -976,14 +976,9 @@ function drawSky(v){
     const asp=azElToSkyXY((sunAz+180)%360,0);
     sctx.save();sctx.setLineDash([5,3]);sctx.strokeStyle=bh?'#FECACA':'#DC2626';sctx.lineWidth=bh?1.8:1.5;sctx.globalAlpha=bh?0.95:0.7;
     sctx.beginPath();sctx.moveTo(sp2.x,sp2.y);sctx.lineTo(SCX,SCY);sctx.lineTo(asp.x,asp.y);sctx.stroke();sctx.restore();
-    const meridianAnchor=azElToSkyXY(sunAz,Math.max(45,Math.max(0,sunEl)));
-    drawSkyCallout(sctx,'Sun-to-antisun line',meridianAnchor.x,meridianAnchor.y,meridianAnchor.x-26,meridianAnchor.y-18,{
-      lineColor:'rgba(15,23,42,0.7)',
-      label:{color:'#991B1B',bg:'rgba(255,241,242,0.94)',border:'rgba(248,113,113,0.45)'}
-    });
     drawSkyCallout(sctx,'Anti-solar point',asp.x,asp.y,asp.x+8,asp.y-16,{
       lineColor:'rgba(15,23,42,0.7)',
-      label:{color:'#991B1B',bg:'rgba(255,241,242,0.94)',border:'rgba(248,113,113,0.45)'}
+      label:{color:'#991B1B',bg:'rgba(255,241,242,0.97)',border:'rgba(15,23,42,0.18)'}
     });
   }
   // Cardinals
