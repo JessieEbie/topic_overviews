@@ -70,6 +70,19 @@ main{width:min(1260px,100%);margin:0 auto;padding:14px clamp(8px,2vw,28px) 34px;
 .upload-help h3{font-size:12px;margin-bottom:5px;}
 .upload-help p,.upload-help li{font-size:12px;color:var(--muted);line-height:1.55;}
 .upload-help ul{padding-left:17px;margin-top:5px;}
+.start-card{border:1px solid var(--line);border-radius:8px;background:#FBFCFD;padding:12px;margin-bottom:12px;}
+.start-card h3{font-size:13px;margin-bottom:6px;}
+.start-card p,.start-card li{font-size:12px;color:var(--muted);line-height:1.6;}
+.start-card ul{padding-left:18px;margin-top:6px;}
+.step-strip{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:10px;}
+.step-box{border:1px solid var(--line);border-radius:8px;background:#fff;padding:9px;}
+.step-box strong{display:block;font-size:12px;margin-bottom:4px;}
+.step-box span{display:block;font-size:12px;color:var(--muted);line-height:1.5;}
+.toggle-row{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 10px;}
+.toggle-btn{border:1px solid var(--line-strong);border-radius:8px;background:#fff;padding:7px 10px;font-size:12px;font-weight:700;color:var(--muted);}
+.toggle-btn.active{border-color:var(--blue);background:var(--bluewash);color:var(--blue);}
+.upload-mode{display:none;}
+.upload-mode.active{display:block;}
 canvas{display:block;width:100%;height:auto;background:#fff;}
 .chart-shell{position:relative;border-top:1px solid var(--line);}
 .chart-label{position:absolute;left:10px;top:8px;font-size:10px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:var(--soft);pointer-events:none;}
@@ -89,6 +102,9 @@ tr.selected{background:#EAF3EF;}
 .selected-peak{display:grid;grid-template-columns:1fr 135px;gap:10px;align-items:start;margin-bottom:10px;}
 .selected-peak h2{font-size:clamp(22px,3.2vw,36px);line-height:1.02;font-weight:790;letter-spacing:0;}
 .selected-peak p{font-size:13px;color:var(--muted);margin-top:7px;}
+.next-step{border:1px solid var(--line);border-radius:8px;background:#F7FAF9;padding:10px;margin-bottom:10px;}
+.next-step h3{font-size:12px;margin-bottom:4px;}
+.next-step p{font-size:12px;color:var(--muted);line-height:1.55;}
 .score-box{border:1px solid var(--line);border-radius:8px;padding:10px;background:#FBFCFD;}
 .score-number{font-size:32px;line-height:1;font-weight:800;color:var(--green);}
 .score-box span{display:block;font-size:11px;color:var(--muted);margin-top:3px;}
@@ -103,6 +119,10 @@ tr.selected{background:#EAF3EF;}
 .annotation label{font-size:11px;font-weight:800;color:var(--muted);}
 .annotation select,.annotation textarea{width:100%;border:1px solid var(--line-strong);border-radius:6px;padding:7px 8px;font-size:12px;}
 .annotation textarea{min-height:82px;resize:vertical;}
+.annotation-guide{border:1px solid var(--line);border-radius:8px;background:#F7FAF9;padding:10px;margin-top:10px;}
+.annotation-guide h3{font-size:12px;margin-bottom:4px;}
+.annotation-guide p,.annotation-guide li{font-size:12px;color:var(--muted);line-height:1.55;}
+.annotation-guide ul{padding-left:17px;margin-top:6px;}
 .export-box{border:1px solid var(--line);border-radius:8px;padding:10px;background:#FBFCFD;margin-top:12px;}
 .export-box h3{font-size:13px;margin-bottom:5px;}
 .export-box p{font-size:12px;color:var(--muted);}
@@ -181,7 +201,7 @@ tr.selected{background:#EAF3EF;}
   .selected-peak{grid-template-columns:1fr;}
   .side-band{border-right:0;border-bottom:1px solid var(--line);}
   .guide-grid{grid-template-columns:1fr;}
-  .story-grid,.fragment-grid,.ion-layout{grid-template-columns:1fr;}
+  .step-strip,.story-grid,.fragment-grid,.ion-layout{grid-template-columns:1fr;}
   th,td{font-size:11px;padding:7px 5px;}
 }
 </style>
@@ -214,8 +234,26 @@ tr.selected{background:#EAF3EF;}
     <div class="workspace">
       <aside class="pane">
         <div class="pane-title">
-          <h2>Sample and peaks</h2>
-          <span class="small-note" id="sample-count">Demo data</span>
+          <h2>Start here</h2>
+          <span class="small-note" id="sample-count">Demo data loaded</span>
+        </div>
+        <div class="start-card">
+          <h3>What this tab does</h3>
+          <p>This tab helps you move from a GC-MS report to a reviewed peak list. You upload a table, inspect one peak at a time, then save a cautious annotation with your reasoning.</p>
+          <div class="step-strip">
+            <div class="step-box">
+              <strong>1. Load a file</strong>
+              <span>Upload a CSV, TSV, TXT report, or use the demo data to practice.</span>
+            </div>
+            <div class="step-box">
+              <strong>2. Review a peak</strong>
+              <span>Click a chromatogram peak or row to see its spectrum and teaching notes.</span>
+            </div>
+            <div class="step-box">
+              <strong>3. Save your call</strong>
+              <span>Record the compound class, confidence, and why you think it fits.</span>
+            </div>
+          </div>
         </div>
         <div class="visual-card">
           <div class="context-strip">
@@ -232,12 +270,26 @@ tr.selected{background:#EAF3EF;}
         </div>
         <div class="upload-help">
           <h3>What should I upload?</h3>
-          <p>Use <strong>RESULTS.CSV</strong> first. That is the Agilent export this prototype is designed to read.</p>
-          <ul>
-            <li><strong>Works now:</strong> `.csv`, `.tsv`, or `.txt` peak/library reports.</li>
-            <li><strong>Save as CSV first:</strong> Excel `.xlsx` reports.</li>
-            <li><strong>Advanced/raw path:</strong> `DATA.MS`, `FID1A.CH`, `EDFIL.DAT`, `.ini`, `.val`, and method text files.</li>
-          </ul>
+          <div class="toggle-row" role="tablist" aria-label="Upload mode">
+            <button class="toggle-btn active" type="button" data-upload-mode="csv">I have a CSV/report</button>
+            <button class="toggle-btn" type="button" data-upload-mode="raw">I have a raw Agilent folder</button>
+          </div>
+          <div class="upload-mode active" id="upload-mode-csv">
+            <p>Use <strong>RESULTS.CSV</strong> first. This uploader currently reads `.csv`, `.tsv`, and `.txt` peak or library reports.</p>
+            <ul>
+              <li><strong>Best first files:</strong> `RESULTS.CSV`, exported peak tables, or library-search reports.</li>
+              <li><strong>Also okay:</strong> `.txt` or `.tsv` tables with retention time, area, and candidate names.</li>
+              <li><strong>Save as CSV first:</strong> Excel `.xlsx` reports.</li>
+            </ul>
+          </div>
+          <div class="upload-mode" id="upload-mode-raw">
+            <p>If you only have the raw Agilent `.D` folder, the best first target is usually <strong>MSRep.xls</strong> inside that folder. Direct `DATA.MS` parsing is a later step.</p>
+            <ul>
+              <li><strong>Best bridge file:</strong> `MSRep.xls` if Agilent generated it in the run folder.</li>
+              <li><strong>Not yet uploaded directly here:</strong> `DATA.MS`, `FID1A.CH`, `EDFIL.DAT`, `.ini`, `.val`, and method text files.</li>
+              <li><strong>Raw-data plan:</strong> add `.D` folder support that auto-detects `MSRep.xls` or converts the run into the review format.</li>
+            </ul>
+          </div>
         </div>
         <div class="controls">
           <div class="control-row">
@@ -266,6 +318,10 @@ tr.selected{background:#EAF3EF;}
       </aside>
 
       <section class="pane">
+        <div class="next-step">
+          <h3>What happens here?</h3>
+          <p>When you click a peak, this panel shows the mass spectrum and gives a plain-language interpretation of what the ion pattern might mean. It is meant to help you decide whether the peak is probably an alkane, alkene, ester, branched hydrocarbon, or still unresolved.</p>
+        </div>
         <div class="selected-peak">
           <div>
             <div class="small-note" id="peak-subtitle">Peak review</div>
@@ -288,8 +344,8 @@ tr.selected{background:#EAF3EF;}
 
       <aside class="pane results">
         <div class="pane-title">
-          <h2>Annotation</h2>
-          <span class="small-note">local session</span>
+          <h2>Save your interpretation</h2>
+          <span class="small-note">local session only</span>
         </div>
         <div class="annotation">
           <label for="assigned-name">Assigned compound</label>
@@ -318,6 +374,14 @@ tr.selected{background:#EAF3EF;}
           <textarea id="notes" placeholder="Record ions, RI, library hit, standard, or why this remains unresolved."></textarea>
           <button class="btn primary" id="save-annotation">Save annotation</button>
           <div class="status" id="save-status"></div>
+        </div>
+        <div class="annotation-guide">
+          <h3>How to finish a peak</h3>
+          <ul>
+            <li>Use the <strong>compound class</strong> field even if you are not sure of the exact structure.</li>
+            <li>Use <strong>tentative class</strong> or <strong>tentative compound</strong> when the evidence is incomplete.</li>
+            <li>Write the key evidence in <strong>Reasoning notes</strong>: ions, RI, library hit, standard, or why it remains uncertain.</li>
+          </ul>
         </div>
         <div class="export-box">
           <h3>Export table</h3>
@@ -570,6 +634,7 @@ let activeIonTutorial="alkane";
 let simRunning=true;
 let simFrame=0;
 let simRaf=0;
+let dataSourceLabel="Demo data loaded";
 
 function parseSpectrum(text){
   if(!text)return[];
@@ -757,7 +822,7 @@ function renderRows(){
     tr.addEventListener("click",()=>selectPeak(peak.id));
     rows.appendChild(tr);
   });
-  document.getElementById("sample-count").textContent=`${peaks.length} peaks`;
+  document.getElementById("sample-count").textContent=`${dataSourceLabel} · ${peaks.length} peaks`;
 }
 function renderSelected(){
   const peak=peaks.find(p=>p.id===selectedId)||peaks[0];
@@ -824,12 +889,17 @@ function renderChcTable(){
   }
   holder.innerHTML=`<table><thead><tr><th>Carbon no.</th><th>Alkane / methyl-branched alkane</th><th>MW, nominal M+</th><th>Alkene</th><th>MW, nominal M+</th><th>Diene</th><th>MW, nominal M+</th></tr></thead><tbody>${rows.join("")}</tbody></table>`;
 }
+function setUploadMode(mode){
+  document.querySelectorAll(".toggle-btn").forEach(btn=>btn.classList.toggle("active",btn.dataset.uploadMode===mode));
+  document.querySelectorAll(".upload-mode").forEach(panel=>panel.classList.toggle("active",panel.id===`upload-mode-${mode}`));
+}
 document.querySelectorAll(".tab").forEach(tab=>tab.addEventListener("click",()=>{
   document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
   document.querySelectorAll(".panel").forEach(p=>p.classList.remove("active"));
   tab.classList.add("active");
   document.getElementById(`${tab.dataset.tab}-panel`).classList.add("active");
 }));
+document.querySelectorAll(".toggle-btn").forEach(btn=>btn.addEventListener("click",()=>setUploadMode(btn.dataset.uploadMode)));
 tic.addEventListener("click",event=>{
   const rect=tic.getBoundingClientRect();
   const x=(event.clientX-rect.left)*(tic.width/rect.width);
@@ -840,10 +910,10 @@ tic.addEventListener("click",event=>{
 });
 document.getElementById("filter").addEventListener("input",renderRows);
 document.getElementById("class-filter").addEventListener("change",renderRows);
-document.getElementById("load-demo").addEventListener("click",()=>{peaks=demoPeaks.map(p=>({...p,annotation:{name:p.name,class:p.class,confidence:p.match>84?"probable compound":"tentative compound",notes:p.notes}}));selectedId=peaks[0].id;renderSelected();});
+document.getElementById("load-demo").addEventListener("click",()=>{peaks=demoPeaks.map(p=>({...p,annotation:{name:p.name,class:p.class,confidence:p.match>84?"probable compound":"tentative compound",notes:p.notes}}));selectedId=peaks[0].id;dataSourceLabel="Demo data loaded";renderSelected();});
 document.getElementById("file-input").addEventListener("change",event=>{
   const file=event.target.files[0];if(!file)return;
-  file.text().then(text=>{peaks=parseDelimited(text);selectedId=peaks[0]?.id;renderSelected();});
+  file.text().then(text=>{peaks=parseDelimited(text);selectedId=peaks[0]?.id;dataSourceLabel=`Loaded ${file.name}`;renderSelected();});
 });
 document.getElementById("save-annotation").addEventListener("click",()=>{
   const peak=peaks.find(p=>p.id===selectedId);if(!peak)return;
