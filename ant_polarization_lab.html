@@ -248,8 +248,8 @@ button:focus-visible,input:focus-visible,select:focus-visible,canvas:focus-visib
       <div class="crow"><label for="e-uses-pol">Compass cue model</label>
         <select id="e-uses-pol" onchange="syncExp()">
           <option value="1">Polarization only</option>
-          <option value="0.5">Sun + polarization (equal weight)</option>
-          <option value="0">Sun only</option>
+          <option value="0.5">Polarization + landscape (equal weight)</option>
+          <option value="0">Landscape only</option>
         </select>
       </div>
       <div class="crow">
@@ -288,9 +288,9 @@ button:focus-visible,input:focus-visible,select:focus-visible,canvas:focus-visib
 
   <div class="guide-section">
     <h3>Overview</h3>
-    <p>This tool simulates a polarized light manipulation experiment based on Freas et al. (2019, <em>Journal of Comparative Physiology A</em>). A linear polarizing filter is placed over a foraging ant at a feeder and rotated while she feeds. The strongest prediction in the simulator is the <strong>polarization-only</strong> case, where the ant's home vector is rotated by the same total filter-angle manipulation. Because desert ants can also combine sun and polarization cues, the app also offers a blended cue-conflict prediction instead of assuming one cue always dominates.</p>
+    <p>This tool simulates a polarized light manipulation experiment based on Freas et al. (2019, <em>Journal of Comparative Physiology A</em>). A linear polarizing filter is placed over a foraging ant at a feeder and rotated while she feeds. The strongest prediction in the simulator is the <strong>polarization-only</strong> case, where the ant's home vector is rotated by the same total filter-angle manipulation. Because desert ants can also use landscape information, the app also offers a blended cue-conflict prediction instead of assuming polarization always dominates.</p>
     <p>The tool has two windows side by side. Window 1 is the sky dome — the view looking straight up from the ground. Window 2 is a top-down ground view showing the ant's movement. Both windows are linked: dragging the nest or feeder in Window 1 updates Window 2 automatically.</p>
-    <p>Use the app for <strong>geometric experimental predictions</strong> under clear-sky Phoenix conditions, not as a full behavioral model. The sky polarization field is modeled with a Rayleigh-style single-scattering approximation, and the cue-conflict prediction depends on the cue-weight model you choose.</p>
+    <p>Use the app for <strong>geometric experimental predictions</strong> under clear-sky Phoenix conditions, not as a full behavioral model. The sky polarization field is modeled with a Rayleigh-style single-scattering approximation, and the cue-conflict prediction depends on the polarization-versus-landscape weighting model you choose.</p>
   </div>
 
   <div class="guide-section">
@@ -343,11 +343,11 @@ button:focus-visible,input:focus-visible,select:focus-visible,canvas:focus-visib
     <div class="guide-row">
       <div class="gcard">
         <div class="gtitle"><span class="gbadge red">Filter rotation during trial (−45° to +45°)</span></div>
-        <p>The number of degrees the filter physically rotates while the ant is feeding at the feeder. This is the core experimental manipulation. +45° rotates clockwise, −45° counterclockwise. In the polarization-only model, the ant's predicted home direction shifts by the total filter angle acting at the feeder. In the blended model, the shift is smaller because the sun cue and polarization cue are averaged. Freas et al. used ±45° rotations in their manipulations.</p>
+        <p>The number of degrees the filter physically rotates while the ant is feeding at the feeder. This is the core experimental manipulation. +45° rotates clockwise, −45° counterclockwise. In the polarization-only model, the ant's predicted home direction shifts by the total filter angle acting at the feeder. In the blended model, the shift is smaller because landscape information and polarization are averaged. Freas et al. used ±45° rotations in their manipulations.</p>
       </div>
       <div class="gcard">
         <div class="gtitle">Compass cue model</div>
-        <p><strong>Polarization only</strong> shows the idealized case where the manipulated polarization cue fully determines the homeward heading. <strong>Sun + polarization (equal weight)</strong> shows a cue-conflict compromise, motivated by experiments in which desert ants use both celestial cues. <strong>Sun only</strong> is the null case where the polarizer has no directional effect and the ant exits on the correct homeward course.</p>
+        <p><strong>Polarization only</strong> shows the idealized case where the manipulated polarization cue fully determines the homeward heading. <strong>Polarization + landscape (equal weight)</strong> shows a cue-conflict compromise in which the ant combines the rotated polarization cue with learned terrestrial panorama cues. <strong>Landscape only</strong> is the null case where the polarizer has no directional effect and the ant exits on the correct homeward course.</p>
       </div>
       <div class="gcard">
         <div class="gtitle">Animation speed</div>
@@ -368,7 +368,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,canvas:focus-visib
 
   <div class="guide-section">
     <h3>Reading the angle diagram</h3>
-    <p>The three circles at the bottom of Window 2 show E-vector orientation at the feeder location. The left circle (blue) shows the ambient E-vector without any filter. The middle circle (purple) shows the filter at its starting angle before the trial rotation. The right circle (red) shows the filter after rotation. In the polarization-only model, that total filter angle sets the full compass shift. In the blended model, it contributes one component of the final predicted heading.</p>
+    <p>The three circles at the bottom of Window 2 show E-vector orientation at the feeder location. The left circle (blue) shows the ambient E-vector without any filter. The middle circle (purple) shows the filter at its starting angle before the trial rotation. The right circle (red) shows the filter after rotation. In the polarization-only model, that total filter angle sets the full compass shift. In the blended model, it contributes one component of the final predicted heading alongside landscape information.</p>
   </div>
 
   <div class="guide-section">
@@ -376,7 +376,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,canvas:focus-visib
     <ul>
       <li>Set the time to early morning (6–8 AM) or late afternoon (4–6 PM) in November or April — these match the seasons and times used in Freas et al. (October–November 2018 and April 2019).</li>
       <li>Sun elevation of 0–20° gives the strongest polarization pattern and is when V. pergandei is most active near the nest.</li>
-      <li>With feeder azimuth 90° (feeder due east of nest), the ant's homeward heading is 270° (west). In the polarization-only model, a total +45° filter manipulation predicts exit at 315° (NW); in the equal-weight cue-conflict model it predicts a smaller shift.</li>
+      <li>With feeder azimuth 90° (feeder due east of nest), the ant's homeward heading is 270° (west). In the polarization-only model, a total +45° filter manipulation predicts exit at 315° (NW); in the equal-weight polarization-plus-landscape model it predicts a smaller shift.</li>
       <li>Drag the nest to a corner and the feeder toward the opposite side to maximize the visible trail length in Window 2.</li>
       <li>Use 0.25× speed during presentations so the audience can see the filter rotate and the ant reorient before it exits.</li>
     </ul>
@@ -413,7 +413,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,canvas:focus-visib
   <div class="guide-section">
     <h3>Why ants can use it</h3>
     <p>Many insects, including desert ants, have a specialized dorsal rim area in the compound eye with photoreceptors tuned to polarization. Those receptors are sensitive to e-vector orientation rather than only brightness. Combined with time compensation and other navigational cues, the sky polarization pattern can provide a stable celestial reference frame for path integration.</p>
-    <p>That is why a rotated filter can produce a predictable heading error: if the ant interprets the filtered e-vector field as a compass cue, its calculated homeward direction shifts toward the manipulated polarization direction. How large that shift is depends on how strongly the ant weights polarization relative to other available celestial cues.</p>
+    <p>That is why a rotated filter can produce a predictable heading error: if the ant interprets the filtered e-vector field as a compass cue, its calculated homeward direction shifts toward the manipulated polarization direction. How large that shift is depends on how strongly the ant weights polarization relative to other available cues, including landscape information.</p>
   </div>
 
 </div>
@@ -1248,7 +1248,7 @@ function drawTopScene(){
     tctx.save();tctx.font='bold 11px var(--font-sans,sans-serif)';tctx.fillStyle='#1E3A8A';tctx.textAlign='center';tctx.textBaseline='top';tctx.globalAlpha=0.85;
     const ep2=getEP();
     const finalShiftDeg=r2d(shortestAngleDelta(correctHome,actualHome));
-    tctx.fillText(ep2.polWeight>0?(Math.abs(finalShiftDeg)>1?`Predicted shift: ${(finalShiftDeg>=0?'+':'')+Math.round(finalShiftDeg)}°`:'No measurable shift'):'Sun-only prediction — correct exit',TCW/2,8);tctx.restore();
+    tctx.fillText(ep2.polWeight>0?(Math.abs(finalShiftDeg)>1?`Predicted shift: ${(finalShiftDeg>=0?'+':'')+Math.round(finalShiftDeg)}°`:'No measurable shift'):'Landscape-only prediction — correct exit',TCW/2,8);tctx.restore();
   }
   drawAngleDiagram(v,A);
   updateScreenReaderText(v);
