@@ -3,15 +3,15 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Ant Navigation with Polarized Light Simulation</title>
-<meta name="description" content="An interactive polarized-light navigation simulator for exploring how desert ants use sky polarization cues, filter rotation, and sun position to predict heading errors.">
+<title>Ant Navigation Simulator</title>
+<meta name="description" content="An interactive ant navigation simulator for exploring how sky polarization, landscape cues, and mixed-cue conflicts shape predicted heading shifts under Phoenix sky conditions.">
 <meta property="og:type" content="website">
-<meta property="og:title" content="Ant Navigation with Polarized Light Simulation">
-<meta property="og:description" content="Run a linked sky-dome and top-down experiment that models ant navigation under rotated polarizing filters, with Phoenix sun position controls and responsive guided instructions.">
-<meta property="og:site_name" content="Ant Navigation with Polarized Light Simulation">
+<meta property="og:title" content="Ant Navigation Simulator">
+<meta property="og:description" content="Run a linked sky-dome and top-down experiment that models ant navigation with polarized-light, landscape, and mixed-cue manipulations under Phoenix sky conditions.">
+<meta property="og:site_name" content="Ant Navigation Simulator">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Ant Navigation with Polarized Light Simulation">
-<meta name="twitter:description" content="Explore ant polarized-light navigation with an interactive sky-dome, filter rotation controls, and animated heading-error predictions.">
+<meta name="twitter:title" content="Ant Navigation Simulator">
+<meta name="twitter:description" content="Explore ant navigation with polarized-light, landscape, and mixed-cue manipulations using an interactive sky dome and experiment view.">
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
 :root{
@@ -38,8 +38,8 @@ h1{font-size:clamp(20px,2.35vw,28px);line-height:1.08;font-weight:750;letter-spa
 .return-link:hover,.return-link:focus-visible{border-color:#1D4ED8;background:#EFF6FF;text-decoration:none;}
 main{width:min(1180px,100%);margin:0 auto;padding:16px clamp(10px,2.5vw,28px) 32px;}
 #lab{width:100%;font-family:var(--font-sans,sans-serif);background:#fff;border:1px solid var(--color-border-tertiary);border-radius:8px;overflow:hidden;box-shadow:0 18px 45px rgba(15,23,42,0.08);}
-.top-tabs{display:flex;border-bottom:0.5px solid var(--color-border-tertiary);}
-.top-tab{padding:8px 18px;font-size:13px;font-weight:500;cursor:pointer;border:none;background:transparent;color:var(--color-text-secondary);border-bottom:2px solid transparent;}
+.top-tabs{display:flex;border-bottom:0.5px solid var(--color-border-tertiary);flex-wrap:wrap;}
+.top-tab{padding:8px 18px;font-size:13px;font-weight:500;cursor:pointer;border:none;background:transparent;color:var(--color-text-secondary);border-bottom:2px solid transparent;white-space:normal;line-height:1.2;text-wrap:balance;flex:1 1 120px;}
 .top-tab.active{color:var(--color-text-primary);border-bottom:2px solid #1D4ED8;}
 .top-tab:hover:not(.active){color:var(--color-text-primary);}
 .panel-content{display:none;}
@@ -55,25 +55,29 @@ main{width:min(1180px,100%);margin:0 auto;padding:16px clamp(10px,2.5vw,28px) 32
 .crow input[type=range]{flex:1;}
 .crow select,.crow input[type=number]{font-size:12px;padding:3px 5px;border:0.5px solid var(--color-border-secondary);border-radius:5px;background:var(--color-background-primary);color:var(--color-text-primary);}
 .crow input[type=number]{width:60px;}
+.crow.time-row{gap:5px;align-items:center;flex-wrap:nowrap;}
+.crow.time-row label{min-width:auto;margin-right:2px;}
+.row-btn{display:inline-flex;align-items:center;justify-content:center;border:0.5px solid var(--color-border-secondary);border-radius:6px;padding:4px 8px;background:#fff;color:var(--color-text-primary);font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;}
+.row-btn:hover,.row-btn:focus-visible{background:var(--color-background-secondary);}
 .val{min-width:42px;text-align:right;font-size:12px;font-weight:500;color:var(--color-text-primary);}
 .mode-tabs{display:flex;border:0.5px solid var(--color-border-secondary);border-radius:5px;overflow:hidden;width:100%;margin:4px 0 6px;}
 .mtab{flex:1;padding:4px 0;font-size:11px;cursor:pointer;border:none;background:transparent;color:var(--color-text-secondary);text-align:center;}
 .mtab.active{background:var(--color-background-secondary);color:var(--color-text-primary);font-weight:500;}
 canvas{border-radius:6px;display:block;max-width:100%;height:auto;}
-#sky-c{touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;}
+#sky-c,#sky-side-c{touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;}
 .canvas-wrap{position:relative;}
 #align-toast{position:absolute;top:8px;left:50%;transform:translateX(-50%);background:rgba(5,150,105,0.93);color:#fff;border-radius:7px;padding:5px 14px;font-size:12px;font-weight:500;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity 0.3s;z-index:20;}
 #align-toast.show{opacity:1;}
 .sky-mini{margin:8px auto 4px;max-width:310px;}
 .sky-mini canvas{width:100%;max-width:310px;margin:0 auto;}
-.sky-mini figcaption{font-size:9px;color:var(--color-text-secondary);line-height:1.45;margin-top:4px;text-align:left;}
-.info-strip{display:flex;gap:5px;flex-wrap:wrap;margin:4px 0;}
+.sky-mini figcaption{font-size:9px;color:var(--color-text-secondary);line-height:1.45;margin-top:4px;text-align:left;overflow-wrap:anywhere;}
+.info-strip{display:flex;gap:5px;flex-wrap:wrap;margin:4px 0;align-items:flex-start;min-height:28px;}
 .ibadge{font-size:10px;padding:2px 7px;border-radius:4px;font-weight:500;}
 .ibadge.sun{background:#FEF3C7;color:#92400E;}
 .ibadge.pol{background:#DBEAFE;color:#1E40AF;}
 .ibadge.filt{background:#EDE9FE;color:#5B21B6;}
 .ibadge.loc{background:#D1FAE5;color:#065F46;}
-#status-txt{font-size:11px;color:var(--color-text-secondary);margin-top:3px;line-height:1.7;}
+#status-txt{font-size:11px;color:var(--color-text-secondary);margin-top:3px;line-height:1.7;min-height:38px;}
 .stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin:4px 0;}
 .scard{background:var(--color-background-secondary);border-radius:6px;padding:5px 8px;}
 .scard .sl{font-size:10px;color:var(--color-text-tertiary);}
@@ -97,19 +101,19 @@ button.rst-btn:hover{background:var(--color-background-secondary);}
 .phase-name{font-size:10px;color:var(--color-text-tertiary);}
 .phase-name.active{color:var(--color-text-primary);font-weight:500;}
 .hint{font-size:10px;color:var(--color-text-tertiary);font-style:italic;margin:2px 0 4px;}
-#guide-panel,#learn-panel{padding:14px 4px;}
+#guide-panel,#learn-panel,#visual-panel{padding:14px 4px;}
 .guide-section{margin-bottom:18px;}
 .guide-section h3{font-size:13px;font-weight:500;color:var(--color-text-primary);margin-bottom:8px;padding-bottom:4px;border-bottom:0.5px solid var(--color-border-tertiary);}
-.guide-section p,.guide-section li{font-size:12px;color:var(--color-text-secondary);line-height:1.7;margin-bottom:5px;}
+.guide-section p,.guide-section li{font-size:12px;color:var(--color-text-secondary);line-height:1.7;margin-bottom:5px;overflow-wrap:anywhere;}
 .guide-section ul{padding-left:18px;}
-.guide-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px;}
+.guide-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:8px;margin-top:6px;}
 .gcard{background:var(--color-background-secondary);border-radius:8px;padding:10px 12px;}
 .gcard .gtitle{font-size:11px;font-weight:500;color:var(--color-text-primary);margin-bottom:5px;}
-.gcard p{font-size:11px;color:var(--color-text-secondary);line-height:1.6;margin:0;}
-.diagram-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;}
+.gcard p{font-size:11px;color:var(--color-text-secondary);line-height:1.6;margin:0;overflow-wrap:anywhere;}
+.diagram-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:8px;margin-top:8px;}
 .diagram-card{background:var(--color-background-secondary);border-radius:8px;padding:10px 12px;}
-.diagram-card svg{display:block;width:100%;height:auto;border-radius:6px;background:#fff;border:0.5px solid var(--color-border-tertiary);}
-.diagram-card figcaption{font-size:11px;color:var(--color-text-secondary);line-height:1.6;margin-top:6px;}
+.diagram-card svg{display:block;width:100%;height:auto;min-height:220px;border-radius:6px;background:#fff;border:0.5px solid var(--color-border-tertiary);shape-rendering:geometricPrecision;text-rendering:geometricPrecision;}
+.diagram-card figcaption{font-size:11px;color:var(--color-text-secondary);line-height:1.6;margin-top:6px;overflow-wrap:anywhere;}
 .gbadge{display:inline-block;padding:1px 7px;border-radius:4px;font-size:10px;font-weight:500;margin-right:3px;vertical-align:middle;}
 .gbadge.blue{background:#DBEAFE;color:#1E40AF;}
 .gbadge.green{background:#D1FAE5;color:#065F46;}
@@ -130,11 +134,13 @@ button:focus-visible,input:focus-visible,select:focus-visible,canvas:focus-visib
   main{padding:10px 8px 24px;}
   #lab{border-radius:0;border-left:none;border-right:none;box-shadow:none;}
   .top-tabs{position:sticky;top:0;background:#fff;z-index:30;}
-  .top-tab{flex:1;padding:10px 8px;}
+  .top-tab{flex:1 1 50%;padding:10px 8px;font-size:12px;min-height:42px;display:flex;align-items:center;justify-content:center;text-align:center;}
   #exp-panel{grid-template-columns:1fr;}
   .exp-col:first-child{border-right:none;border-bottom:0.5px solid var(--color-border-tertiary);}
   .crow{align-items:flex-start;gap:6px;flex-wrap:wrap;}
   .crow label{min-width:100%;font-size:10px;}
+  .crow.time-row{flex-wrap:wrap;gap:6px;}
+  .crow.time-row label{min-width:100%;margin-right:0;}
   .crow input[type=range]{min-width:0;flex:1 1 155px;}
   .crow select{max-width:100%;}
   .val{min-width:40px;}
@@ -149,12 +155,19 @@ button:focus-visible,input:focus-visible,select:focus-visible,canvas:focus-visib
   .legend-row{justify-content:center;}
   .guide-row{grid-template-columns:1fr;}
   .diagram-grid{grid-template-columns:1fr;}
-  #guide-panel,#learn-panel{padding:14px 12px;}
+  .diagram-card{padding:10px;}
+  .diagram-card svg{min-height:0;}
+  #guide-panel,#learn-panel,#visual-panel{padding:14px 12px;}
+  .info-strip{min-height:54px;}
+  #status-txt{min-height:58px;}
 }
 @media (max-width:380px){
   .stat-grid{grid-template-columns:1fr;}
   .scard:last-child{grid-column:auto;}
   h1{font-size:19px;}
+  .top-tab{flex-basis:100%;}
+  .guide-section h3{font-size:12px;}
+  .guide-section p,.guide-section li,.diagram-card figcaption,.gcard p{font-size:11px;}
 }
 </style>
 </head>
@@ -164,11 +177,11 @@ button:focus-visible,input:focus-visible,select:focus-visible,canvas:focus-visib
   <div class="site-header-inner">
     <div>
       <div class="eyebrow">Interactive lab</div>
-      <h1>Ant Navigation with Polarized Light Simulation</h1>
+      <h1>Ant Navigation Simulator</h1>
       <div class="copyright">&copy; 2026 Jessie Ebie</div>
     </div>
     <div class="header-side">
-      <p class="intro">Model how a rotated polarizing filter shifts an ant's celestial compass, then compare the predicted exit heading against the unshifted homeward route.</p>
+      <p class="intro">Model how polarized light, landscape cues, and mixed-cue conflicts shift an ant's predicted homeward heading under different experimental manipulations.</p>
       <a class="return-link" href="index.html">Return to list</a>
     </div>
   </div>
@@ -181,6 +194,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,canvas:focus-visib
   <button class="top-tab active" id="tab-exp" role="tab" aria-selected="true" aria-controls="exp-panel" tabindex="0" onclick="showTab('exp')">Experiment</button>
   <button class="top-tab" id="tab-guide" role="tab" aria-selected="false" aria-controls="guide-panel" tabindex="-1" onclick="showTab('guide')">Guide</button>
   <button class="top-tab" id="tab-learn" role="tab" aria-selected="false" aria-controls="learn-panel" tabindex="-1" onclick="showTab('learn')">Polarized light</button>
+  <button class="top-tab" id="tab-visual" role="tab" aria-selected="false" aria-controls="visual-panel" tabindex="-1" onclick="showTab('visual')">Visual navigation</button>
 </div>
 
 <div id="exp-panel" class="panel-content active" role="tabpanel" aria-labelledby="tab-exp">
@@ -205,11 +219,12 @@ button:focus-visible,input:focus-visible,select:focus-visible,canvas:focus-visib
         <label class="sr-only" for="dt-year">Year</label>
         <input type="number" id="dt-year" aria-label="Year" min="2000" max="2099" oninput="update()">
       </div>
-      <div class="crow">
+      <div class="crow time-row">
         <label for="dt-hour">Time (MST)</label>
         <select id="dt-hour" aria-label="Hour" onchange="update()"></select>
         <label class="sr-only" for="dt-min">Minute</label>
         <select id="dt-min" aria-label="Minute" onchange="update()"></select>
+        <button type="button" class="row-btn" onclick="setCurrentSky()">Set to current sky</button>
       </div>
       <div id="below-h" aria-live="polite">Sun below horizon — twilight polarization pattern shown</div>
     </div>
@@ -231,8 +246,9 @@ button:focus-visible,input:focus-visible,select:focus-visible,canvas:focus-visib
       <div id="align-toast" aria-hidden="true">Filter near center alignment</div>
     </div>
     <figure class="sky-mini" aria-labelledby="sky-mini-caption">
-      <canvas id="sky-side-c" width="310" height="128" role="img" aria-describedby="sky-mini-caption sky-side-summary"></canvas>
-      <figcaption id="sky-mini-caption">Small Phoenix south-sky view: the gold arc is the Sun's daily path for the selected date, the yellow point is the current Sun, and the red dashed line marks local solar noon on that path.</figcaption>
+      <p id="sky-side-instructions" class="sr-only">In Phoenix real date and time mode, the current Sun marker on this helper can be dragged along the daily path to update the selected time for the current day. When this helper is focused, use the left and right arrow keys to change time by 10 minutes, or hold Shift to change by 1 hour.</p>
+      <canvas id="sky-side-c" width="310" height="128" tabindex="0" role="slider" aria-label="Phoenix Sun path time control" aria-describedby="sky-mini-caption sky-side-instructions sky-side-summary"></canvas>
+      <figcaption id="sky-mini-caption">Small Phoenix south-sky view: the gold arc is the Sun's daily path for the selected date, the yellow point is the current Sun, and the red dashed line marks local solar noon on that path. In Phoenix date and time mode, dragging the Sun marker changes the selected time for that day.</figcaption>
       <p id="sky-side-summary" class="sr-only"></p>
     </figure>
     <div class="legend-row" style="margin-top:5px;">
@@ -300,7 +316,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,canvas:focus-visib
     <p>This tool simulates a polarized light manipulation experiment based on Freas et al. (2019, <em>Journal of Comparative Physiology A</em>). A linear polarizing filter is placed over a foraging ant at a feeder and rotated while she feeds. The strongest prediction in the simulator is the <strong>polarization-only</strong> case, where the ant's home vector is rotated by the same total filter-angle manipulation. Because desert ants can also use landscape information, the app also offers a blended cue-conflict prediction instead of assuming polarization always dominates.</p>
     <p>The tool has two windows side by side. Window 1 is the sky dome — the view looking straight up from the ground. Window 2 is a top-down ground view showing the ant's movement. Both windows are linked: dragging the nest or feeder in Window 1 updates Window 2 automatically.</p>
     <p>Use the app for <strong>geometric experimental predictions</strong> under clear-sky Phoenix conditions, not as a full behavioral model. The sky polarization field is modeled with a Rayleigh-style single-scattering approximation, and the cue-conflict prediction depends on the polarization-versus-landscape weighting model you choose.</p>
-    <p>Although the simulator can be used more generally to think about cue conflict between polarized light and landscape information, its teaching notes and biological framing are designed mainly around <strong>Temnothorax rugatulus</strong> and related ant navigation questions.</p>
+    <p>Although the simulator can be used more generally to think about cue conflict between polarized light and landscape information, its teaching notes and biological framing are designed mainly around <strong><em>Temnothorax rugatulus</em></strong> and related ant navigation questions.</p>
   </div>
 
   <div class="guide-section">
@@ -395,7 +411,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,canvas:focus-visib
     <h3>Tips for realistic field conditions</h3>
     <ul>
       <li>Set the time to early morning (6–8 AM) or late afternoon (4–6 PM) in November or April — these match the seasons and times used in Freas et al. (October–November 2018 and April 2019).</li>
-      <li>Sun elevation of 0–20° gives the strongest polarization pattern and is when V. pergandei is most active near the nest.</li>
+      <li>Sun elevation of 0–20° gives the strongest polarization pattern and is when <em>V. pergandei</em> is most active near the nest.</li>
       <li>With feeder azimuth 90° (feeder due east of nest), the ant's homeward heading is 270° (west). In the polarization-only model, a total +45° filter manipulation predicts exit at 315° (NW); in the equal-weight polarization-plus-landscape model it predicts a smaller shift.</li>
       <li>Drag the nest to a corner and the feeder toward the opposite side to maximize the visible trail length in Window 2.</li>
       <li>Use 0.25× speed during presentations so the audience can see the filter rotate and the ant reorient before it exits.</li>
@@ -433,62 +449,60 @@ button:focus-visible,input:focus-visible,select:focus-visible,canvas:focus-visib
   <div class="guide-section">
     <h3>Why ants can use it</h3>
     <p>Many insects, including desert ants, have a specialized <strong>dorsal rim area</strong> in the compound eye with photoreceptors tuned to polarization. Those receptors are sensitive to e-vector orientation rather than only brightness. In the insect brain, polarization-sensitive pathways converge on the <strong>central complex</strong>, which is strongly implicated in celestial compass coding and path-integration-related directional processing.</p>
-    <p>For the species modeled here, <strong>Temnothorax rugatulus</strong>, eye anatomy has been described in detail and the published figures include a <strong>dorsal rim area</strong>, so it is reasonable to say that this ant possesses the peripheral visual specializations expected for polarization sensitivity. What is less certain is how strongly this species relies on skylight polarization in the exact way desert ants such as <em>Cataglyphis</em> do, so the simulator should still be read as a mechanistic hypothesis tool rather than a species-complete neural model.</p>
+    <p>For the species modeled here, <strong><em>Temnothorax rugatulus</em></strong>, eye anatomy has been described in detail and the published figures include a <strong>dorsal rim area</strong>, so it is reasonable to say that this ant possesses the peripheral visual specializations expected for polarization sensitivity. What is less certain is how strongly this species relies on skylight polarization in the exact way desert ants such as <em>Cataglyphis</em> do, so the simulator should still be read as a mechanistic hypothesis tool rather than a species-complete neural model.</p>
     <p>That is why a rotated filter can produce a predictable heading error: if the ant interprets the filtered e-vector field as a compass cue, its calculated homeward direction shifts toward the manipulated polarization direction. How large that shift is depends on how strongly the ant weights polarization relative to other available cues, including landscape information.</p>
     <div class="diagram-grid">
       <figure class="diagram-card">
-        <svg viewBox="0 0 320 200" aria-label="Simplified ant eye diagram with dorsal rim area highlighted">
-          <rect x="0" y="0" width="320" height="200" fill="#FFFFFF"/>
-          <ellipse cx="145" cy="104" rx="92" ry="64" fill="#F8FAFC" stroke="#94A3B8" stroke-width="2"/>
-          <path d="M88 60 Q145 16 202 60 L202 77 Q145 40 88 77 Z" fill="#DBEAFE" stroke="#2563EB" stroke-width="2"/>
-          <text x="145" y="35" text-anchor="middle" font-size="14" font-weight="700" fill="#1D4ED8">Dorsal rim area</text>
-          <line x1="145" y1="40" x2="145" y2="58" stroke="#1D4ED8" stroke-width="1.5"/>
+        <svg viewBox="0 0 320 220" aria-label="Simplified ant eye diagram with dorsal rim area highlighted">
+          <rect x="0" y="0" width="320" height="220" fill="#FFFFFF"/>
+          <text x="160" y="24" text-anchor="middle" font-size="14" font-weight="700" fill="#1D4ED8">Dorsal rim area</text>
+          <ellipse cx="150" cy="104" rx="88" ry="62" fill="#F8FAFC" stroke="#94A3B8" stroke-width="2"/>
+          <path d="M96 61 Q150 29 204 61 L204 77 Q150 49 96 77 Z" fill="#DBEAFE" stroke="#2563EB" stroke-width="2"/>
+          <line x1="160" y1="30" x2="160" y2="58" stroke="#1D4ED8" stroke-width="1.5"/>
           <g stroke="#CBD5E1" stroke-width="1.4">
-            <circle cx="105" cy="90" r="10"/><circle cx="128" cy="86" r="10"/><circle cx="151" cy="84" r="10"/><circle cx="174" cy="86" r="10"/><circle cx="197" cy="91" r="10"/>
-            <circle cx="97" cy="114" r="10"/><circle cx="120" cy="109" r="10"/><circle cx="143" cy="106" r="10"/><circle cx="166" cy="108" r="10"/><circle cx="189" cy="113" r="10"/>
-            <circle cx="106" cy="137" r="10"/><circle cx="129" cy="132" r="10"/><circle cx="152" cy="130" r="10"/><circle cx="175" cy="132" r="10"/><circle cx="198" cy="137" r="10"/>
+            <circle cx="112" cy="90" r="10"/><circle cx="135" cy="86" r="10"/><circle cx="158" cy="84" r="10"/><circle cx="181" cy="86" r="10"/><circle cx="204" cy="91" r="10"/>
+            <circle cx="104" cy="114" r="10"/><circle cx="127" cy="109" r="10"/><circle cx="150" cy="106" r="10"/><circle cx="173" cy="108" r="10"/><circle cx="196" cy="113" r="10"/>
+            <circle cx="113" cy="137" r="10"/><circle cx="136" cy="132" r="10"/><circle cx="159" cy="130" r="10"/><circle cx="182" cy="132" r="10"/><circle cx="205" cy="137" r="10"/>
           </g>
           <g stroke="#7C3AED" stroke-width="2.2" stroke-linecap="round">
-            <line x1="97" y1="68" x2="113" y2="60"/><line x1="120" y1="64" x2="136" y2="56"/><line x1="143" y1="62" x2="159" y2="54"/><line x1="166" y1="64" x2="182" y2="56"/><line x1="189" y1="68" x2="205" y2="60"/>
+            <line x1="104" y1="68" x2="120" y2="60"/><line x1="127" y1="64" x2="143" y2="56"/><line x1="150" y1="62" x2="166" y2="54"/><line x1="173" y1="64" x2="189" y2="56"/><line x1="196" y1="68" x2="212" y2="60"/>
           </g>
-          <text x="245" y="108" font-size="13" font-weight="700" fill="#102033">Eye facets</text>
-          <text x="245" y="126" font-size="12" fill="#475569">Upper edge specialized</text>
-          <text x="245" y="142" font-size="12" fill="#475569">for skylight polarization</text>
-          <line x1="214" y1="98" x2="240" y2="104" stroke="#64748B" stroke-width="1.4"/>
+          <text x="160" y="186" text-anchor="middle" font-size="11" font-weight="700" fill="#102033">Dorsal rim ommatidia are specialized for polarization vision</text>
+          <text x="160" y="201" text-anchor="middle" font-size="11" fill="#475569">Most other facets are used for ordinary spatial vision</text>
         </svg>
         <figcaption>The dorsal rim area is a small specialized strip at the top of the compound eye. Its ommatidia are adapted for polarization vision rather than ordinary spatial detail.</figcaption>
       </figure>
       <figure class="diagram-card">
-        <svg viewBox="0 0 320 200" aria-label="Simplified insect brain pathway from dorsal rim area to central complex and mushroom bodies">
-          <rect x="0" y="0" width="320" height="200" fill="#FFFFFF"/>
-          <circle cx="64" cy="100" r="28" fill="#DBEAFE" stroke="#2563EB" stroke-width="2"/>
-          <text x="64" y="94" text-anchor="middle" font-size="12" font-weight="700" fill="#1E3A8A">Dorsal rim</text>
-          <text x="64" y="110" text-anchor="middle" font-size="12" font-weight="700" fill="#1E3A8A">area</text>
-          <rect x="126" y="64" width="68" height="38" rx="8" fill="#F3E8FF" stroke="#7C3AED" stroke-width="2"/>
-          <text x="160" y="87" text-anchor="middle" font-size="12" font-weight="700" fill="#6D28D9">Optic lobe</text>
-          <rect x="126" y="116" width="68" height="38" rx="8" fill="#FEF3C7" stroke="#D97706" stroke-width="2"/>
-          <text x="160" y="139" text-anchor="middle" font-size="12" font-weight="700" fill="#92400E">Anterior</text>
-          <text x="160" y="152" text-anchor="middle" font-size="12" font-weight="700" fill="#92400E">optic tubercle</text>
-          <rect x="228" y="54" width="58" height="44" rx="8" fill="#DCFCE7" stroke="#16A34A" stroke-width="2"/>
-          <text x="257" y="80" text-anchor="middle" font-size="12" font-weight="700" fill="#166534">Central</text>
-          <text x="257" y="93" text-anchor="middle" font-size="12" font-weight="700" fill="#166534">complex</text>
-          <rect x="220" y="116" width="74" height="40" rx="8" fill="#FEE2E2" stroke="#DC2626" stroke-width="2"/>
-          <text x="257" y="139" text-anchor="middle" font-size="12" font-weight="700" fill="#991B1B">Mushroom</text>
-          <text x="257" y="152" text-anchor="middle" font-size="12" font-weight="700" fill="#991B1B">bodies</text>
+        <svg viewBox="0 0 320 220" aria-label="Simplified insect brain pathway from dorsal rim area to central complex and mushroom bodies">
+          <rect x="0" y="0" width="320" height="220" fill="#FFFFFF"/>
+          <text x="160" y="24" text-anchor="middle" font-size="14" font-weight="700" fill="#102033">Sky compass and visual memory</text>
+          <circle cx="52" cy="96" r="24" fill="#DBEAFE" stroke="#2563EB" stroke-width="2"/>
+          <text x="52" y="92" text-anchor="middle" font-size="11" font-weight="700" fill="#1E3A8A">Dorsal rim</text>
+          <text x="52" y="106" text-anchor="middle" font-size="11" font-weight="700" fill="#1E3A8A">area</text>
+          <rect x="102" y="58" width="70" height="34" rx="8" fill="#F3E8FF" stroke="#7C3AED" stroke-width="2"/>
+          <text x="137" y="79" text-anchor="middle" font-size="11" font-weight="700" fill="#6D28D9">Optic lobe</text>
+          <rect x="102" y="106" width="86" height="40" rx="8" fill="#FEF3C7" stroke="#D97706" stroke-width="2"/>
+          <text x="145" y="123" text-anchor="middle" font-size="11" font-weight="700" fill="#92400E">Anterior optic</text>
+          <text x="145" y="137" text-anchor="middle" font-size="11" font-weight="700" fill="#92400E">tubercle</text>
+          <rect x="214" y="50" width="72" height="42" rx="8" fill="#DCFCE7" stroke="#16A34A" stroke-width="2"/>
+          <text x="250" y="68" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">Central</text>
+          <text x="250" y="82" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">complex</text>
+          <rect x="206" y="110" width="88" height="40" rx="8" fill="#FEE2E2" stroke="#DC2626" stroke-width="2"/>
+          <text x="250" y="127" text-anchor="middle" font-size="11" font-weight="700" fill="#991B1B">Mushroom</text>
+          <text x="250" y="141" text-anchor="middle" font-size="11" font-weight="700" fill="#991B1B">bodies</text>
           <g stroke="#475569" stroke-width="2.2" fill="none" marker-end="url(#arrow)">
-            <path d="M92 90 C104 86 112 84 126 83"/>
-            <path d="M92 110 C104 118 112 124 126 132"/>
-            <path d="M194 83 C206 78 214 75 228 76"/>
-            <path d="M194 132 C206 132 214 134 220 136"/>
+            <path d="M76 88 C84 82 92 79 102 76"/>
+            <path d="M76 104 C84 112 92 118 102 126"/>
+            <path d="M172 76 C186 72 198 69 214 69"/>
+            <path d="M188 126 C196 126 202 128 206 129"/>
           </g>
           <defs>
             <marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
               <path d="M0,0 L0,6 L6,3 z" fill="#475569"/>
             </marker>
           </defs>
-          <text x="257" y="28" text-anchor="middle" font-size="13" font-weight="700" fill="#102033">Sky compass and view memory</text>
-          <text x="257" y="172" text-anchor="middle" font-size="11" fill="#475569">Central complex: heading / compass</text>
-          <text x="257" y="186" text-anchor="middle" font-size="11" fill="#475569">Mushroom bodies: learned scene memory</text>
+          <text x="160" y="182" text-anchor="middle" font-size="11" fill="#475569">Central complex: heading, compass alignment, path integration</text>
+          <text x="160" y="198" text-anchor="middle" font-size="11" fill="#475569">Mushroom bodies: learned scene memory and familiar-view guidance</text>
         </svg>
         <figcaption>A simplified pathway view: polarization-sensitive input from the dorsal rim area feeds sky-compass processing, while learned landscape information is more strongly associated with mushroom-body-dependent visual memory.</figcaption>
       </figure>
@@ -498,8 +512,90 @@ button:focus-visible,input:focus-visible,select:focus-visible,canvas:focus-visib
   <div class="guide-section">
     <h3>Landscape navigation and the ant brain</h3>
     <p>For learned visual navigation, the current evidence points less to a cortex-like map and more to interactions between the insect <strong>optic lobes</strong>, <strong>mushroom bodies</strong>, and <strong>central complex</strong>. Ants are thought to use stored panoramic scene memories to judge whether a current view is familiar and whether it is aligned with a learned route or nest direction.</p>
-    <p>The term <strong>retinocortical map</strong> is usually not used for ants, because they do not have a cortex. Some visual pathways in insects are retinotopically organized at early stages such as the optic lobes, but the navigation literature for ants more often discusses <strong>view-based memory</strong>, <strong>mushroom-body-dependent visual learning</strong>, and <strong>central-complex heading computation</strong>. So if you want a teaching section beyond polarized light, the most accurate framing would be something like <strong>Landscape navigation and scene memory</strong>, not retinocortical mapping.</p>
-    <p>One species-specific caution: a commonly cited visual-surround rotation study was originally published under <em>Temnothorax rugatulus</em> but was later corrected to <em>Temnothorax curvispinosus</em>. So it is fair to say that <strong>Temnothorax ants</strong> and ants more broadly can use landscape information, but that particular experiment should not be used as direct rugatulus-specific evidence.</p>
+    <p>The term <strong>retinocortical map</strong> is usually not used for ants, because they do not have a cortex. Some visual pathways in insects are retinotopically organized at early stages such as the optic lobes, but the navigation literature for ants more often discusses <strong>view-based memory</strong>, <strong>mushroom-body-dependent visual learning</strong>, and <strong>central-complex heading computation</strong>. In this context, the clearest framing is <strong>Landscape navigation and scene memory</strong>, not retinocortical mapping.</p>
+    <p>One species-specific caution: a commonly cited visual-surround rotation study was originally published under <em>Temnothorax rugatulus</em> but was later corrected to <em>Temnothorax curvispinosus</em>. So it is fair to say that <strong><em>Temnothorax</em> ants</strong> and ants more broadly can use landscape information, but that particular experiment should not be used as direct <em>rugatulus</em>-specific evidence.</p>
+  </div>
+
+</div>
+
+<div id="visual-panel" class="panel-content" role="tabpanel" aria-labelledby="tab-visual" hidden>
+
+  <div class="guide-section">
+    <h3>Landscape and landmark guidance</h3>
+    <p>Ants can use the shape of the surrounding panorama, nearby landmarks, and the overall arrangement of the terrain to guide movement. In many cases they do not need a map-like reconstruction of space in the mammalian sense. Instead, they can compare the current view with stored views and move so that the scene becomes more familiar or better aligned with what was learned before.</p>
+    <p>That is why a rotated artificial landscape can matter experimentally. If the ant relies strongly on terrestrial panorama cues at the feeder, rotating that panorama can shift the direction it treats as homeward even when the actual nest has not moved.</p>
+  </div>
+
+  <div class="guide-section">
+    <h3>The ant equivalent of a retinocortical map</h3>
+    <p>For ants, the closest scientific answer is not a single direct equivalent. They do not have a visual cortex, so the mammalian phrase <strong>retinocortical map</strong> is not normally used. Early visual stages in insects such as the <strong>optic lobes</strong> can preserve retinotopic organization, but navigation is usually discussed in terms of what those signals are used for downstream.</p>
+    <p>Current evidence points to a division of labor. The <strong>central complex</strong> is strongly implicated in heading, compass alignment, and path-integration-related computations. The <strong>mushroom bodies</strong> are strongly implicated in learned visual scene memory and familiarity-based route guidance. So the best ant analogue of the mammalian story is a <strong>distributed navigation system</strong>, not a single cortical map.</p>
+  </div>
+
+  <div class="guide-section">
+    <h3><em>Temnothorax rugatulus</em> and visual navigation</h3>
+    <p><em>Temnothorax rugatulus</em> is a useful teaching species here because it has a published eye anatomy paper that includes a dorsal rim area, and because <em>Temnothorax</em> ants are good examples of navigation with visually learned surroundings. At the same time, the literature should be read carefully species by species.</p>
+    <p>In particular, one commonly cited visual-surround rotation study was later corrected from <em>Temnothorax rugatulus</em> to <em>Temnothorax curvispinosus</em>. So the broad point that <em>Temnothorax</em> ants can use landscape information is well supported, but that single experiment should not be treated as direct <em>rugatulus</em>-specific evidence.</p>
+  </div>
+
+  <div class="guide-section">
+    <h3>Landmarks, panorama, and brain pathways</h3>
+    <div class="diagram-grid">
+      <figure class="diagram-card">
+        <svg viewBox="0 0 320 220" aria-label="Simplified diagram of an ant using landmarks and skyline cues">
+          <rect x="0" y="0" width="320" height="220" fill="#FFFFFF"/>
+          <text x="160" y="24" text-anchor="middle" font-size="14" font-weight="700" fill="#102033">Learning a terrestrial panorama</text>
+          <rect x="36" y="140" width="248" height="42" rx="6" fill="#ECFDF5" stroke="#A7F3D0"/>
+          <path d="M44 140 L44 126 L58 110 L69 123 L78 102 L92 126 L106 114 L119 140 Z" fill="#334155"/>
+          <path d="M122 140 L122 118 L136 98 L147 114 L157 88 L171 118 L184 108 L199 140 Z" fill="#475569"/>
+          <path d="M204 140 L204 122 L217 104 L229 120 L238 96 L252 123 L268 111 L278 140 Z" fill="#334155"/>
+          <circle cx="160" cy="132" r="10" fill="#1E3A8A" stroke="#FFFFFF" stroke-width="3"/>
+          <path d="M160 132 C145 118 127 112 108 108" stroke="#2563EB" stroke-width="2" fill="none"/>
+          <path d="M160 132 C176 118 196 114 218 110" stroke="#2563EB" stroke-width="2" fill="none"/>
+          <path d="M160 132 C158 112 159 94 160 74" stroke="#2563EB" stroke-width="2" fill="none"/>
+          <text x="160" y="62" text-anchor="middle" font-size="11" font-weight="700" fill="#1D4ED8">Stored familiar view</text>
+          <text x="160" y="198" text-anchor="middle" font-size="11" fill="#475569">The ant can compare the current skyline and landmarks with a learned panorama</text>
+        </svg>
+        <figcaption>Landscape guidance is often framed as familiar-view matching: the current scene is compared with stored panoramic memories rather than reconstructed as a mammal-like cortical map.</figcaption>
+      </figure>
+      <figure class="diagram-card">
+        <svg viewBox="0 0 320 220" aria-label="Simplified diagram of optic lobes, mushroom bodies, and central complex in ant navigation">
+          <rect x="0" y="0" width="320" height="220" fill="#FFFFFF"/>
+          <text x="160" y="24" text-anchor="middle" font-size="14" font-weight="700" fill="#102033">Distributed visual navigation system</text>
+          <rect x="28" y="84" width="72" height="44" rx="8" fill="#DBEAFE" stroke="#2563EB" stroke-width="2"/>
+          <text x="64" y="102" text-anchor="middle" font-size="11" font-weight="700" fill="#1E3A8A">Optic</text>
+          <text x="64" y="116" text-anchor="middle" font-size="11" font-weight="700" fill="#1E3A8A">lobes</text>
+          <rect x="124" y="54" width="82" height="44" rx="8" fill="#DCFCE7" stroke="#16A34A" stroke-width="2"/>
+          <text x="165" y="72" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">Central</text>
+          <text x="165" y="86" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">complex</text>
+          <rect x="124" y="124" width="82" height="48" rx="8" fill="#FEE2E2" stroke="#DC2626" stroke-width="2"/>
+          <text x="165" y="144" text-anchor="middle" font-size="11" font-weight="700" fill="#991B1B">Mushroom</text>
+          <text x="165" y="158" text-anchor="middle" font-size="11" font-weight="700" fill="#991B1B">bodies</text>
+          <rect x="232" y="84" width="60" height="44" rx="8" fill="#FEF3C7" stroke="#D97706" stroke-width="2"/>
+          <text x="262" y="102" text-anchor="middle" font-size="11" font-weight="700" fill="#92400E">Motor</text>
+          <text x="262" y="116" text-anchor="middle" font-size="11" font-weight="700" fill="#92400E">output</text>
+          <g stroke="#475569" stroke-width="2.2" fill="none" marker-end="url(#visualArrow)">
+            <path d="M100 98 C110 96 116 92 124 84"/>
+            <path d="M100 112 C110 118 116 126 124 138"/>
+            <path d="M206 84 C214 88 222 93 232 98"/>
+            <path d="M206 148 C214 142 222 132 232 118"/>
+          </g>
+          <defs>
+            <marker id="visualArrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+              <path d="M0,0 L0,6 L6,3 z" fill="#475569"/>
+            </marker>
+          </defs>
+          <text x="160" y="194" text-anchor="middle" font-size="11" fill="#475569">No single retinocortical map: early retinotopy feeds heading and scene-memory systems</text>
+        </svg>
+        <figcaption>For ants, the nearest equivalent to a mammalian retinocortical story is a distributed system in which early visual pathways remain retinotopic, while the central complex and mushroom bodies support different parts of navigation.</figcaption>
+      </figure>
+    </div>
+  </div>
+
+  <div class="guide-section">
+    <h3>How to read the landscape option in this simulator</h3>
+    <p>The landscape cue in this simulator is a simplified teaching representation of terrestrial panorama guidance. The optional ring around the feeder is meant to stand in for a rotated artificial surround, such as a cardboard cylinder carrying skyline features. It is not a full panoramic rendering of a real habitat.</p>
+    <p>Use it to ask qualitative and geometric questions: what happens if polarized light and landscape agree, conflict, or are weighted differently? That is a useful way to reason about predictions without claiming that the simulator is a complete species-level neural model.</p>
   </div>
 
 </div>
@@ -542,6 +638,7 @@ setupHiDPI();
 let skyNestX=SCX, skyNestY=SCY;
 let skyFeedX=SCX+90, skyFeedY=SCY;
 let skyDragTarget=null;
+let sunMiniDragging=false;
 let toastTimer=null,lastAligned=false;
 let curMode='datetime';
 let skyKeyboardTarget='nest';
@@ -600,22 +697,29 @@ function currentPhoenixParts(){
   }
 }
 
-// Init date/time to the visitor's current moment in Phoenix, Arizona.
-(function(){
-  populateTimeMenus();
+function setCurrentSky(){
   const phx=currentPhoenixParts();
   document.getElementById('dt-month').value=phx.month;
   document.getElementById('dt-day').value=phx.day;
   document.getElementById('dt-year').value=phx.year;
   document.getElementById('dt-hour').value=phx.hour;
   document.getElementById('dt-min').value=phx.minute;
+  if(curMode!=='datetime')setMode('datetime');
+  else update();
+}
+
+// Init date/time to the visitor's current moment in Phoenix, Arizona.
+(function(){
+  populateTimeMenus();
+  setCurrentSky();
 })();
 
 function showTab(t){
   const tabs=[
     {key:'exp',btn:'tab-exp',panel:'exp-panel'},
     {key:'guide',btn:'tab-guide',panel:'guide-panel'},
-    {key:'learn',btn:'tab-learn',panel:'learn-panel'}
+    {key:'learn',btn:'tab-learn',panel:'learn-panel'},
+    {key:'visual',btn:'tab-visual',panel:'visual-panel'}
   ];
   tabs.forEach(({key,btn,panel})=>{
     const active=key===t;
@@ -794,7 +898,7 @@ function updateScreenReaderText(v=getV()){
   document.getElementById('sky-c-summary').textContent=
     `${sunModeText}. ${sunText}. Selected point: ${selected}. Nest at azimuth ${nestAzEl.az.toFixed(0)} degrees, elevation ${nestAzEl.el.toFixed(0)} degrees. Feeder at azimuth ${feedAzEl.az.toFixed(0)} degrees, elevation ${feedAzEl.el.toFixed(0)} degrees. Feeder azimuth from nest ${derivedAzimuth().toFixed(0)} degrees, dome distance ${dist.toFixed(0)} pixels. Ambient e-vector at the feeder is about ${ambientDeg.toFixed(0)} degrees. Filter transmission axis is about ${filterDeg.toFixed(0)} degrees.`;
   document.getElementById('sky-side-summary').textContent=
-    `South-facing Phoenix sky helper. The daily Sun path is shown for the selected date. The current Sun is at azimuth ${v.sunAz.toFixed(1)} degrees and elevation ${Math.max(v.sunEl,0).toFixed(1)} degrees. North is behind the viewer in this helper diagram.`;
+    `South-facing Phoenix sky helper. The daily Sun path is shown for the selected date. The current Sun is at azimuth ${v.sunAz.toFixed(1)} degrees and elevation ${Math.max(v.sunEl,0).toFixed(1)} degrees. North is behind the viewer in this helper diagram. In Phoenix real date and time mode, dragging the Sun marker along the path changes the selected time for the current day.`;
   const ep=getEP();
   const layout=getTopLayout(),nt=layout.nest,ft=layout.feed;
   const dx=ft.x-nt.x,dy=ft.y-nt.y;
@@ -959,36 +1063,40 @@ function drawLandscapeRing(ctx,cx,cy,angleDeg,alpha=1){
   ctx.beginPath();ctx.arc(0,0,outerR,0,Math.PI*2);ctx.stroke();
   ctx.beginPath();ctx.arc(0,0,innerR,0,Math.PI*2);ctx.stroke();
 
-  for(let i=0;i<18;i++){
-    const a=(i/18)*Math.PI*2;
-    const x1=Math.cos(a)*(innerR+2),y1=Math.sin(a)*(innerR+2);
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(0,0,outerR-1,0,Math.PI*2);
+  ctx.arc(0,0,innerR+1,0,Math.PI*2,true);
+  ctx.closePath();
+  ctx.clip();
+
+  for(let i=0;i<12;i++){
+    const a=-Math.PI+(i/12)*Math.PI*2;
+    const trunkW=i%3===0?4.2:3.4;
+    const trunkInner=innerR+8+(i%2)*2;
+    const trunkOuter=outerR-10-(i%3===1?2:0);
+    ctx.save();
+    ctx.rotate(a);
+    ctx.fillStyle=i%2===0?'rgba(71,85,105,0.88)':'rgba(51,65,85,0.9)';
+    ctx.beginPath();
+    ctx.roundRect(-trunkW/2,-trunkOuter,trunkW,trunkOuter-trunkInner,2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(0,-trunkOuter+1,7+(i%3),0,Math.PI*2);
+    ctx.fillStyle=i%2===0?'rgba(30,41,59,0.92)':'rgba(71,85,105,0.9)';
+    ctx.fill();
+    ctx.restore();
+  }
+  ctx.restore();
+
+  for(let i=0;i<20;i++){
+    const a=(i/20)*Math.PI*2;
+    const x1=Math.cos(a)*(innerR+3),y1=Math.sin(a)*(innerR+3);
     const x2=Math.cos(a)*(outerR-3),y2=Math.sin(a)*(outerR-3);
-    ctx.strokeStyle=i%2===0?'rgba(111,78,55,0.65)':'rgba(205,170,125,0.65)';
-    ctx.lineWidth=3.2;
+    ctx.strokeStyle='rgba(146,98,52,0.22)';
+    ctx.lineWidth=1;
     ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();
   }
-
-  const peaks=[-0.45,-0.15,0.12,0.42];
-  ctx.strokeStyle='rgba(55,65,81,0.85)';
-  ctx.lineWidth=1.7;
-  ctx.beginPath();
-  peaks.forEach((p,i)=>{
-    const a=p*Math.PI;
-    const baseR=(innerR+outerR)*0.5;
-    const tipR=outerR+6+(i%2)*4;
-    const bx=Math.cos(a)*baseR,by=Math.sin(a)*baseR;
-    const tx=Math.cos(a)*tipR,ty=Math.sin(a)*tipR;
-    if(i===0)ctx.moveTo(bx,by);
-    ctx.lineTo(tx,ty);
-    ctx.lineTo(Math.cos(a+0.18)*baseR,Math.sin(a+0.18)*baseR);
-  });
-  ctx.stroke();
-
-  ctx.fillStyle='rgba(55,65,81,0.9)';
-  ctx.font='600 9px var(--font-sans,sans-serif)';
-  ctx.textAlign='center';
-  ctx.textBaseline='middle';
-  ctx.fillText('Landscape',0,-(outerR+10));
   ctx.restore();
 }
 
@@ -1001,7 +1109,7 @@ function projectSouthSkyPoint(az,el,box){
 
 function drawSkyMini(v){
   ssctx.clearRect(0,0,310,128);
-  const box={cx:155,baseY:96,rx:114,ry:58};
+  const box={cx:155,baseY:98,rx:114,ry:56};
   ssctx.save();
   ssctx.fillStyle='#F8FAFC';
   if(ssctx.roundRect){ssctx.beginPath();ssctx.roundRect(0.5,0.5,309,127,8);ssctx.fill();}
@@ -1020,21 +1128,11 @@ function drawSkyMini(v){
   ssctx.stroke();
   ssctx.restore();
 
-  ssctx.save();
-  ssctx.font='9px var(--font-sans,sans-serif)';
-  ssctx.fillStyle='#475569';
-  ssctx.textAlign='center';
-  ssctx.textBaseline='alphabetic';
-  ssctx.fillText('East',box.cx-box.rx+8,box.baseY+15);
-  ssctx.fillText('South',box.cx,box.baseY+15);
-  ssctx.fillText('West',box.cx+box.rx-8,box.baseY+15);
-  ssctx.textBaseline='top';
-  ssctx.font='600 10px var(--font-sans,sans-serif)';
-  ssctx.fillText('Phoenix Sun path',box.cx,8);
-  ssctx.font='9px var(--font-sans,sans-serif)';
-  ssctx.fillStyle='#64748B';
-  ssctx.fillText('Facing south; north is behind you',box.cx,20);
-  ssctx.restore();
+  drawCanvasBadge(ssctx,'East',box.cx-box.rx+8,box.baseY+14,{font:'700 9px var(--font-sans,sans-serif)',height:14,color:'#475569',bg:'rgba(255,255,255,0.9)'});
+  drawCanvasBadge(ssctx,'South',box.cx,box.baseY+14,{font:'700 9px var(--font-sans,sans-serif)',height:14,color:'#475569',bg:'rgba(255,255,255,0.9)'});
+  drawCanvasBadge(ssctx,'West',box.cx+box.rx-8,box.baseY+14,{font:'700 9px var(--font-sans,sans-serif)',height:14,color:'#475569',bg:'rgba(255,255,255,0.9)'});
+  drawCanvasBadge(ssctx,'Phoenix Sun path',box.cx,8,{font:'700 10px var(--font-sans,sans-serif)',height:15,color:'#334155',bg:'rgba(248,250,252,0.96)'});
+  drawCanvasBadge(ssctx,'Facing south; north is behind you',box.cx,19,{font:'600 8px var(--font-sans,sans-serif)',height:14,color:'#64748B',bg:'rgba(248,250,252,0.94)'});
 
   const dateIn=getDateInputs();
   const track=[];
@@ -1072,11 +1170,13 @@ function drawSkyMini(v){
     ssctx.lineTo(noonPt.x,noonPt.y);
     ssctx.stroke();
     ssctx.setLineDash([]);
-    ssctx.font='600 9px var(--font-sans,sans-serif)';
-    ssctx.fillStyle='rgba(185,28,28,0.9)';
-    ssctx.textAlign='center';
-    ssctx.textBaseline='bottom';
-    ssctx.fillText('Solar noon meridian',box.cx,Math.min(noonPt.y,box.baseY)-6);
+    drawCanvasBadge(ssctx,'Solar noon meridian',box.cx,Math.max(30,Math.min(noonPt.y,box.baseY)-8),{
+      font:'700 8px var(--font-sans,sans-serif)',
+      height:14,
+      color:'rgba(185,28,28,0.95)',
+      bg:'rgba(255,255,255,0.94)',
+      border:'rgba(220,38,38,0.18)'
+    });
     ssctx.restore();
   }
 
@@ -1098,11 +1198,13 @@ function drawSkyMini(v){
     ssctx.lineWidth=1;
     ssctx.fill();
     ssctx.stroke();
-    ssctx.font='700 9px var(--font-sans,sans-serif)';
-    ssctx.fillStyle='#92400E';
-    ssctx.textAlign='left';
-    ssctx.textBaseline='middle';
-    ssctx.fillText('Current Sun',sunPt.x+10,sunPt.y);
+    drawCanvasBadge(ssctx,'Current Sun',sunPt.x+16,sunPt.y,{
+      font:'700 9px var(--font-sans,sans-serif)',
+      align:'left',
+      color:'#92400E',
+      bg:'rgba(255,251,235,0.95)',
+      border:'rgba(217,119,6,0.2)'
+    });
     ssctx.restore();
   }else{
     const horizonPt=projectSouthSkyPoint(v.sunAz,0,box);
@@ -1145,6 +1247,34 @@ function drawSkyTextLabel(ctx,text,x,y,opt={}){
   ctx.restore();
 }
 
+function drawCanvasBadge(ctx,text,x,y,opt={}){
+  const padX=opt.padX??5,padY=opt.padY??3;
+  ctx.save();
+  ctx.font=opt.font||'700 10px var(--font-sans,sans-serif)';
+  ctx.textAlign=opt.align||'center';
+  ctx.textBaseline=opt.baseline||'middle';
+  const metrics=ctx.measureText(text);
+  const w=metrics.width+padX*2;
+  const h=(opt.height||16);
+  let left=x-w/2;
+  if((opt.align||'center')==='left')left=x;
+  if((opt.align||'center')==='right')left=x-w;
+  let top=y-h/2;
+  if((opt.baseline||'middle')==='top')top=y;
+  if((opt.baseline||'middle')==='bottom')top=y-h;
+  ctx.fillStyle=opt.bg||'rgba(255,255,255,0.94)';
+  ctx.strokeStyle=opt.border||'rgba(15,23,42,0.14)';
+  ctx.lineWidth=opt.lineWidth||0.9;
+  ctx.beginPath();
+  if(ctx.roundRect)ctx.roundRect(left,top,w,h,opt.radius||4);
+  else ctx.rect(left,top,w,h);
+  ctx.fill();
+  ctx.stroke();
+  ctx.fillStyle=opt.color||'#102033';
+  ctx.fillText(text,x,y);
+  ctx.restore();
+}
+
 function drawSkyCallout(ctx,text,anchorX,anchorY,labelX,labelY,opt={}){
   ctx.save();
   ctx.strokeStyle=opt.lineColor||'rgba(15,23,42,0.7)';
@@ -1167,6 +1297,43 @@ function getDailySunTrack(){
     if(p.el>=0)pts.push(p);
   }
   return pts;
+}
+
+function getMiniSunTrack(stepMins=2){
+  const d=getDateInputs();
+  const pts=[];
+  const box={cx:155,baseY:98,rx:114,ry:56};
+  for(let mins=0;mins<=24*60;mins+=stepMins){
+    const hr=Math.floor(mins/60),mn=mins%60;
+    const p=solarPos(d.yr,d.mo,d.dy,hr,mn);
+    if(p.el>=0&&p.az>=60&&p.az<=300){
+      const pt=projectSouthSkyPoint(p.az,p.el,box);
+      pts.push({...p,mins,x:pt.x,y:pt.y});
+    }
+  }
+  return pts;
+}
+
+function setDateTimeFromMinutes(mins){
+  const hr=Math.floor(mins/60),mn=mins%60;
+  document.getElementById('dt-hour').value=String(hr);
+  document.getElementById('dt-min').value=String(mn);
+}
+
+function adjustDateTimeMinutes(delta){
+  const d=getDateInputs();
+  const next=Math.max(0,Math.min(23*60+59,d.hr*60+d.mn+delta));
+  setDateTimeFromMinutes(next);
+}
+
+function nearestMiniSunSample(x,y,maxDist=24){
+  const pts=getMiniSunTrack(2);
+  let best=null,bestD2=maxDist*maxDist;
+  pts.forEach(pt=>{
+    const d2=(pt.x-x)**2+(pt.y-y)**2;
+    if(d2<=bestD2){best=pt;bestD2=d2;}
+  });
+  return best;
 }
 
 function drawSky(v){
@@ -1289,10 +1456,22 @@ function drawSky(v){
   }
   // Feeder dot
   sctx.beginPath();sctx.arc(skyFeedX,skyFeedY,7,0,Math.PI*2);sctx.fillStyle='#059669';sctx.globalAlpha=1;sctx.fill();sctx.strokeStyle=bh?'#EFFFF8':'#fff';sctx.lineWidth=bh?2.5:2;sctx.stroke();
-  sctx.font='bold 9px var(--font-sans,sans-serif)';sctx.fillStyle='#064E3B';sctx.textAlign='center';sctx.textBaseline='top';sctx.fillText('Feeder',skyFeedX,skyFeedY+9);
+  drawCanvasBadge(sctx,'Feeder',skyFeedX,skyFeedY+20,{
+    font:'700 10px var(--font-sans,sans-serif)',
+    baseline:'middle',
+    color:'#064E3B',
+    bg:bh?'rgba(236,253,245,0.96)':'rgba(255,255,255,0.94)',
+    border:'rgba(5,150,105,0.18)'
+  });
   // Nest dot — drawn on top
   sctx.beginPath();sctx.arc(skyNestX,skyNestY,8,0,Math.PI*2);sctx.fillStyle='#1E3A8A';sctx.globalAlpha=1;sctx.fill();sctx.strokeStyle=bh?'#F8FBFF':'#fff';sctx.lineWidth=bh?2.5:2;sctx.stroke();
-  sctx.font='bold 9px var(--font-sans,sans-serif)';sctx.fillStyle='#1E3A8A';sctx.textAlign='center';sctx.textBaseline='top';sctx.fillText('Nest',skyNestX,skyNestY+10);
+  drawCanvasBadge(sctx,'Nest',skyNestX,skyNestY+21,{
+    font:'700 10px var(--font-sans,sans-serif)',
+    baseline:'middle',
+    color:'#1E3A8A',
+    bg:bh?'rgba(239,246,255,0.96)':'rgba(255,255,255,0.94)',
+    border:'rgba(30,58,138,0.18)'
+  });
   // Toast
   const toast=document.getElementById('align-toast');
   if(isAligned&&!lastAligned){toast.classList.add('show');if(toastTimer)clearTimeout(toastTimer);toastTimer=setTimeout(()=>toast.classList.remove('show'),3000);}
@@ -1330,6 +1509,7 @@ function drawTopScene(){
   const correctHome=outAngle+Math.PI;
   const totalShift=d2r(totalFilterShiftDeg(A.phase==='idle'||A.phase==='done'?ep.filtRot:A.filtCurrentAngle));
   const currentLandDeg=(A.phase==='idle'||A.phase==='done')?ep.landRot:A.landCurrentAngle;
+  const displayLandDeg=(A.phase==='rotating'||A.phase==='exit'||A.phase==='done')?A.landCurrentAngle:0;
   const polarizationHome=correctHome+totalShift;
   const landscapeHome=correctHome+d2r(currentLandDeg);
   const actualHome=blendCueHeadings(landscapeHome,polarizationHome,ep.polWeight);
@@ -1346,7 +1526,7 @@ function drawTopScene(){
   tctx.restore();
   drawTopCompass(TCW-40,40,20);
   if(ep.showLandscape){
-    drawLandscapeRing(tctx,ft.x,ft.y,currentLandDeg,0.95);
+    drawLandscapeRing(tctx,ft.x,ft.y,displayLandDeg,0.95);
     if(A.phase==='rotating'&&Math.abs(A.landCurrentAngle)>0.5){
       tctx.save();
       tctx.font='bold 10px var(--font-sans,sans-serif)';
@@ -1395,21 +1575,43 @@ function drawTopScene(){
   drawFilterSlits(tctx,ft.x,ft.y,fR,fDA,0.9);
   tctx.save();tctx.strokeStyle='#6D28D9';tctx.lineWidth=1.5;tctx.setLineDash([4,2]);tctx.globalAlpha=0.75;
   tctx.beginPath();tctx.arc(ft.x,ft.y,fR,0,Math.PI*2);tctx.stroke();tctx.restore();
-  tctx.font='bold 9px var(--font-sans,sans-serif)';tctx.fillStyle='#5B21B6';tctx.globalAlpha=0.8;tctx.textAlign='center';tctx.textBaseline='bottom';tctx.fillText('Filter',ft.x,ft.y-fR-3);
+  drawCanvasBadge(tctx,'Filter',ft.x,ft.y-fR-11,{
+    font:'700 10px var(--font-sans,sans-serif)',
+    color:'#5B21B6',
+    bg:'rgba(250,245,255,0.95)',
+    border:'rgba(124,58,237,0.18)'
+  });
   if(A.phase==='rotating'&&Math.abs(A.filtCurrentAngle)>0.5){
     tctx.save();tctx.font='bold 10px var(--font-sans,sans-serif)';tctx.fillStyle='#6D28D9';tctx.textAlign='center';tctx.textBaseline='top';tctx.globalAlpha=0.9;
     tctx.fillText((A.filtCurrentAngle>=0?'+':'')+Math.round(A.filtCurrentAngle)+'°',ft.x,ft.y+fR+4);tctx.restore();
   }
   // Feeder
   tctx.beginPath();tctx.arc(ft.x,ft.y,7,0,Math.PI*2);tctx.fillStyle='#059669';tctx.globalAlpha=1;tctx.fill();tctx.strokeStyle='#fff';tctx.lineWidth=1.5;tctx.stroke();
-  tctx.font='bold 9px var(--font-sans,sans-serif)';tctx.fillStyle='#064E3B';tctx.textAlign='center';tctx.textBaseline='top';tctx.fillText('Feeder',ft.x,ft.y+10);
+  drawCanvasBadge(tctx,'Feeder',ft.x,ft.y+20,{
+    font:'700 10px var(--font-sans,sans-serif)',
+    color:'#064E3B',
+    bg:'rgba(236,253,245,0.95)',
+    border:'rgba(5,150,105,0.18)'
+  });
   // Nest
   tctx.beginPath();tctx.arc(nt.x,nt.y,9,0,Math.PI*2);tctx.fillStyle='#1E3A8A';tctx.fill();tctx.strokeStyle='#fff';tctx.lineWidth=2;tctx.stroke();
-  tctx.font='bold 9px var(--font-sans,sans-serif)';tctx.fillStyle='#1E3A8A';tctx.textAlign='center';tctx.textBaseline='top';tctx.fillText('Nest',nt.x,nt.y+12);
+  drawCanvasBadge(tctx,'Nest',nt.x,nt.y+22,{
+    font:'700 10px var(--font-sans,sans-serif)',
+    color:'#1E3A8A',
+    bg:'rgba(239,246,255,0.95)',
+    border:'rgba(30,58,138,0.18)'
+  });
   // Trail info
   const dist=Math.sqrt(dx*dx+dy*dy);
-  tctx.save();tctx.font='9px var(--font-sans,sans-serif)';tctx.fillStyle='rgba(0,0,0,0.3)';tctx.textAlign='left';tctx.textBaseline='bottom';
-  tctx.fillText(`Az: ${Math.round(derivedAzimuth())}°  trail: ${Math.round(dist)}px`,5,TCH-3);tctx.restore();
+  drawCanvasBadge(tctx,`Az: ${Math.round(derivedAzimuth())}°  trail: ${Math.round(dist)}px`,8,TCH-7,{
+    font:'600 9px var(--font-sans,sans-serif)',
+    align:'left',
+    baseline:'bottom',
+    color:'rgba(15,23,42,0.62)',
+    bg:'rgba(255,255,255,0.74)',
+    border:'rgba(15,23,42,0.08)',
+    height:14
+  });
   if(A.phase!=='idle') drawAnt(tctx,A.antX,A.antY,A.antAngle);
   if(A.phase==='done'){
     tctx.save();tctx.font='bold 11px var(--font-sans,sans-serif)';tctx.fillStyle='#1E3A8A';tctx.textAlign='center';tctx.textBaseline='top';tctx.globalAlpha=0.85;
@@ -1555,6 +1757,11 @@ function scCoords(e){
   const src=e.touches?e.touches[0]:e;
   return{x:(src.clientX-rect.left)*sx,y:(src.clientY-rect.top)*sx};
 }
+function sscCoords(e){
+  const rect=SSC.getBoundingClientRect();
+  const src=e.touches?e.touches[0]:e;
+  return{x:(src.clientX-rect.left)*(310/rect.width),y:(src.clientY-rect.top)*(128/rect.height)};
+}
 function hitSky(x,y,nx,ny,r){return Math.sqrt((x-nx)**2+(y-ny)**2)<=r;}
 function pickSkyDragTarget(x,y,isTouch=false){
   const nestRadius=isTouch?20:14;
@@ -1568,6 +1775,15 @@ function clampSky(x,y){
   const dx=x-SCX,dy=y-SCY,dist=Math.sqrt(dx*dx+dy*dy);
   if(dist<=SR-8)return{x,y};
   const scale=(SR-8)/dist;return{x:SCX+dx*scale,y:SCY+dy*scale};
+}
+
+function updateMiniSunDrag(e){
+  if(curMode!=='datetime')return;
+  const {x,y}=sscCoords(e);
+  const sample=nearestMiniSunSample(x,y);
+  if(!sample)return;
+  setDateTimeFromMinutes(sample.mins);
+  update();
 }
 
 SC.addEventListener('mousedown',e=>{
@@ -1623,6 +1839,69 @@ SC.addEventListener('keydown',e=>{
   if(e.key==='ArrowRight'){e.preventDefault();moveSkyTarget(step,0);}
 });
 
+SSC.addEventListener('mousedown',e=>{
+  if(curMode!=='datetime'||(A.phase!=='idle'&&A.phase!=='done'))return;
+  const {x,y}=sscCoords(e);
+  const sample=nearestMiniSunSample(x,y,28);
+  if(!sample)return;
+  sunMiniDragging=true;
+  SSC.style.cursor='grabbing';
+  setDateTimeFromMinutes(sample.mins);
+  update();
+});
+SSC.addEventListener('mousemove',e=>{
+  if(curMode!=='datetime'){SSC.style.cursor='default';return;}
+  if(sunMiniDragging){updateMiniSunDrag(e);return;}
+  const {x,y}=sscCoords(e);
+  SSC.style.cursor=nearestMiniSunSample(x,y,18)?'grab':'default';
+},{passive:true});
+SSC.addEventListener('mouseup',()=>{sunMiniDragging=false;SSC.style.cursor=curMode==='datetime'?'grab':'default';});
+SSC.addEventListener('mouseleave',()=>{sunMiniDragging=false;SSC.style.cursor='default';});
+SSC.addEventListener('touchstart',e=>{
+  if(curMode!=='datetime'||(A.phase!=='idle'&&A.phase!=='done'))return;
+  const {x,y}=sscCoords(e);
+  const sample=nearestMiniSunSample(x,y,32);
+  if(!sample)return;
+  e.preventDefault();
+  sunMiniDragging=true;
+  setDateTimeFromMinutes(sample.mins);
+  update();
+},{passive:false});
+SSC.addEventListener('touchmove',e=>{
+  if(!sunMiniDragging)return;
+  e.preventDefault();
+  updateMiniSunDrag(e);
+},{passive:false});
+SSC.addEventListener('touchend',()=>{sunMiniDragging=false;});
+SSC.addEventListener('touchcancel',()=>{sunMiniDragging=false;});
+SSC.addEventListener('keydown',e=>{
+  if(curMode!=='datetime')return;
+  const step=e.shiftKey?60:10;
+  if(e.key==='ArrowLeft'){
+    e.preventDefault();
+    adjustDateTimeMinutes(-step);
+    update();
+    return;
+  }
+  if(e.key==='ArrowRight'){
+    e.preventDefault();
+    adjustDateTimeMinutes(step);
+    update();
+    return;
+  }
+  if(e.key==='Home'){
+    e.preventDefault();
+    setDateTimeFromMinutes(0);
+    update();
+    return;
+  }
+  if(e.key==='End'){
+    e.preventDefault();
+    setDateTimeFromMinutes(23*60+59);
+    update();
+  }
+});
+
 window.addEventListener('resize',()=>{
   const nextDpr=Math.max(1,Math.min(window.devicePixelRatio||1,3));
   if(Math.abs(nextDpr-activeDpr)>0.01){
@@ -1635,6 +1914,7 @@ window.addEventListener('resize',()=>{
 
 function update(){
   const v=getV();
+  const dateNow=getDateInputs();
   if(curMode==='datetime'){document.getElementById('sun-az').value=Math.round(v.sunAz);document.getElementById('sun-el').value=Math.round(v.sunEl);}
   document.getElementById('sun-az-v').textContent=v.sunAz.toFixed(1)+'°';
   document.getElementById('sun-el-v').textContent=v.sunEl.toFixed(1)+'°';
@@ -1644,6 +1924,10 @@ function update(){
   document.getElementById('sun-el').setAttribute('aria-valuetext',v.sunEl.toFixed(1)+' degrees');
   document.getElementById('filt-init').setAttribute('aria-valuetext',(v.filtInit>=0?'+':'')+v.filtInit+' degrees');
   document.getElementById('filt-op').setAttribute('aria-valuetext',Math.round(v.filtOp*100)+' percent');
+  SSC.setAttribute('aria-valuemin','0');
+  SSC.setAttribute('aria-valuemax','1439');
+  SSC.setAttribute('aria-valuenow',String(dateNow.hr*60+dateNow.mn));
+  SSC.setAttribute('aria-valuetext',`${formatHourLabel(dateNow.hr)} ${String(dateNow.mn).padStart(2,'0')} Phoenix time; Sun azimuth ${v.sunAz.toFixed(1)} degrees; elevation ${v.sunEl.toFixed(1)} degrees`);
   drawSky(v);
   drawSkyMini(v);
   if(A.phase==='idle'||A.phase==='done')drawTopScene();
