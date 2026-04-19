@@ -436,7 +436,7 @@ let activeDpr=1;
 function setupHiDPICanvas(canvas,ctx,w,h,dpr){
   canvas.width=Math.round(w*dpr);
   canvas.height=Math.round(h*dpr);
-  canvas.style.width=w+'px';
+  canvas.style.width=`min(100%, ${w}px)`;
   canvas.style.height='auto';
   ctx.setTransform(dpr,0,0,dpr,0,0);
 }
