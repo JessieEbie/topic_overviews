@@ -51,6 +51,10 @@ main{width:min(1180px,100%);margin:0 auto;padding:clamp(44px,7vw,76px) clamp(18p
 .section-label{font-size:12px;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;color:var(--accent);margin-bottom:10px;}
 .section-top h2{font-size:clamp(30px,4.6vw,58px);line-height:0.98;font-weight:780;letter-spacing:0;max-width:720px;}
 .section-top p{font-size:15px;color:var(--muted);line-height:1.7;max-width:390px;}
+.app-section + .app-section{margin-top:38px;}
+.app-section-heading{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-bottom:14px;}
+.app-section-heading h3{font-size:clamp(18px,2.4vw,28px);line-height:1.05;font-weight:760;color:var(--ink);}
+.app-section-heading p{font-size:14px;color:var(--muted);max-width:460px;}
 .app-list{border-top:1px solid var(--line);}
 .app-link{position:relative;display:grid;grid-template-columns:minmax(0,1fr) minmax(150px,220px);gap:24px;align-items:center;padding:26px 0;border-bottom:1px solid var(--line);text-decoration:none;transition:padding-left 180ms ease;}
 .app-link::before{content:"";position:absolute;left:0;top:24px;bottom:24px;width:3px;border-radius:8px;background:var(--green);opacity:0;transform:scaleY(0.5);transition:opacity 180ms ease,transform 180ms ease;}
@@ -88,6 +92,7 @@ footer{width:min(1180px,100%);margin:0 auto;padding:0 clamp(18px,4vw,34px) 30px;
   .hero-copy p{font-size:16px;}
   .hero-note{border-left:none;border-top:1px solid rgba(255,255,255,0.3);padding-left:0;padding-top:15px;}
   .section-top{grid-template-columns:1fr;gap:14px;}
+  .app-section-heading{align-items:flex-start;flex-direction:column;}
   .app-link{grid-template-columns:1fr;gap:14px;}
   .app-meta{justify-content:flex-start;}
 }
@@ -128,27 +133,42 @@ footer{width:min(1180px,100%);margin:0 auto;padding:0 clamp(18px,4vw,34px) 30px;
   </section>
 
   <section aria-label="App list">
-    <div class="app-list">
-      <a class="app-link" href="gcms_cuticle_compound_lab.html">
-        <div>
-          <h3>GC-MS Cuticular Compound Lab</h3>
-          <p>Upload peak tables, inspect chromatograms and spectra, annotate compound classes, and use pattern guides for ant cuticular hydrocarbons, alkenes, methyl-branched alkanes, esters, and unknowns.</p>
-        </div>
-        <div class="app-meta">
-          <span>Analysis tool</span>
-          <span class="open-label">Open app</span>
-        </div>
-      </a>
-      <a class="app-link" href="ant_polarization_lab.html">
-        <div>
-          <h3>Ant Navigation with Polarized Light Simulation</h3>
-          <p>Rotate a polarizing filter, shift a celestial compass, and compare the predicted exit heading against the unshifted homeward route.</p>
-        </div>
-        <div class="app-meta">
-          <span>Simulation</span>
-          <span class="open-label">Open app</span>
-        </div>
-      </a>
+    <div class="app-section" aria-labelledby="simulations-title">
+      <div class="app-section-heading">
+        <h3 id="simulations-title">Simulations</h3>
+        <p>Interactive models for testing ideas by changing conditions and watching the system respond.</p>
+      </div>
+      <div class="app-list">
+        <a class="app-link" href="ant_polarization_lab.html">
+          <div>
+            <h3>Ant Navigation with Polarized Light Simulation</h3>
+            <p>Rotate a polarizing filter, shift a celestial compass, and compare the predicted exit heading against the unshifted homeward route.</p>
+          </div>
+          <div class="app-meta">
+            <span>Simulation</span>
+            <span class="open-label">Open app</span>
+          </div>
+        </a>
+      </div>
+    </div>
+
+    <div class="app-section" aria-labelledby="analysis-tools-title">
+      <div class="app-section-heading">
+        <h3 id="analysis-tools-title">Analysis tools</h3>
+        <p>Browser-based tools for reviewing uploaded data, interpreting results, and organizing scientific observations.</p>
+      </div>
+      <div class="app-list">
+        <a class="app-link" href="gcms_cuticle_compound_lab.html">
+          <div>
+            <h3>GC-MS Cuticular Compound Lab</h3>
+            <p>Upload peak tables, inspect chromatograms and spectra, annotate compound classes, and use pattern guides for ant cuticular hydrocarbons, alkenes, methyl-branched alkanes, esters, and unknowns.</p>
+          </div>
+          <div class="app-meta">
+            <span>Analysis tool</span>
+            <span class="open-label">Open app</span>
+          </div>
+        </a>
+      </div>
     </div>
   </section>
 
