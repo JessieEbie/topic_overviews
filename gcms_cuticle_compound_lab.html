@@ -1135,12 +1135,14 @@ function peakFactsFor(peak){
   const top=s.slice().sort((a,b)=>b.intensity-a.intensity);
   const base=top[0];
   const highMz=s.reduce((a,p)=>p.intensity>3&&p.mz>a?p.mz:a,0);
-  return [
+  const facts=[
     {label:"RT",value:`${peak.rt.toFixed(2)} min`},
     {label:"Area",value:peak.area.toLocaleString()},
     {label:"Base peak",value:base?`m/z ${Math.round(base.mz)}`:"n/a"},
     {label:"Molecular region",value:highMz?`m/z ${Math.round(highMz)}`:"not clear"}
   ];
+  if(Number.isFinite(peak.ri))facts.push({label:"RI",value:peak.ri.toFixed(1)});
+  return facts;
 }
 function rankedCandidatesFor(peak){
   const suggestion=suggestedCallFor(peak);
@@ -1192,6 +1194,7 @@ function suggestedCallFor(peak){
   const homologName=inferHomologName(peak,cls,highMz);
   if(sourceName && !isRawUnknown)evidence.push(`Source table name: ${sourceName}.`);
   if(formula)evidence.push(`Reported formula: ${formula}.`);
+  if(Number.isFinite(peak.ri))evidence.push(`Retention index available: ${peak.ri.toFixed(1)}.`);
   if(peak.match)evidence.push(`Match score available: ${peak.match}.`);
   if(has(74,30))evidence.push("m/z 74 is present, which is a classic ester/FAME clue.");
   if(has(43,40) && has(58,30))evidence.push("m/z 43 and 58 suggest an oxygenated or carbonyl-like pattern.");
@@ -1224,6 +1227,7 @@ function suggestedCallFor(peak){
       evidence:[
         ...evidence,
         ...(homologName?[`The formula or molecular-ion region is compatible with ${homologName}.`]:[]),
+        ...(Number.isFinite(peak.ri)?["Use the RI to check whether this homolog fits the expected ladder position."]:[]),
         "Suggestion is based on repeated hydrocarbon fragments rather than exact structural proof.",
         "Retention index or an alkane ladder would make this suggestion much stronger."
       ]
@@ -1236,6 +1240,7 @@ function suggestedCallFor(peak){
       evidence:[
         ...evidence,
         ...(homologName?[`The formula is compatible with a ${homologName} isomer, but not one exact branch position.`]:[]),
+        ...(Number.isFinite(peak.ri)?["The reported RI should be compared against literature values for branch-position candidates."]:[]),
         "The app sees hydrocarbon-like ions, but the pattern is uneven enough to suggest branching.",
         "Branch position is not being assigned automatically here."
       ]
@@ -1248,6 +1253,7 @@ function suggestedCallFor(peak){
       evidence:[
         ...evidence,
         ...(homologName?[`The formula or molecular-ion region is compatible with ${homologName}.`]:[]),
+        ...(Number.isFinite(peak.ri)?["Use RI alongside the allylic-ion pattern to decide whether the homolog assignment is plausible."]:[]),
         "This suggestion depends on allylic-ion emphasis, not on a unique alkene fingerprint.",
         "Double-bond position still needs derivatization, standards, or stronger prior knowledge."
       ]
@@ -1260,6 +1266,7 @@ function suggestedCallFor(peak){
       evidence:[
         ...evidence,
         ...(homologName?[`The formula is compatible with ${homologName}.`]:[]),
+        ...(Number.isFinite(peak.ri)?["Compare the RI against ester reference behavior before treating this as a stronger ID."]:[]),
         "This suggestion is driven by oxygenated-fragment behavior rather than cuticle context alone."
       ]
     };
@@ -1675,20 +1682,21 @@ function parseDelimited(text){
   const delim=lines[0].includes("\t")?"\t":",";
   const headers=lines[0].split(delim).map(h=>h.trim().toLowerCase());
   const at=names=>names.map(n=>headers.indexOf(n)).find(i=>i>=0);
-  const idx={rt:at(["rt","retention_time","retention time","time"]),area:at(["area","intensity","height","abundance"]),name:at(["name","compound","candidate"]),formula:at(["formula"]),class:at(["class","compound_class","type"]),match:at(["match","score","similarity"]),spectrum:at(["spectrum","ions","mass_spectrum"]),notes:at(["notes","comment"])};
+  const idx={rt:at(["rt","retention_time","retention time","time"]),ri:at(["ri","retention_index","retention index","linear_retention_index","lri","kovats_index"]),area:at(["area","intensity","height","abundance"]),name:at(["name","compound","candidate"]),formula:at(["formula"]),class:at(["class","compound_class","type"]),match:at(["match","score","similarity"]),spectrum:at(["spectrum","ions","mass_spectrum"]),notes:at(["notes","comment"])};
   return lines.slice(1).map((line,i)=>{
     const cells=line.split(delim).map(c=>c.trim());
     const get=k=>idx[k]!==undefined&&idx[k]>=0?cells[idx[k]]:"";
-    const peak={id:`P${String(i+1).padStart(2,"0")}`,rt:Number(get("rt"))||i+1,area:Number(get("area"))||100000,name:get("name")||"Unknown",formula:get("formula"),class:get("class")||"unknown",match:Number(get("match"))||0,spectrum:get("spectrum")||"",notes:get("notes")};
+    const peak={id:`P${String(i+1).padStart(2,"0")}`,rt:Number(get("rt"))||i+1,ri:Number(get("ri")),area:Number(get("area"))||100000,name:get("name")||"Unknown",formula:get("formula"),class:get("class")||"unknown",match:Number(get("match"))||0,spectrum:get("spectrum")||"",notes:get("notes")};
+    if(!Number.isFinite(peak.ri))delete peak.ri;
     if(!peak.spectrum)peak.spectrum="57:100 71:60 85:35";
     peak.annotation={name:peak.name,class:peak.class,confidence:peak.match>80?"tentative compound":"unreviewed",notes:peak.notes};
     return peak;
   });
 }
 function downloadCsv(){
-  const headers=["id","rt","area","source_name","formula","source_class","match","assigned_name","assigned_class","confidence","notes"];
+  const headers=["id","rt","ri","area","source_name","formula","source_class","match","assigned_name","assigned_class","confidence","notes"];
   const esc=v=>`"${String(v??"").replaceAll('"','""')}"`;
-  const rows=peaks.map(p=>[p.id,p.rt,p.area,p.name,p.formula,p.class,p.match,p.annotation?.name,p.annotation?.class,p.annotation?.confidence,p.annotation?.notes].map(esc).join(","));
+  const rows=peaks.map(p=>[p.id,p.rt,p.ri,p.area,p.name,p.formula,p.class,p.match,p.annotation?.name,p.annotation?.class,p.annotation?.confidence,p.annotation?.notes].map(esc).join(","));
   const blob=new Blob([[headers.join(","),...rows].join("\n")],{type:"text/csv"});
   const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="gcms_cuticle_annotations.csv";a.click();URL.revokeObjectURL(a.href);
 }
