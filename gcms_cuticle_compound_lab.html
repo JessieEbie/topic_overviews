@@ -1029,6 +1029,19 @@ function detectRawPeaks(scans){
       return peak;
     });
 }
+function simplifyTrace(scans,maxPoints=1400){
+  if(!scans.length)return [];
+  if(scans.length<=maxPoints)return scans.map(scan=>({rt:scan.timeMin,value:scan.tic}));
+  const step=Math.ceil(scans.length/maxPoints);
+  const trace=[];
+  for(let i=0;i<scans.length;i+=step){
+    const chunk=scans.slice(i,i+step);
+    const avgRt=chunk.reduce((sum,scan)=>sum+scan.timeMin,0)/chunk.length;
+    const maxVal=Math.max(...chunk.map(scan=>scan.tic));
+    trace.push({rt:avgRt,value:maxVal});
+  }
+  return trace;
+}
 async function importAgilentFolder(fileList){
   const files=[...fileList];
   const dataFile=files.find(file=>/(^|\/)data\.ms$/i.test(file.webkitRelativePath||file.name));
@@ -1041,6 +1054,7 @@ async function importAgilentFolder(fileList){
   selectedId=peaks[0].id;
   ticZoom=null;
   dataSourceLabel=`Raw import from ${(dataFile.webkitRelativePath||dataFile.name).split('/')[0]}`;
+  compareRuns=[...(compareRuns.filter(run=>run.id!=="current-run")), makeRun(dataSourceLabel,importedPeaks,"raw",simplifyTrace(parsed.scans))];
   rawStatus.textContent=`Loaded ${peaks.length} approximate peaks from DATA.MS${parsed.metadata.date?` · acquired ${parsed.metadata.date}`:""}.`;
   renderSelected();
 }
@@ -1059,6 +1073,7 @@ async function importAgilentZip(file){
   ticZoom=null;
   const root=(dataName.split("/").find(Boolean) || file.name).replace(/\/$/,"");
   dataSourceLabel=`Raw import from ${root}`;
+  compareRuns=[...(compareRuns.filter(run=>run.id!=="current-run")), makeRun(dataSourceLabel,importedPeaks,"raw",simplifyTrace(parsed.scans))];
   rawStatus.textContent=`Loaded ${peaks.length} approximate peaks from ZIP${parsed.metadata.date?` · acquired ${parsed.metadata.date}`:""}.`;
   renderSelected();
 }
@@ -1142,6 +1157,8 @@ function peakFactsFor(peak){
     {label:"Molecular region",value:highMz?`m/z ${Math.round(highMz)}`:"not clear"}
   ];
   if(Number.isFinite(peak.ri))facts.push({label:"RI",value:peak.ri.toFixed(1)});
+  const info=formulaInfo(peak.formula);
+  if(info)facts.push({label:"MW",value:`${averageMw(info.c,info.h).toFixed(2)} (${Math.round(averageMw(info.c,info.h))})`});
   return facts;
 }
 function rankedCandidatesFor(peak){
@@ -1737,22 +1754,25 @@ function downloadCanvasPng(canvas,filename){
   a.download=filename;
   a.click();
 }
-function makeRun(name,peakList,kind="table"){
+function makeRun(name,peakList,kind="table",trace=null){
   return {
     id:`run-${Math.random().toString(36).slice(2,9)}`,
     name,
     kind,
     color:comparePalette[compareRuns.length%comparePalette.length],
-    peaks:peakList.map(p=>({...p}))
+    peaks:peakList.map(p=>({...p})),
+    trace
   };
 }
 function syncCurrentRunToCompare(){
+  const existing=compareRuns.find(run=>run.id==="current-run");
   const current={
     id:"current-run",
     name:dataSourceLabel,
-    kind:"review",
+    kind:existing?.kind || "review",
     color:comparePalette[0],
-    peaks:peaks.map(p=>({...p}))
+    peaks:peaks.map(p=>({...p})),
+    trace:existing?.trace || null
   };
   const idx=compareRuns.findIndex(run=>run.id==="current-run");
   if(idx>=0)compareRuns[idx]=current;
@@ -1788,6 +1808,19 @@ function localPeakWidth(run,index){
   return Math.max(0.018, Math.min(0.08, spacing*0.18));
 }
 function traceValue(run,rt,mode){
+  if(Array.isArray(run.trace) && run.trace.length){
+    let best=run.trace[0];
+    let bestDiff=Math.abs(rt-best.rt);
+    for(let i=1;i<run.trace.length;i+=1){
+      const diff=Math.abs(rt-run.trace[i].rt);
+      if(diff<bestDiff){best=run.trace[i];bestDiff=diff;}
+    }
+    const maxTrace=Math.max(...run.trace.map(point=>point.value),1);
+    const totalTrace=run.trace.reduce((sum,point)=>sum+point.value,0)||1;
+    if(mode==="raw")return best.value;
+    if(mode==="total")return best.value/totalTrace;
+    return best.value/maxTrace;
+  }
   return run.peaks.reduce((sum,peak,index)=>{
     const sigma=localPeakWidth(run,index);
     const amp=normalizedArea(run,peak,mode);
