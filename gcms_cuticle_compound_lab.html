@@ -93,6 +93,11 @@ canvas{display:block;width:100%;height:auto;background:#fff;}
 .chart-toolbar h3{font-size:12px;letter-spacing:0.08em;text-transform:uppercase;color:var(--soft);}
 .chart-toolbar p{font-size:12px;color:var(--muted);margin:0;}
 .chart-meta{display:flex;gap:12px;align-items:center;flex-wrap:wrap;}
+.analysis-toolbar{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:10px 12px;border-bottom:1px solid var(--line);background:#F7F9FA;flex-wrap:wrap;}
+.analysis-toolbar h3{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--soft);}
+.analysis-toolbar .group{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+.analysis-toolbar label{font-size:11px;color:var(--muted);font-weight:700;}
+.analysis-toolbar select{border:1px solid var(--line-strong);border-radius:6px;padding:6px 8px;background:#fff;font-size:12px;}
 .chart-shell{position:relative;border-top:1px solid var(--line);}
 .chart-label{position:absolute;left:10px;top:8px;font-size:10px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:var(--soft);pointer-events:none;}
 .peak-table{border-top:1px solid var(--line);max-height:430px;overflow:auto;}
@@ -135,6 +140,10 @@ tr.selected{background:#EAF3EF;}
 .fact-chip{border:1px solid var(--line);border-radius:8px;background:#FBFCFD;padding:9px;}
 .fact-chip strong{display:block;font-size:11px;color:var(--muted);margin-bottom:3px;text-transform:uppercase;letter-spacing:.05em;}
 .fact-chip span{display:block;font-size:13px;color:var(--ink);}
+.details-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:10px;}
+.detail-cell{border:1px solid var(--line);border-radius:8px;background:#fff;padding:9px;}
+.detail-cell strong{display:block;font-size:11px;color:var(--muted);margin-bottom:3px;text-transform:uppercase;letter-spacing:.05em;}
+.detail-cell span{display:block;font-size:13px;color:var(--ink);}
 .candidate-workbench{border:1px solid var(--line);border-radius:8px;background:#fff;overflow:hidden;margin-top:10px;}
 .candidate-workbench-head{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:10px 12px;border-bottom:1px solid var(--line);background:#FBFCFD;flex-wrap:wrap;}
 .candidate-workbench-head h3{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--soft);}
@@ -347,8 +356,23 @@ tr.selected{background:#EAF3EF;}
       <div class="review-grid">
         <div class="review-main">
           <div class="review-card">
-            <div class="context-strip">
-              <p>Use the chromatogram to see where the strongest features are in the run, then read the selected mass spectrum directly underneath it. Drag across the chromatogram to zoom into a time window, then click peaks for closer review.</p>
+            <div class="analysis-toolbar">
+              <h3>Analysis layout</h3>
+              <div class="group">
+                <label for="tic-label-mode">Peak labels</label>
+                <select id="tic-label-mode">
+                  <option value="id" selected>ID</option>
+                  <option value="name">Name</option>
+                  <option value="class">Class</option>
+                  <option value="off">Off</option>
+                </select>
+                <label for="spectrum-label-mode">Spectrum labels</label>
+                <select id="spectrum-label-mode">
+                  <option value="major" selected>Major ions</option>
+                  <option value="highlight">Top only</option>
+                  <option value="off">Off</option>
+                </select>
+              </div>
             </div>
             <div class="chart-toolbar">
               <h3>Total ion chromatogram</h3>
@@ -365,21 +389,18 @@ tr.selected{background:#EAF3EF;}
 
           <div class="review-card">
             <div class="review-card-body">
-              <div class="next-step">
-                <h3>What happens here?</h3>
-                <p>When you click a peak, this panel shows the mass spectrum and a best first-pass suggestion for class or identity. It is meant to give you a starting point, then show the reasoning underneath so you can agree, refine it, or reject it.</p>
-              </div>
               <div class="selected-peak">
                 <div>
-                  <div class="small-note" id="peak-subtitle">Peak review</div>
+                  <div class="small-note" id="peak-subtitle">Peak details</div>
                   <h2 id="peak-title">Select a peak</h2>
-                  <p id="peak-description">Click a chromatogram peak or a table row to inspect the spectrum and candidate interpretations.</p>
+                  <p id="peak-description">Click a chromatogram peak or a table row to inspect the synchronized peak details and spectrum.</p>
                 </div>
                 <div class="score-box">
                   <div class="score-number" id="match-score">--</div>
                   <span>working confidence</span>
                 </div>
               </div>
+              <div class="details-grid" id="peak-details-grid"></div>
               <div class="suggestion-strip">
                 <div class="suggestion-card">
                   <h3>Suggested call</h3>
@@ -1315,11 +1336,46 @@ function drawAxes(ctx,w,h,pad){
   ctx.beginPath();ctx.moveTo(pad,h-pad);ctx.lineTo(w-pad,h-pad);ctx.lineTo(w-pad,pad);ctx.stroke();
   ctx.fillStyle="#758594";ctx.font="12px Inter, sans-serif";
 }
+function getTicLabelMode(){
+  return document.getElementById("tic-label-mode")?.value || "id";
+}
+function getSpectrumLabelMode(){
+  return document.getElementById("spectrum-label-mode")?.value || "major";
+}
+function labelForPeak(peak){
+  const mode=getTicLabelMode();
+  if(mode==="off")return "";
+  if(mode==="name")return peak.annotation?.name || peak.name || peak.id;
+  if(mode==="class")return peak.annotation?.class || peak.class || inferClass(peak);
+  return peak.id;
+}
+function formatPeakDetailValue(value){
+  if(value===undefined || value===null || value==="")return "not available";
+  return String(value);
+}
+function renderPeakDetailsGrid(peak){
+  const holder=document.getElementById("peak-details-grid");
+  if(!holder)return;
+  const info=formulaInfo(peak.formula);
+  const entries=[
+    {label:"Source name",value:peak.name || "Unknown"},
+    {label:"Assigned class",value:peak.annotation?.class || peak.class || inferClass(peak)},
+    {label:"Formula",value:peak.formula || null},
+    {label:"Retention time",value:`${peak.rt.toFixed(3)} min`},
+    {label:"Retention index",value:Number.isFinite(peak.ri)?peak.ri.toFixed(1):null},
+    {label:"Molecular weight",value:info?`${averageMw(info.c,info.h).toFixed(2)} (${Math.round(averageMw(info.c,info.h))})`:null},
+    {label:"Nominal molecular ion",value:info?`m/z ${Math.round(averageMw(info.c,info.h))}`:null},
+    {label:"Match score",value:peak.match || null}
+  ];
+  holder.innerHTML=entries.map(entry=>`<div class="detail-cell"><strong>${entry.label}</strong><span>${formatPeakDetailValue(entry.value)}</span></div>`).join("");
+}
 function drawSpectrumData(ctx,canvas,data,highlight,label){
   const w=canvas.width,h=canvas.height,p=34;
   drawAxes(ctx,w,h,p);
   const maxMz=Math.max(120,...data.map(x=>x.mz))+20;
   const maxI=Math.max(100,...data.map(x=>x.intensity));
+  const labelMode=getSpectrumLabelMode();
+  const topMz=new Set(data.slice().sort((a,b)=>b.intensity-a.intensity).slice(0,4).map(ion=>Math.round(ion.mz)));
   [0.25,0.5,0.75].forEach(frac=>{
     const y=h-p-frac*(h-p*2);
     ctx.strokeStyle="#E7EDF1";
@@ -1332,7 +1388,8 @@ function drawSpectrumData(ctx,canvas,data,highlight,label){
     ctx.strokeStyle=highlight.includes(Math.round(ion.mz))?"#A23A32":"#243B53";
     ctx.lineWidth=highlight.includes(Math.round(ion.mz))?2.5:1.6;
     ctx.beginPath();ctx.moveTo(x,h-p);ctx.lineTo(x,y);ctx.stroke();
-    if(ion.intensity>45||highlight.includes(Math.round(ion.mz))){
+    const shouldLabel=labelMode==="off"?false:(labelMode==="highlight"?highlight.includes(Math.round(ion.mz)):(ion.intensity>45||highlight.includes(Math.round(ion.mz))||topMz.has(Math.round(ion.mz))));
+    if(shouldLabel){
       ctx.fillStyle="#14212B";ctx.font="11px Inter, sans-serif";
       ctx.fillText(String(Math.round(ion.mz)),x-8,y-6);
     }
@@ -1375,7 +1432,11 @@ function drawTic(){
     const x=xFor(peak.rt), y=yFor(peak.area);
     ticCtx.fillStyle=peak.id===selectedId?"#A23A32":"#14212B";
     ticCtx.beginPath();ticCtx.arc(x,y,5,0,Math.PI*2);ticCtx.fill();
-    ticCtx.fillStyle="#50616F";ticCtx.fillText(peak.id,x-8,y-10);
+    const peakLabel=labelForPeak(peak);
+    if(peakLabel){
+      ticCtx.fillStyle="#50616F";
+      ticCtx.fillText(peakLabel,x-12,y-10);
+    }
   });
   if(ticDrag){
     const left=Math.min(ticDrag.startX,ticDrag.currentX);
@@ -1689,6 +1750,7 @@ function renderSelected(){
   document.getElementById("suggested-reason").textContent=suggested.reason;
   const evidenceList=document.getElementById("suggested-evidence");
   evidenceList.innerHTML=(suggested.evidence||["No evidence summary available yet."]).map(item=>`<li>${item}</li>`).join("");
+  renderPeakDetailsGrid(peak);
   renderPeakFacts(peak);
   renderCandidateWorkbench(peak);
   const list=document.getElementById("candidate-list");
@@ -2025,6 +2087,11 @@ document.getElementById("reset-tic-zoom").addEventListener("click",()=>{
   ticZoom=null;
   ticDrag=null;
   drawTic();
+});
+document.getElementById("tic-label-mode").addEventListener("change",drawTic);
+document.getElementById("spectrum-label-mode").addEventListener("change",()=>{
+  const peak=peaks.find(p=>p.id===selectedId)||peaks[0];
+  if(peak)drawSpectrum(peak);
 });
 document.getElementById("export-tic-png").addEventListener("click",()=>downloadCanvasPng(tic,"chromatogram.png"));
 document.getElementById("export-spectrum-png").addEventListener("click",()=>downloadCanvasPng(spec,"mass-spectrum.png"));
