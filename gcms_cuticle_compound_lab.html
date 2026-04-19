@@ -570,7 +570,7 @@ tr.selected{background:#EAF3EF;}
           <h3>1. What the GC-MS is doing</h3>
           <div class="sim-shell">
             <div class="sim-toolbar">
-              <p>Step through a GC-MS run one stage at a time. Watch where the sample is, what the instrument is doing there, and how that stage contributes to the chromatogram and the spectrum.</p>
+              <p>Step through a GC-MS run one stage at a time. Here the sample contains two alkanes, <strong>C25</strong> and <strong>C31</strong>, so you can watch the shorter chain move ahead in the column and then see both molecules fragment in the electron ionization source.</p>
               <div class="button-row">
                 <button class="pill" id="gcmssim-toggle" type="button">Pause</button>
                 <button class="pill" id="gcmssim-reset" type="button">Restart</button>
@@ -717,18 +717,18 @@ const gcmsStages=[
   },
   {
     key:"source",
-    label:"Ion source",
-    caption:"In the EI source, electrons strike the molecules. That makes molecular ions and also breaks many molecules into smaller fragment ions."
+    label:"Electron ionization (EI) source",
+    caption:"In the electron ionization (EI) source, electrons strike C25 and C31. That creates molecular ions and also breaks the alkanes into smaller fragment ions such as m/z 57, 71, 85, and 99."
   },
   {
     key:"analyzer",
     label:"Mass analyzer",
-    caption:"The mass analyzer separates those ions by mass-to-charge ratio, so ions of different m/z can be measured as distinct signals."
+    caption:"The mass analyzer separates the fragment ions by mass-to-charge ratio, so m/z 57, 71, 85, 99, and the weak molecular-ion region can be measured separately."
   },
   {
     key:"detector",
     label:"Detector and software",
-    caption:"The detector counts the ions and the software turns that into a mass spectrum for that moment in time. When you follow those signals across time, you get the chromatogram peak."
+    caption:"The detector counts the ions and the software turns them into spectra. Because C25 leaves the column before C31, you would see an earlier chromatogram peak for C25 and a later one for C31."
   }
 ];
 
@@ -1012,6 +1012,10 @@ function drawGcmsSim(){
   const stageIndex=Math.min(gcmsStages.length-1, Math.floor(prog*gcmsStages.length));
   const stageFrac=(prog*gcmsStages.length)-stageIndex;
   const isActive=key=>gcmsStages[stageIndex].key===key;
+  const moleculePalette={
+    c25:{fill:"#177E63",stroke:"#11614D",label:"C25"},
+    c31:{fill:"#C08B2C",stroke:"#8B6721",label:"C31"}
+  };
   const drawBox=(x,y,wid,ht,label,key,fill)=>{
     ctx.fillStyle=isActive(key)?fill:"#F7FAFC";
     ctx.strokeStyle=isActive(key)?"#1D5E9E":"#CBD5E1";
@@ -1047,28 +1051,98 @@ function drawGcmsSim(){
   ctx.strokeStyle=isActive("analyzer")?"#A23A32":"#94A3B8";
   ctx.lineWidth=4;
   ctx.beginPath();ctx.moveTo(722,96);ctx.lineTo(722,150);ctx.moveTo(740,96);ctx.lineTo(740,150);ctx.moveTo(770,96);ctx.lineTo(770,150);ctx.moveTo(788,96);ctx.lineTo(788,150);ctx.stroke();
-  let sampleX=82, sampleY=132;
-  if(stageIndex===0){ sampleX=76+stageFrac*34; sampleY=132-stageFrac*18; }
-  if(stageIndex===1){ sampleX=184+stageFrac*190; sampleY=110+Math.sin(stageFrac*Math.PI*4)*28; }
-  if(stageIndex===2){ sampleX=448+stageFrac*58; sampleY=132; }
-  if(stageIndex===3){ sampleX=580+stageFrac*52; sampleY=122; }
-  if(stageIndex===4){ sampleX=706+stageFrac*72; sampleY=123; }
-  if(stageIndex===5){ sampleX=838+stageFrac*20; sampleY=123; }
-  ctx.fillStyle="#177E63";
-  ctx.beginPath();ctx.arc(sampleX,sampleY,8,0,Math.PI*2);ctx.fill();
-  ctx.fillStyle="#0F172A";ctx.textAlign="left";ctx.font="12px Inter, sans-serif";
-  ctx.fillText("sample",sampleX+12,sampleY+4);
-  if(stageIndex>=3){
-    const bars=[44,80,61,45];
-    const labels=["43","57","71","85"];
-    bars.forEach((bar,i)=>{
-      ctx.strokeStyle=i===1?"#A23A32":"#1D5E9E";
-      ctx.lineWidth=4;
-      const x=862+i*12;
+  const drawMolecule=(kind,x,y,textAlign="left")=>{
+    const style=moleculePalette[kind];
+    ctx.fillStyle=style.fill;
+    ctx.strokeStyle=style.stroke;
+    ctx.lineWidth=2;
+    ctx.beginPath();ctx.roundRect(x-16,y-11,32,22,11);ctx.fill();ctx.stroke();
+    ctx.fillStyle="#ffffff";
+    ctx.font="11px Inter, sans-serif";
+    ctx.textAlign="center";
+    ctx.fillText(style.label,x,y+4);
+    ctx.textAlign=textAlign;
+  };
+  const place={
+    c25:{x:82,y:122},
+    c31:{x:82,y:144}
+  };
+  if(stageIndex===0){
+    place.c25={x:76+stageFrac*34,y:122-stageFrac*14};
+    place.c31={x:78+stageFrac*28,y:144-stageFrac*10};
+  }
+  if(stageIndex===1){
+    place.c25={x:182+stageFrac*202,y:103+Math.sin(stageFrac*Math.PI*4)*24};
+    place.c31={x:168+stageFrac*156,y:145+Math.sin(stageFrac*Math.PI*4+1.2)*18};
+  }
+  if(stageIndex===2){
+    place.c25={x:448+stageFrac*58,y:123};
+    place.c31={x:440+stageFrac*48,y:141};
+  }
+  if(stageIndex===3){
+    place.c25={x:584+stageFrac*38,y:114};
+    place.c31={x:586+stageFrac*42,y:138};
+  }
+  if(stageIndex===4){
+    place.c25={x:706+stageFrac*72,y:110};
+    place.c31={x:706+stageFrac*72,y:136};
+  }
+  if(stageIndex===5){
+    place.c25={x:840+stageFrac*10,y:108};
+    place.c31={x:840+stageFrac*16,y:136};
+  }
+  drawMolecule("c25",place.c25.x,place.c25.y);
+  drawMolecule("c31",place.c31.x,place.c31.y);
+  ctx.fillStyle="#0F172A";
+  ctx.textAlign="left";
+  ctx.font="12px Inter, sans-serif";
+  if(stageIndex===1){
+    ctx.fillText("C25 moves ahead",338,86);
+    ctx.fillText("C31 is retained longer",318,182);
+  }
+  if(stageIndex===3){
+    ctx.strokeStyle="#64748B";
+    ctx.lineWidth=1.5;
+    ctx.beginPath();
+    ctx.moveTo(630,114);ctx.lineTo(680,90);
+    ctx.moveTo(630,138);ctx.lineTo(680,154);
+    ctx.stroke();
+    ctx.fillStyle="#334155";
+    ctx.font="11px Inter, sans-serif";
+    ctx.fillText("EI makes molecular ions",684,89);
+    ctx.fillText("and fragment ions",684,103);
+    ctx.fillText("C25 -> 57, 71, 85",684,132);
+    ctx.fillText("C31 -> 57, 71, 85, 99",684,146);
+  }
+  if(stageIndex>=4){
+    const c25Bars=[78,58,41,29];
+    const c31Bars=[82,56,44,33];
+    const labels=["57","71","85","99"];
+    c25Bars.forEach((bar,i)=>{
+      const x=842+i*12;
+      ctx.strokeStyle=moleculePalette.c25.fill;
+      ctx.lineWidth=3;
       ctx.beginPath();ctx.moveTo(x,114);ctx.lineTo(x,114-bar);ctx.stroke();
-      ctx.fillStyle="#64748B";ctx.font="9px Inter, sans-serif";ctx.textAlign="center";
+      ctx.fillStyle="#64748B";
+      ctx.font="9px Inter, sans-serif";
+      ctx.textAlign="center";
       ctx.fillText(labels[i],x,126);
     });
+    c31Bars.forEach((bar,i)=>{
+      const x=842+i*12;
+      ctx.strokeStyle=moleculePalette.c31.fill;
+      ctx.lineWidth=3;
+      ctx.beginPath();ctx.moveTo(x+52,154);ctx.lineTo(x+52,154-bar);ctx.stroke();
+      ctx.fillStyle="#64748B";
+      ctx.font="9px Inter, sans-serif";
+      ctx.textAlign="center";
+      ctx.fillText(labels[i],x+52,166);
+    });
+    ctx.fillStyle="#334155";
+    ctx.font="11px Inter, sans-serif";
+    ctx.textAlign="left";
+    ctx.fillText("C25 spectrum",834,88);
+    ctx.fillText("C31 spectrum",834,154);
   }
   renderGcmsStageList(stageIndex);
   document.getElementById("gcmssim-stage").textContent=`Stage: ${gcmsStages[stageIndex].label}`;
