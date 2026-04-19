@@ -124,6 +124,8 @@ tr.selected{background:#EAF3EF;}
 .suggestion-card p,.suggestion-card li{font-size:12px;color:var(--muted);line-height:1.55;}
 .suggestion-card ul{padding-left:17px;margin-top:5px;}
 .suggestion-call{font-size:18px;font-weight:790;line-height:1.15;margin-bottom:4px;}
+.suggestion-evidence{margin-top:8px;padding-top:8px;border-top:1px solid var(--line);}
+.suggestion-evidence strong{display:block;font-size:11px;margin-bottom:4px;color:var(--ink);}
 .wide-spectrum canvas{min-height:340px;}
 .candidate{border:1px solid var(--line);border-left:4px solid var(--green);border-radius:8px;padding:10px;background:#fff;}
 .candidate h3{font-size:14px;line-height:1.2;margin-bottom:6px;}
@@ -342,6 +344,12 @@ tr.selected{background:#EAF3EF;}
                   <h3>Suggested call</h3>
                   <div class="suggestion-call" id="suggested-call">Pick a peak to generate a suggestion.</div>
                   <p id="suggested-reason">The app will use the spectrum, formula, and any source name it has to make a conservative first-pass suggestion.</p>
+                  <div class="suggestion-evidence">
+                    <strong>Why this suggestion</strong>
+                    <ul id="suggested-evidence">
+                      <li>Choose a peak to see the evidence summary.</li>
+                    </ul>
+                  </div>
                 </div>
                 <div class="suggestion-card">
                   <h3>Why suggestions stay cautious</h3>
@@ -927,45 +935,93 @@ function candidatesFor(peak){
   return items;
 }
 function suggestedCallFor(peak){
+  const s=parseSpectrum(peak.spectrum);
   const cls=inferClass(peak);
   const sourceName=(peak.name||"").trim();
   const formula=(peak.formula||"").trim();
-  const highMz=parseSpectrum(peak.spectrum).reduce((a,p)=>p.intensity>3&&p.mz>a?p.mz:a,0);
+  const highMz=s.reduce((a,p)=>p.intensity>3&&p.mz>a?p.mz:a,0);
+  const has=(mz,threshold=25)=>s.some(p=>Math.abs(p.mz-mz)<=1&&p.intensity>=threshold);
+  const evidence=[];
+  const cautions=[];
   const isRawUnknown=!sourceName || /^unknown raw peak$/i.test(sourceName) || /^unknown$/i.test(sourceName);
+  if(sourceName && !isRawUnknown)evidence.push(`Source table name: ${sourceName}.`);
+  if(formula)evidence.push(`Reported formula: ${formula}.`);
+  if(peak.match)evidence.push(`Match score available: ${peak.match}.`);
+  if(has(74,30))evidence.push("m/z 74 is present, which is a classic ester/FAME clue.");
+  if(has(43,40) && has(58,30))evidence.push("m/z 43 and 58 suggest an oxygenated or carbonyl-like pattern.");
+  if(has(55,35) && has(69,35))evidence.push("m/z 55 and 69 support an unsaturated or allylic pattern.");
+  if(has(57,40) && has(71,30) && has(85,25))evidence.push("m/z 57, 71, and 85 form a hydrocarbon-like fragment series.");
+  if(highMz)evidence.push(`A higher-mass ion is visible near m/z ${highMz}.`);
   if(!isRawUnknown && peak.match>=80){
     return {
       call:`Tentative ${sourceName}`,
-      reason:`The source table already suggests ${sourceName}${formula?` (${formula})`:""}, and the available evidence is strong enough for a working tentative call.`
+      reason:`The source table already suggests ${sourceName}${formula?` (${formula})`:""}, and the available evidence is strong enough for a working tentative call.`,
+      evidence:[
+        ...evidence,
+        "This suggestion comes primarily from the imported library/report result, not from the spectrum alone."
+      ]
     };
   }
   if(cls==="alkane"){
     const carbonHint=formula.match(/^C(\d+)H\d+$/i)?.[1];
+    if(!has(57,40) || !has(71,30) || !has(85,25)){
+      cautions.push("The hydrocarbon series is not strong enough for a confident alkane suggestion.");
+      return {
+        call:"Hydrocarbon-like peak, still uncertain",
+        reason:"Some ions are compatible with a hydrocarbon, but the evidence is not clean enough to force an alkane call yet.",
+        evidence:[...evidence,...cautions]
+      };
+    }
     return {
       call:carbonHint?`Likely C${carbonHint} alkane`:"Likely long-chain alkane",
-      reason:`The spectrum shows the classic alkane fragment series with strong 14 u spacing. ${highMz?`A weak high-mass ion near m/z ${highMz} may help anchor carbon number.`:"Without a clear molecular ion, this is best treated as a class-level or carbon-range suggestion until RI or standards are checked."}`
+      reason:`The spectrum shows the classic alkane fragment series with strong 14 u spacing. ${highMz?`A weak high-mass ion near m/z ${highMz} may help anchor carbon number.`:"Without a clear molecular ion, this is best treated as a class-level or carbon-range suggestion until RI or standards are checked."}`,
+      evidence:[
+        ...evidence,
+        "Suggestion is based on repeated hydrocarbon fragments rather than exact structural proof.",
+        "Retention index or an alkane ladder would make this suggestion much stronger."
+      ]
     };
   }
   if(cls==="methyl-branched alkane"){
     return {
       call:"Likely methyl-branched alkane",
-      reason:"The spectrum is still hydrocarbon-like, but some fragments are stronger than expected for a straight-chain alkane. That supports a branched CHC, while exact branch position remains tentative."
+      reason:"The spectrum is still hydrocarbon-like, but some fragments are stronger than expected for a straight-chain alkane. That supports a branched CHC, while exact branch position remains tentative.",
+      evidence:[
+        ...evidence,
+        "The app sees hydrocarbon-like ions, but the pattern is uneven enough to suggest branching.",
+        "Branch position is not being assigned automatically here."
+      ]
     };
   }
   if(cls==="alkene"){
     return {
       call:"Likely alkene",
-      reason:"The ion pattern shifts toward allylic fragments such as 55, 69, 83, and 97. That supports unsaturation, but not the exact double-bond position."
+      reason:"The ion pattern shifts toward allylic fragments such as 55, 69, 83, and 97. That supports unsaturation, but not the exact double-bond position.",
+      evidence:[
+        ...evidence,
+        "This suggestion depends on allylic-ion emphasis, not on a unique alkene fingerprint.",
+        "Double-bond position still needs derivatization, standards, or stronger prior knowledge."
+      ]
     };
   }
   if(cls==="ester"){
     return {
       call:"Likely ester or FAME",
-      reason:"The oxygenated fragmentation pattern, especially m/z 74 with supportive ions such as 43 or 87, fits an ester-type compound better than a hydrocarbon."
+      reason:"The oxygenated fragmentation pattern, especially m/z 74 with supportive ions such as 43 or 87, fits an ester-type compound better than a hydrocarbon.",
+      evidence:[
+        ...evidence,
+        "This suggestion is driven by oxygenated-fragment behavior rather than cuticle context alone."
+      ]
     };
   }
   return {
     call:"No strong ID suggestion yet",
-    reason:"The available ions support a cautious review note more than a confident identity. This often happens with raw imports, weak spectra, or coeluting peaks."
+    reason:"The available ions support a cautious review note more than a confident identity. This often happens with raw imports, weak spectra, or coeluting peaks.",
+    evidence:[
+      ...evidence,
+      "Nothing in the current ion pattern cleanly outranks the alternatives.",
+      "This is a good place to check extracted ions, RI, blanks, or library search outside the app."
+    ]
   };
 }
 function drawAxes(ctx,w,h,pad){
@@ -1306,6 +1362,8 @@ function renderSelected(){
   const suggested=suggestedCallFor(peak);
   document.getElementById("suggested-call").textContent=suggested.call;
   document.getElementById("suggested-reason").textContent=suggested.reason;
+  const evidenceList=document.getElementById("suggested-evidence");
+  evidenceList.innerHTML=(suggested.evidence||["No evidence summary available yet."]).map(item=>`<li>${item}</li>`).join("");
   const list=document.getElementById("candidate-list");
   list.innerHTML="";
   candidatesFor(peak).forEach(c=>{
