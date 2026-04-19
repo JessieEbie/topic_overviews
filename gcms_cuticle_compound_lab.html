@@ -134,11 +134,7 @@ tr.selected{background:#EAF3EF;}
 .export-box{border:1px solid var(--line);border-radius:8px;padding:10px;background:#FBFCFD;margin-top:12px;}
 .export-box h3{font-size:13px;margin-bottom:5px;}
 .export-box p{font-size:12px;color:var(--muted);}
-.guide-layout{display:grid;grid-template-columns:minmax(260px,0.85fr) minmax(420px,1.35fr);gap:0;}
-.pipeline-layout,.tutorial-layout{display:grid;grid-template-columns:1fr;gap:0;}
-.side-band{padding:18px;border-right:1px solid var(--line);background:#FBFCFD;}
-.side-band h2{font-size:clamp(24px,3.5vw,42px);line-height:1.02;font-weight:790;}
-.side-band p{font-size:13px;color:var(--muted);line-height:1.7;margin-top:11px;}
+.guide-layout,.pipeline-layout,.tutorial-layout{display:grid;grid-template-columns:1fr;gap:0;}
 .guide-content,.pipeline-content,.tutorial-content{padding:18px;display:grid;gap:12px;}
 .guide-card,.pipeline-card,.tutorial-card{border:1px solid var(--line);border-radius:8px;padding:13px;background:#fff;}
 .guide-card h3,.pipeline-card h3,.tutorial-card h3{font-size:16px;margin-bottom:8px;}
@@ -166,6 +162,9 @@ tr.selected{background:#EAF3EF;}
 .button-row{display:flex;gap:8px;flex-wrap:wrap;}
 .pill{border:1px solid var(--line-strong);border-radius:999px;background:#fff;color:var(--muted);padding:6px 10px;font-size:12px;font-weight:700;}
 .pill.active{background:var(--bluewash);border-color:var(--blue);color:var(--blue);}
+.stage-list{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;padding:10px;border-top:1px solid var(--line);background:#fff;}
+.stage-chip{border:1px solid var(--line);border-radius:8px;padding:8px;background:#FBFCFD;font-size:11px;color:var(--muted);line-height:1.35;text-align:center;}
+.stage-chip.active{border-color:var(--blue);background:var(--bluewash);color:var(--blue);}
 .sim-canvas{display:block;width:100%;height:auto;background:#fff;}
 .sim-caption{padding:10px;border-top:1px solid var(--line);font-size:12px;color:var(--muted);line-height:1.6;}
 .sim-stage{padding:10px;border-top:1px solid var(--line);font-size:12px;color:var(--ink);font-weight:700;background:#FBFCFD;}
@@ -206,9 +205,8 @@ tr.selected{background:#EAF3EF;}
   .tab{flex:0 0 auto;padding:11px 14px;}
   .guide-layout,.pipeline-layout,.tutorial-layout{grid-template-columns:1fr;}
   .selected-peak{grid-template-columns:1fr;}
-  .side-band{border-right:0;border-bottom:1px solid var(--line);}
   .guide-grid{grid-template-columns:1fr;}
-  .step-strip,.story-grid,.fragment-grid,.ion-layout{grid-template-columns:1fr;}
+  .step-strip,.story-grid,.fragment-grid,.ion-layout,.stage-list{grid-template-columns:1fr;}
   th,td{font-size:11px;padding:7px 5px;}
 }
 </style>
@@ -484,18 +482,18 @@ tr.selected{background:#EAF3EF;}
 
   <section class="panel" id="guide-panel">
     <div class="guide-layout">
-      <aside class="side-band">
-        <h2>What patterns are saying.</h2>
-        <p>The guide is intentionally written for review work: not a perfect identification oracle, but a set of clues that helps you explain why a peak looks like an alkane, branched alkane, alkene, ester, or something else.</p>
-      </aside>
       <div class="guide-content">
+        <section class="guide-card">
+          <h3>What patterns are saying</h3>
+          <p>This guide is for real review work. It is not a magic identification button. Use it to decide what class a peak most likely belongs to, what evidence supports that call, and where you should stay cautious.</p>
+        </section>
         <section class="guide-card">
           <h3>Cuticular hydrocarbons first</h3>
           <p>Ant cuticles are often dominated by long-chain hydrocarbons. Many peaks form homologous series, so a compound call should usually combine the spectrum, retention time, retention index, and neighboring peaks.</p>
           <div class="guide-grid">
             <div class="mini"><strong>n-Alkanes</strong><span>Look for a 14 u fragment series such as 57, 71, 85, 99, 113. In long-chain CHCs the pattern often looks like an envelope or clustered hump, not a perfect staircase.</span></div>
             <div class="mini"><strong>Methyl-branched alkanes</strong><span>Still hydrocarbon-like, but alpha-cleavage ions on each side of the branch can help. Use retention index and literature patterns together, because many positional isomers remain ambiguous.</span></div>
-            <div class="mini"><strong>Alkenes</strong><span>Often stronger m/z 55, 69, 83, 97 series. Double-bond position usually needs derivatization such as DMDS or standards.</span></div>
+            <div class="mini"><strong>Alkenes</strong><span>Often emphasize allylic ions such as 55, 69, 83, 97. Think “unsaturation-shifted hydrocarbon pattern,” not one fixed bimodal shape. Double-bond position usually needs DMDS or standards.</span></div>
             <div class="mini"><strong>Esters</strong><span>Look for oxygen-containing behavior, McLafferty ions such as m/z 74 for methyl esters, and acylium fragments such as m/z 43.</span></div>
           </div>
         </section>
@@ -525,7 +523,7 @@ tr.selected{background:#EAF3EF;}
               <tbody>
                 <tr><td>n-Alkanes</td><td>43, 57, 71, 85, 99, 113</td><td>Look for a regular 14 m/z alkyl-fragment series. For longer chains, pay more attention to the spacing and overall envelope than to one exact peak height pattern.</td><td>Long-chain alkanes can have weak molecular ions, and the spectrum shape is not identical for every chain length.</td></tr>
                 <tr><td>Methyl-branched alkanes</td><td>57, 71, 85 plus alpha-cleavage pairs</td><td>Look for unusually strong paired fragments produced by cleavage on either side of the methyl branch. Then compare the retention index and published spectra for likely branch positions.</td><td>Exact branch position is often tentative. Internally branched isomers may co-elute and are often reported as slash groups such as 11-/13-MeC27.</td></tr>
-                <tr><td>Alkenes</td><td>55, 69, 83, 97</td><td>Allylic fragments support unsaturation. Compare the molecular ion with the corresponding alkane.</td><td>Double-bond position usually needs derivatization or standards.</td></tr>
+                <tr><td>Alkenes</td><td>55, 69, 83, 97</td><td>Allylic fragments support unsaturation. Compare the molecular ion with the corresponding alkane and look for the series to shift toward these ions.</td><td>Do not expect one universal bimodal pattern. Exact intensity shape varies with chain length and double-bond position; double-bond location still usually needs derivatization or standards.</td></tr>
                 <tr><td>Dienes</td><td>67, 81, 95 plus alkene-like ions</td><td>More unsaturation shifts the hydrocarbon pattern toward unsaturated fragment series.</td><td>Coelution can make a monoene look more complex.</td></tr>
                 <tr><td>Methyl esters</td><td>74, 87, 43</td><td>m/z 74 is a common McLafferty rearrangement clue for fatty acid methyl esters.</td><td>Check sample prep; methyl esters can be artifacts if methylation was used.</td></tr>
                 <tr><td>Ketones or aldehydes</td><td>43, 58, 72, M-18 or M-28 patterns</td><td>Oxygenated fragments and retention behavior separate these from pure hydrocarbons.</td><td>Low-match oxygenated peaks need extra confirmation.</td></tr>
@@ -572,13 +570,14 @@ tr.selected{background:#EAF3EF;}
           <h3>1. What the GC-MS is doing</h3>
           <div class="sim-shell">
             <div class="sim-toolbar">
-              <p>Step through a simplified GC-MS instrument layout and watch where the sample is at each stage.</p>
+              <p>Step through a GC-MS run one stage at a time. Watch where the sample is, what the instrument is doing there, and how that stage contributes to the chromatogram and the spectrum.</p>
               <div class="button-row">
                 <button class="pill" id="gcmssim-toggle" type="button">Pause</button>
                 <button class="pill" id="gcmssim-reset" type="button">Restart</button>
               </div>
             </div>
             <canvas id="gcmssim" class="sim-canvas" width="900" height="250"></canvas>
+            <div class="stage-list" id="gcmssim-stages"></div>
             <div class="sim-stage" id="gcmssim-stage">Stage: Injector</div>
             <div class="sim-caption" id="gcmssim-caption">The sample enters the injector, is heated very quickly, and turns into vapor before it enters the column inside the oven.</div>
           </div>
@@ -604,7 +603,7 @@ tr.selected{background:#EAF3EF;}
           <h3>3. Read a spectrum in five passes</h3>
           <ul>
             <li><strong>Find the base peak.</strong> This is the tallest bar. For hydrocarbons it is often m/z 57, 55, 69, 71, or a related fragment.</li>
-            <li><strong>Look for a series.</strong> Alkanes often show 43, 57, 71, 85, 99, 113 with 14 u spacing. Alkenes often emphasize 55, 69, 83, 97.</li>
+            <li><strong>Look for a series.</strong> Alkanes often show 43, 57, 71, 85, 99, 113 with 14 u spacing. Alkenes often still look hydrocarbon-like, but the emphasis shifts toward allylic ions such as 55, 69, 83, 97.</li>
             <li><strong>Check the molecular-ion region.</strong> A small high-mass peak can help with carbon number, but it may be weak in long CHCs.</li>
             <li><strong>Compare retention time.</strong> Longer hydrocarbon chains usually come out later. A sudden odd retention time can mean coelution or a different class.</li>
             <li><strong>Decide the confidence level.</strong> Class-level is okay. Do not force an exact structure when branch position or double-bond position is not supported.</li>
@@ -640,7 +639,7 @@ tr.selected{background:#EAF3EF;}
             </div>
             <div class="fragment-card">
               <h4>Alkene</h4>
-              <p>Look for stronger 55, 69, 83, 97 ions. The double bond changes the fragment pattern, but its position usually needs derivatization or standards.</p>
+              <p>Look for stronger 55, 69, 83, 97 ions and a hydrocarbon pattern that is shifted toward allylic fragments. Do not rely on one exact “bimodal” look. The double-bond position usually still needs derivatization or standards.</p>
             </div>
             <div class="fragment-card">
               <h4>Ester</h4>
@@ -689,7 +688,7 @@ const classMap={"alkane":"hc","methyl-branched alkane":"hc","alkene":"alkene","e
 const ionTutorials={
   alkane:{label:"Alkane",subtitle:"Long-chain alkanes usually show a 14 u alkyl-ion series, often as an envelope rather than a perfect staircase.",watch:"43, 57, 71, 85, 99, 113 with 14 u spacing",caution:"Do not memorize one exact shape. Chain length and instrument settings change the envelope, but the repeating spacing is the important clue.",spectrum:[{mz:43,intensity:52},{mz:57,intensity:100},{mz:71,intensity:78},{mz:85,intensity:72},{mz:99,intensity:76},{mz:113,intensity:59},{mz:127,intensity:39},{mz:380,intensity:8}],highlight:[43,57,71,85,99,113]},
   branched:{label:"Methyl-branched alkane",subtitle:"Still hydrocarbon-like, but branch-local alpha-cleavage ions can stand out more strongly than in a straight-chain alkane.",watch:"57, 71, 85 plus paired alpha-cleavage hints and RI support",caution:"Exact branch position is often not secure from EI data alone. Use RI, literature spectra, and be willing to report a slash assignment.",spectrum:[{mz:57,intensity:88},{mz:71,intensity:82},{mz:85,intensity:67},{mz:99,intensity:32},{mz:168,intensity:28},{mz:169,intensity:31},{mz:196,intensity:24},{mz:197,intensity:21},{mz:394,intensity:5}],highlight:[57,71,85,168,169,196,197]},
-  alkene:{label:"Alkene",subtitle:"Unsaturation shifts emphasis toward allylic ions.",watch:"55, 69, 83, 97",caution:"Double-bond position usually needs derivatization or standards.",spectrum:[{mz:41,intensity:28},{mz:55,intensity:100},{mz:69,intensity:74},{mz:83,intensity:57},{mz:97,intensity:44},{mz:111,intensity:26},{mz:378,intensity:10}],highlight:[55,69,83,97]},
+  alkene:{label:"Alkene",subtitle:"Unsaturation often shifts the hydrocarbon pattern toward allylic ions such as 55, 69, 83, and 97.",watch:"55, 69, 83, 97, plus the molecular-ion region",caution:"Do not memorize one universal bimodal shape. Exact intensities vary with chain length and double-bond position, and the double-bond position usually still needs derivatization or standards.",spectrum:[{mz:41,intensity:20},{mz:55,intensity:100},{mz:69,intensity:82},{mz:83,intensity:63},{mz:97,intensity:49},{mz:111,intensity:29},{mz:125,intensity:18},{mz:378,intensity:9}],highlight:[55,69,83,97]},
   ester:{label:"Ester",subtitle:"Oxygenated fragmentation can look very different from pure hydrocarbons.",watch:"74, 87, 43",caution:"Methyl esters may be sample-prep artifacts if methylation was used.",spectrum:[{mz:43,intensity:68},{mz:55,intensity:32},{mz:74,intensity:100},{mz:87,intensity:45},{mz:143,intensity:22},{mz:298,intensity:16}],highlight:[43,74,87]}
 };
 let activeIonTutorial="alkane";
@@ -704,32 +703,32 @@ const gcmsStages=[
   {
     key:"injector",
     label:"Injector",
-    caption:"The sample enters the injector, is heated very quickly, and turns into vapor before it enters the column inside the oven."
+    caption:"You inject a tiny amount of sample here. The inlet is hot, so the sample vaporizes almost immediately and mixes with the carrier gas."
   },
   {
     key:"oven",
     label:"Oven and GC column",
-    caption:"Inside the heated oven, the capillary column holds compounds back by different amounts. That is what creates separation over time."
+    caption:"Inside the oven, compounds travel through the capillary column at different speeds. Less strongly retained compounds come out earlier; more strongly retained ones come out later. This is what creates separate chromatogram peaks."
   },
   {
     key:"transfer",
     label:"Transfer line",
-    caption:"Separated compounds leave the column and move through the heated transfer line toward the mass spectrometer without condensing."
+    caption:"After leaving the column, each separated compound moves through the heated transfer line into the mass spectrometer. The line stays hot so the compound does not condense before analysis."
   },
   {
     key:"source",
     label:"Ion source",
-    caption:"In the EI source, electrons hit the molecules. They become ions and often break into smaller fragments."
+    caption:"In the EI source, electrons strike the molecules. That makes molecular ions and also breaks many molecules into smaller fragment ions."
   },
   {
     key:"analyzer",
     label:"Mass analyzer",
-    caption:"The mass analyzer sorts ions by mass-to-charge ratio, so fragments of different m/z reach the detector at different times."
+    caption:"The mass analyzer separates those ions by mass-to-charge ratio, so ions of different m/z can be measured as distinct signals."
   },
   {
     key:"detector",
     label:"Detector and software",
-    caption:"The detector counts those ions. The software turns the signal into a mass spectrum and links it to the chromatographic peak."
+    caption:"The detector counts the ions and the software turns that into a mass spectrum for that moment in time. When you follow those signals across time, you get the chromatogram peak."
   }
 ];
 
@@ -999,15 +998,17 @@ function renderIonTutorial(){
   document.getElementById("ion-caution").textContent=item.caution;
   drawSpectrumData(ionCtx,ionCanvas,item.spectrum,item.highlight,"highlighted teaching spectrum");
 }
-function gcmsCaptionFor(progress){
-  const idx=Math.min(gcmsStages.length-1, Math.floor(progress*gcmsStages.length));
-  return gcmsStages[idx].caption;
+function renderGcmsStageList(activeIndex){
+  const holder=document.getElementById("gcmssim-stages");
+  if(!holder)return;
+  holder.innerHTML=gcmsStages.map((stage,index)=>`<div class="stage-chip ${index===activeIndex?"active":""}"><strong>${index+1}. ${stage.label}</strong></div>`).join("");
 }
 function drawGcmsSim(){
   const ctx=gcmsSimCtx, canvas=gcmsSimCanvas, w=canvas.width, h=canvas.height;
   ctx.clearRect(0,0,w,h);
   ctx.fillStyle="#ffffff";ctx.fillRect(0,0,w,h);
-  const prog=(simFrame%1800)/1800;
+  const cycleLength=3600;
+  const prog=(simFrame%cycleLength)/cycleLength;
   const stageIndex=Math.min(gcmsStages.length-1, Math.floor(prog*gcmsStages.length));
   const stageFrac=(prog*gcmsStages.length)-stageIndex;
   const isActive=key=>gcmsStages[stageIndex].key===key;
@@ -1069,11 +1070,12 @@ function drawGcmsSim(){
       ctx.fillText(labels[i],x,126);
     });
   }
+  renderGcmsStageList(stageIndex);
   document.getElementById("gcmssim-stage").textContent=`Stage: ${gcmsStages[stageIndex].label}`;
-  document.getElementById("gcmssim-caption").textContent=gcmsCaptionFor(prog);
+  document.getElementById("gcmssim-caption").textContent=gcmsStages[stageIndex].caption;
 }
 function tickGcmsSim(){
-  if(simRunning)simFrame=(simFrame+4)%1800;
+  if(simRunning)simFrame=(simFrame+1)%3600;
   drawGcmsSim();
   simRaf=requestAnimationFrame(tickGcmsSim);
 }
