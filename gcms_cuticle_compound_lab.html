@@ -1387,6 +1387,38 @@ function methylEsterNameForTotalCarbons(c){
   if(!acid)return null;
   return `methyl ${acid.replace(/ane$/,"anoate")}`;
 }
+function inferMolecularIonFamily(peak,highMz){
+  const info=formulaInfo(peak.formula);
+  if(info){
+    if(info.o===0 && info.h===2*info.c+2){
+      return {nominal:Math.round(averageMw(info.c,info.h)),carbonCount:info.c,family:"alkane family",label:`C${info.c} alkane family`,reason:`Formula ${peak.formula} fits a saturated hydrocarbon homolog.`};
+    }
+    if(info.o===0 && info.h===2*info.c){
+      return {nominal:Math.round(averageMw(info.c,info.h)),carbonCount:info.c,family:"alkene family",label:`C${info.c} alkene family`,reason:`Formula ${peak.formula} fits a mono-unsaturated hydrocarbon homolog.`};
+    }
+    if(info.o===0 && info.h===2*info.c-2){
+      return {nominal:Math.round(averageMw(info.c,info.h)),carbonCount:info.c,family:"diene family",label:`C${info.c} diene family`,reason:`Formula ${peak.formula} fits a diene homolog.`};
+    }
+    if(info.o===2 && info.h===2*info.c){
+      return {nominal:Math.round(averageMw(info.c,info.h)),carbonCount:info.c,family:"methyl ester family",label:`C${info.c} methyl ester family`,reason:`Formula ${peak.formula} fits a methyl ester / FAME-style homolog.`};
+    }
+  }
+  const nominal=Math.round(highMz||0);
+  if(!nominal)return null;
+  if((nominal-2)%14===0){
+    const c=(nominal-2)/14;
+    if(Number.isInteger(c) && c>0)return {nominal,carbonCount:c,family:"alkane family",label:`C${c} alkane family`,reason:`Nominal molecular ion m/z ${nominal} matches 14n + 2 for a saturated hydrocarbon.`};
+  }
+  if(nominal%14===0){
+    const c=nominal/14;
+    if(Number.isInteger(c) && c>0)return {nominal,carbonCount:c,family:"alkene family",label:`C${c} alkene family`,reason:`Nominal molecular ion m/z ${nominal} matches 14n for a mono-unsaturated hydrocarbon.`};
+  }
+  if((nominal+2)%14===0){
+    const c=(nominal+2)/14;
+    if(Number.isInteger(c) && c>0)return {nominal,carbonCount:c,family:"diene family",label:`C${c} diene family`,reason:`Nominal molecular ion m/z ${nominal} matches 14n - 2 for a diene homolog.`};
+  }
+  return null;
+}
 function inferHomologName(peak,cls,highMz){
   const info=formulaInfo(peak.formula);
   if(info){
@@ -1413,12 +1445,14 @@ function peakFactsFor(peak){
   const top=s.slice().sort((a,b)=>b.intensity-a.intensity);
   const base=top[0];
   const highMz=s.reduce((a,p)=>p.intensity>3&&p.mz>a?p.mz:a,0);
+  const molecularFamily=inferMolecularIonFamily(peak,highMz);
   const facts=[
     {label:"RT",value:`${peak.rt.toFixed(2)} min`},
     {label:"Area",value:peak.area.toLocaleString()},
     {label:"Base peak",value:base?`m/z ${Math.round(base.mz)}`:"n/a"},
     {label:"Molecular region",value:highMz?`m/z ${Math.round(highMz)}`:"not clear"}
   ];
+  if(molecularFamily)facts.push({label:"M+ family",value:`m/z ${molecularFamily.nominal} -> ${molecularFamily.label}`});
   if(Number.isFinite(peak.ri))facts.push({label:"RI",value:peak.ri.toFixed(1)});
   const info=formulaInfo(peak.formula);
   if(info)facts.push({label:"MW",value:`${averageMw(info.c,info.h).toFixed(2)} (${Math.round(averageMw(info.c,info.h))})`});
@@ -1429,13 +1463,23 @@ function rankedCandidatesFor(peak){
   const cls=inferClass(peak);
   const rows=[];
   const primaryClass=cls==="unknown"?"other":cls;
+  const highMz=parseSpectrum(peak.spectrum).reduce((a,p)=>p.intensity>3&&p.mz>a?p.mz:a,0);
+  const molecularFamily=inferMolecularIonFamily(peak,highMz);
   rows.push({
     name:suggestion.call,
     className:primaryClass,
     confidence:/No strong|uncertain/i.test(suggestion.call)?"tentative class":"tentative compound",
     reason:suggestion.reason
   });
-  const homolog=inferHomologName(peak,cls,parseSpectrum(peak.spectrum).reduce((a,p)=>p.intensity>3&&p.mz>a?p.mz:a,0));
+  if(molecularFamily && !rows.some(row=>row.name.toLowerCase()===molecularFamily.label.toLowerCase())){
+    rows.push({
+      name:molecularFamily.label,
+      className:primaryClass,
+      confidence:"tentative class",
+      reason:molecularFamily.reason
+    });
+  }
+  const homolog=inferHomologName(peak,cls,highMz);
   if(homolog && !rows.some(row=>row.name.toLowerCase().includes(homolog.toLowerCase()))){
     rows.push({
       name:homolog,
@@ -1472,6 +1516,7 @@ function suggestedCallFor(peak){
   const cautions=[];
   const isRawUnknown=!sourceName || /^unknown raw peak$/i.test(sourceName) || /^unknown$/i.test(sourceName);
   const homologName=inferHomologName(peak,cls,highMz);
+  const molecularFamily=inferMolecularIonFamily(peak,highMz);
   if(sourceName && !isRawUnknown)evidence.push(`Source table name: ${sourceName}.`);
   if(formula)evidence.push(`Reported formula: ${formula}.`);
   if(Number.isFinite(peak.ri))evidence.push(`Retention index available: ${peak.ri.toFixed(1)}.`);
@@ -1481,6 +1526,7 @@ function suggestedCallFor(peak){
   if(has(55,35) && has(69,35))evidence.push("m/z 55 and 69 support an unsaturated or allylic pattern.");
   if(has(57,40) && has(71,30) && has(85,25))evidence.push("m/z 57, 71, and 85 form a hydrocarbon-like fragment series.");
   if(highMz)evidence.push(`A higher-mass ion is visible near m/z ${highMz}.`);
+  if(molecularFamily)evidence.push(`The molecular-ion region points to ${molecularFamily.label} (${molecularFamily.reason.toLowerCase()}).`);
   if(!isRawUnknown && peak.match>=80){
     return {
       call:`Tentative ${sourceName}`,
@@ -1513,7 +1559,7 @@ function suggestedCallFor(peak){
     }
     return {
       call:homologName?`Likely ${homologName}`:(carbonHint?`Likely C${carbonHint} alkane`:"Likely long-chain alkane"),
-      reason:`The spectrum shows the classic alkane fragment series with strong 14 u spacing. ${highMz?`A weak high-mass ion near m/z ${highMz} may help anchor carbon number.`:"Without a clear molecular ion, this is best treated as a class-level or carbon-range suggestion until RI or standards are checked."}`,
+      reason:`The spectrum shows the classic alkane fragment series with strong 14 u spacing. ${molecularFamily?`The molecular-ion region is consistent with ${molecularFamily.label}.`:highMz?`A weak high-mass ion near m/z ${highMz} may help anchor carbon number.`:"Without a clear molecular ion, this is best treated as a class-level or carbon-range suggestion until RI or standards are checked."}`,
       evidence:[
         ...evidence,
         ...(homologName?[`The formula or molecular-ion region is compatible with ${homologName}.`]:[]),
@@ -1539,7 +1585,7 @@ function suggestedCallFor(peak){
   if(cls==="alkene"){
     return {
       call:homologName?`Likely ${homologName}`:"Likely alkene",
-      reason:"The ion pattern shifts toward allylic fragments such as 55, 69, 83, and 97. That supports unsaturation, but not the exact double-bond position.",
+      reason:`The ion pattern shifts toward allylic fragments such as 55, 69, 83, and 97. ${molecularFamily?`The molecular-ion region is consistent with ${molecularFamily.label}.`:"That supports unsaturation, but not the exact double-bond position."}`,
       evidence:[
         ...evidence,
         ...(homologName?[`The formula or molecular-ion region is compatible with ${homologName}.`]:[]),
@@ -1599,6 +1645,8 @@ function renderPeakDetailsGrid(peak){
   const holder=document.getElementById("peak-details-grid");
   if(!holder)return;
   const info=formulaInfo(peak.formula);
+  const highMz=parseSpectrum(peak.spectrum).reduce((a,p)=>p.intensity>3&&p.mz>a?p.mz:a,0);
+  const molecularFamily=inferMolecularIonFamily(peak,highMz);
   const entries=[
     {label:"Run",value:currentRunMeta?.runName || null},
     {label:"Method",value:currentRunMeta?.methodName || currentRunMeta?.methodFile || null},
@@ -1610,6 +1658,7 @@ function renderPeakDetailsGrid(peak){
     {label:"Retention index",value:Number.isFinite(peak.ri)?peak.ri.toFixed(1):null},
     {label:"Molecular weight",value:info?`${averageMw(info.c,info.h).toFixed(2)} (${Math.round(averageMw(info.c,info.h))})`:null},
     {label:"Nominal molecular ion",value:info?`m/z ${Math.round(averageMw(info.c,info.h))}`:null},
+    {label:"Hydrocarbon family",value:molecularFamily?`m/z ${molecularFamily.nominal} -> ${molecularFamily.label}`:null},
     {label:"Match score",value:peak.match || null},
     {label:"Scan range",value:currentRunMeta?.scanRange || null},
     {label:"Source / quad",value:(currentRunMeta?.sourceTemp||currentRunMeta?.quadTemp)?`${currentRunMeta?.sourceTemp||"n/a"} / ${currentRunMeta?.quadTemp||"n/a"}`:null}
