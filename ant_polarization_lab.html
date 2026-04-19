@@ -208,7 +208,7 @@ button.rst-btn:hover{background:var(--color-background-secondary);}
     <div id="status-txt"></div>
     <div class="canvas-wrap">
       <canvas id="sky-c" width="310" height="310" style="cursor:grab;"></canvas>
-      <div id="align-toast">Filter aligned — control condition</div>
+      <div id="align-toast">Filter near center alignment</div>
     </div>
     <div class="legend-row" style="margin-top:5px;">
       <span><span class="ldot" style="background:#F59E0B;border:1px solid #92400E;"></span>Sun</span>
@@ -277,7 +277,7 @@ button.rst-btn:hover{background:var(--color-background-secondary);}
       <li>Drag the <strong>nest dot</strong> (dark blue, labeled "Nest") on the sky canvas to any position inside the dome. This represents the nest's location relative to the sky reference frame.</li>
       <li>Drag the <strong>feeder dot</strong> (green, labeled "Feeder") to set where the feeder is. The direction from nest to feeder is the ant's outbound heading. The filter circle appears at the feeder position.</li>
       <li>Check the E-vector tick marks (blue lines) in and around the filter circle to see what polarization angle the ant will perceive at the feeder location.</li>
-      <li>Adjust the <strong>initial filter angle</strong> slider if you want the filter pre-rotated. At 0° the filter aligns with the ambient E-vector — a green glow appears indicating this is the control condition.</li>
+      <li>Adjust the <strong>initial filter angle</strong> slider if you want the filter pre-rotated. At 0° the filter is near center alignment with the feeder's ambient E-vector — a green glow marks the control condition while the surrounding vectors show how close the whole filter field gets.</li>
       <li>In Window 2, set the <strong>filter rotation during trial</strong> — this is the angle the filter will rotate while the ant feeds. Freas et al. used ±45°.</li>
       <li>Choose whether the ant uses polarized light and set the animation speed.</li>
       <li>Click <strong>Run experiment</strong> to watch the full trial: outbound walk → feeding pause → filter rotation → exit on error heading.</li>
@@ -306,7 +306,7 @@ button.rst-btn:hover{background:var(--color-background-secondary);}
       </div>
       <div class="gcard">
         <div class="gtitle"><span class="gbadge purple">Initial filter angle (−45° to +45°)</span></div>
-        <p>The orientation of the polarizing filter before the experiment trial begins. At 0°, the filter transmission axis aligns with the ambient E-vector at the feeder location — this is the control condition, indicated by a green glow around the filter circle. Rotating it pre-shifts the E-vector the ant perceives before the trial rotation occurs. In most experiments this is left at 0°.</p>
+        <p>The orientation of the polarizing filter before the experiment trial begins. At 0°, the filter transmission axis is near center alignment with the ambient E-vector at the feeder location — this is the control condition, indicated by a green glow around the filter circle. Because the sky pattern changes across the filter area, the slits may be closer to some ambient vectors than others. Rotating it pre-shifts the E-vector the ant perceives before the trial rotation occurs. In most experiments this is left at 0°.</p>
       </div>
       <div class="gcard">
         <div class="gtitle"><span class="gbadge purple">Filter opacity</span></div>
@@ -561,6 +561,21 @@ function azElToSkyXY(az,el){
   return{x:SCX+r*Math.cos(a),y:SCY+r*Math.sin(a)};
 }
 
+function drawFilterSlits(ctx,cx,cy,r,angle,alpha){
+  const ca=Math.cos(angle),sa=Math.sin(angle),len=10;
+  for(let ox=-r+6;ox<=r-6;ox+=10){
+    for(let oy=-r+6;oy<=r-6;oy+=10){
+      if(Math.sqrt(ox*ox+oy*oy)>r-6)continue;
+      const x=cx+ox*ca-oy*sa,y=cy+ox*sa+oy*ca;
+      ctx.save();ctx.lineCap='round';ctx.globalAlpha=alpha;
+      ctx.strokeStyle='rgba(255,255,255,0.9)';ctx.lineWidth=4;
+      ctx.beginPath();ctx.moveTo(x-ca*len/2,y-sa*len/2);ctx.lineTo(x+ca*len/2,y+sa*len/2);ctx.stroke();
+      ctx.strokeStyle='#6D28D9';ctx.lineWidth=2.2;
+      ctx.beginPath();ctx.moveTo(x-ca*len/2,y-sa*len/2);ctx.lineTo(x+ca*len/2,y+sa*len/2);ctx.stroke();ctx.restore();
+    }
+  }
+}
+
 function drawSky(v){
   const{sunAz,sunEl,filtInit,filtOp}=v;
   const bh=sunEl<0,tw=sunEl>=-18&&sunEl<0;
@@ -640,17 +655,7 @@ function drawSky(v){
   const isAligned=Math.abs(filtInit)<=1;
   const fR=32;
   sctx.save();sctx.globalAlpha=0.14;sctx.fillStyle='#7C3AED';sctx.beginPath();sctx.arc(skyFeedX,skyFeedY,fR,0,Math.PI*2);sctx.fill();sctx.restore();
-  for(let ox=-fR+6;ox<=fR-6;ox+=10){
-    for(let oy=-fR+6;oy<=fR-6;oy+=10){
-      if(Math.sqrt(ox*ox+oy*oy)>fR-6)continue;
-      const cf=Math.cos(filtPol),sf=Math.sin(filtPol),len=10;
-      sctx.save();sctx.lineCap='round';sctx.globalAlpha=Math.min(1,filtOp+0.15);
-      sctx.strokeStyle='rgba(255,255,255,0.9)';sctx.lineWidth=4;
-      sctx.beginPath();sctx.moveTo(skyFeedX+ox-cf*len/2,skyFeedY+oy-sf*len/2);sctx.lineTo(skyFeedX+ox+cf*len/2,skyFeedY+oy+sf*len/2);sctx.stroke();
-      sctx.strokeStyle='#6D28D9';sctx.lineWidth=2.2;
-      sctx.beginPath();sctx.moveTo(skyFeedX+ox-cf*len/2,skyFeedY+oy-sf*len/2);sctx.lineTo(skyFeedX+ox+cf*len/2,skyFeedY+oy+sf*len/2);sctx.stroke();sctx.restore();
-    }
-  }
+  drawFilterSlits(sctx,skyFeedX,skyFeedY,fR,filtPol,Math.min(1,filtOp+0.15));
   sctx.save();sctx.globalAlpha=0.8;sctx.strokeStyle=isAligned?'#059669':'#6D28D9';sctx.lineWidth=isAligned?2.5:1.5;sctx.setLineDash([4,2]);
   sctx.beginPath();sctx.arc(skyFeedX,skyFeedY,fR,0,Math.PI*2);sctx.stroke();sctx.restore();
   if(isAligned){sctx.save();sctx.globalAlpha=0.22;sctx.strokeStyle='#10B981';sctx.lineWidth=4;sctx.beginPath();sctx.arc(skyFeedX,skyFeedY,fR+3,0,Math.PI*2);sctx.stroke();sctx.restore();}
@@ -687,7 +692,7 @@ function drawSky(v){
     strips=`<span class="ibadge loc">Phoenix MST</span> ${mo2[mm-1]} ${document.getElementById('dt-day').value} ${document.getElementById('dt-year').value} ${hs}:${String(mn2).padStart(2,'0')}${ap}&nbsp;`+strips;
   }
   document.getElementById('info-strip').innerHTML=strips+`<span class="ibadge pol">E-vec at feeder ~${Math.round(lpolDeg)}°</span>&nbsp;<span class="ibadge filt">Filter E-vec ~${Math.round(filtPolDeg)}°</span>`;
-  document.getElementById('status-txt').innerHTML=isAligned?'<span style="color:#059669;font-weight:500">Filter aligned — control condition</span>':`Filter shifted <strong>${(filtInit>=0?'+':'')+filtInit}°</strong> — expected heading change: <strong>${(filtInit>=0?'+':'')+filtInit}°</strong>`;
+  document.getElementById('status-txt').innerHTML=isAligned?'<span style="color:#059669;font-weight:500">Filter near center alignment — compare the full filter area visually</span>':`Filter shifted <strong>${(filtInit>=0?'+':'')+filtInit}°</strong> — expected heading change: <strong>${(filtInit>=0?'+':'')+filtInit}°</strong>`;
   document.getElementById('ic-faz').textContent=Math.round(feedAzDerived)+'°';
 }
 
@@ -741,17 +746,7 @@ function drawTopScene(){
   const feederPol=localPolAngle(skyFeedX,skyFeedY,v.sunAz);
   const fDA=feederPol+d2r(v.filtInit+A.filtCurrentAngle);
   tctx.save();tctx.globalAlpha=0.14;tctx.fillStyle='#7C3AED';tctx.beginPath();tctx.arc(ft.x,ft.y,fR,0,Math.PI*2);tctx.fill();tctx.restore();
-  for(let ox=-fR+6;ox<=fR-6;ox+=10){
-    for(let oy=-fR+6;oy<=fR-6;oy+=10){
-      if(Math.sqrt(ox*ox+oy*oy)>fR-6)continue;
-      const cf=Math.cos(fDA),sf=Math.sin(fDA),len=10;
-      tctx.save();tctx.lineCap='round';tctx.globalAlpha=0.9;
-      tctx.strokeStyle='rgba(255,255,255,0.9)';tctx.lineWidth=4;
-      tctx.beginPath();tctx.moveTo(ft.x+ox-cf*len/2,ft.y+oy-sf*len/2);tctx.lineTo(ft.x+ox+cf*len/2,ft.y+oy+sf*len/2);tctx.stroke();
-      tctx.strokeStyle='#6D28D9';tctx.lineWidth=2.2;
-      tctx.beginPath();tctx.moveTo(ft.x+ox-cf*len/2,ft.y+oy-sf*len/2);tctx.lineTo(ft.x+ox+cf*len/2,ft.y+oy+sf*len/2);tctx.stroke();tctx.restore();
-    }
-  }
+  drawFilterSlits(tctx,ft.x,ft.y,fR,fDA,0.9);
   tctx.save();tctx.strokeStyle='#6D28D9';tctx.lineWidth=1.5;tctx.setLineDash([4,2]);tctx.globalAlpha=0.75;
   tctx.beginPath();tctx.arc(ft.x,ft.y,fR,0,Math.PI*2);tctx.stroke();tctx.restore();
   tctx.font='bold 9px var(--font-sans,sans-serif)';tctx.fillStyle='#5B21B6';tctx.globalAlpha=0.8;tctx.textAlign='center';tctx.textBaseline='bottom';tctx.fillText('Filter',ft.x,ft.y-fR-3);
