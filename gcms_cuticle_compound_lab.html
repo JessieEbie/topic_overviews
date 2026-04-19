@@ -80,6 +80,9 @@ main{width:min(1260px,100%);margin:0 auto;padding:14px clamp(8px,2vw,28px) 34px;
 .start-card h3{font-size:13px;margin-bottom:6px;}
 .start-card p,.start-card li{font-size:12px;color:var(--muted);line-height:1.6;}
 .start-card ul{padding-left:18px;margin-top:6px;}
+.inline-draft-warning{margin-top:10px;padding:10px 12px;border:1px solid #E7C98A;border-radius:8px;background:#FFF4DE;color:#7A4A00;}
+.inline-draft-warning strong{display:block;font-size:11px;letter-spacing:.08em;text-transform:uppercase;margin-bottom:3px;}
+.inline-draft-warning span{display:block;font-size:12px;line-height:1.55;}
 .step-strip{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:10px;}
 .step-box{border:1px solid var(--line);border-radius:8px;background:#fff;padding:9px;}
 .step-box strong{display:block;font-size:12px;margin-bottom:4px;}
@@ -319,6 +322,10 @@ tr.selected{background:#EAF3EF;}
         </div>
         <p>This tab helps you move from a GC-MS report or raw Agilent file to a reviewed peak list. Load a file, click peaks to inspect them, then save cautious annotations with the evidence you used.</p>
         <p><strong>GitHub Pages note:</strong> this app runs entirely in your browser. Your files stay local unless you choose to share them some other way.</p>
+        <div class="inline-draft-warning" role="note" aria-label="Draft warning">
+          <strong>Draft workstation</strong>
+          <span>This GC-MS tool is still in progress. Treat all identifications and integrations as review-grade, not final-grade, until you verify them against your trusted workflow.</span>
+        </div>
         <div class="step-strip">
           <div class="step-box">
             <strong>1. Load a file</strong>
