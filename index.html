@@ -9,88 +9,163 @@
 <meta property="og:title" content="Topic Overviews">
 <meta property="og:description" content="A growing collection of interactive topic overviews, simulations, and teaching tools.">
 <meta property="og:site_name" content="Topic Overviews">
-<meta name="twitter:card" content="summary">
+<meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Topic Overviews">
 <meta name="twitter:description" content="A growing collection of interactive topic overviews, simulations, and teaching tools.">
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
 :root{
-  --bg:#F8FAFC;
+  --bg:#F7FAFC;
   --surface:#FFFFFF;
   --ink:#102033;
-  --muted:#475569;
-  --soft:#64748B;
-  --line:#DDE5EF;
-  --accent:#1D4ED8;
-  --accent-dark:#153E9C;
+  --muted:#46576B;
+  --soft:#6B7C91;
+  --line:#D9E3EE;
+  --accent:#1467B8;
+  --accent-dark:#0E447A;
+  --green:#0E8F6D;
+  --wash:#EAF3EF;
 }
-html{min-height:100%;background:var(--bg);}
+html{min-height:100%;background:var(--bg);scroll-behavior:smooth;}
 body{min-height:100%;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--ink);background:var(--bg);line-height:1.5;}
 a{color:inherit;}
-.site-header{border-bottom:1px solid var(--line);background:rgba(248,250,252,0.94);position:sticky;top:0;z-index:10;backdrop-filter:blur(14px);}
-.header-inner{width:min(1080px,100%);margin:0 auto;padding:18px clamp(16px,4vw,32px);display:flex;align-items:flex-start;justify-content:space-between;gap:24px;}
-.eyebrow{font-size:11px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--accent);margin-bottom:4px;}
-h1{font-size:clamp(30px,5vw,56px);line-height:1.02;font-weight:760;letter-spacing:0;}
-.copyright{font-size:11px;color:var(--soft);margin-top:6px;}
-.intro{max-width:480px;font-size:14px;color:var(--muted);text-align:right;margin-top:14px;}
-main{width:min(1080px,100%);margin:0 auto;padding:clamp(26px,6vw,64px) clamp(16px,4vw,32px) 56px;}
-.lead{max-width:760px;margin-bottom:34px;}
-.lead h2{font-size:clamp(22px,3vw,34px);line-height:1.12;font-weight:720;letter-spacing:0;margin-bottom:10px;}
-.lead p{font-size:16px;color:var(--muted);max-width:620px;}
-.section-label{font-size:12px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--soft);padding-bottom:9px;border-bottom:1px solid var(--line);margin-bottom:14px;}
-.app-list{display:grid;gap:12px;margin-bottom:38px;}
-.app-link{display:grid;grid-template-columns:1fr auto;gap:18px;align-items:center;padding:18px 0;border-bottom:1px solid var(--line);text-decoration:none;}
-.app-link h3{font-size:20px;line-height:1.2;font-weight:690;letter-spacing:0;margin-bottom:6px;color:var(--ink);}
-.app-link p{font-size:14px;color:var(--muted);max-width:720px;}
-.open-label{font-size:13px;font-weight:700;color:var(--accent);white-space:nowrap;}
+.site-header{border-bottom:1px solid rgba(217,227,238,0.82);background:rgba(247,250,252,0.9);position:sticky;top:0;z-index:10;backdrop-filter:blur(16px);}
+.header-inner{width:min(1180px,100%);margin:0 auto;padding:15px clamp(18px,4vw,34px);display:flex;align-items:center;justify-content:space-between;gap:24px;}
+.brand{display:flex;flex-direction:column;gap:1px;text-decoration:none;}
+.eyebrow{font-size:11px;font-weight:800;letter-spacing:0.14em;text-transform:uppercase;color:var(--accent);}
+.brand-title{font-size:18px;line-height:1.1;font-weight:760;letter-spacing:0;}
+.nav-link{font-size:13px;font-weight:700;color:var(--accent);text-decoration:none;}
+.nav-link:hover,.nav-link:focus-visible{text-decoration:underline;}
+.hero{position:relative;min-height:calc(100svh - 59px);overflow:hidden;display:flex;align-items:stretch;background:#10251F;}
+.hero-media{position:absolute;inset:0;background-image:linear-gradient(90deg,rgba(9,30,23,0.9) 0%,rgba(9,30,23,0.76) 36%,rgba(9,30,23,0.18) 74%),url("https://images.unsplash.com/photo-1473773508845-188df298d2d1?auto=format&fit=crop&w=1800&q=82");background-size:cover;background-position:center;transform:scale(1.02);animation:heroDrift 12s ease-out forwards;}
+.hero-inner{position:relative;width:min(1180px,100%);margin:0 auto;padding:clamp(44px,8vw,86px) clamp(18px,4vw,34px) clamp(42px,6vw,72px);display:grid;grid-template-columns:minmax(0,660px) minmax(260px,1fr);gap:clamp(28px,6vw,70px);align-items:end;}
+.hero-copy{color:#fff;animation:riseIn 680ms ease-out both;}
+.hero-kicker{font-size:12px;font-weight:800;letter-spacing:0.16em;text-transform:uppercase;color:#9DD7C8;margin-bottom:12px;}
+h1{font-size:clamp(48px,8vw,98px);line-height:0.92;font-weight:790;letter-spacing:0;color:#fff;max-width:640px;}
+.hero-copy p{font-size:clamp(17px,2vw,21px);line-height:1.55;color:rgba(255,255,255,0.82);max-width:560px;margin-top:24px;}
+.hero-actions{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-top:30px;}
+.primary-link{display:inline-flex;align-items:center;justify-content:center;min-height:44px;border-radius:8px;padding:11px 18px;background:#fff;color:#10251F;font-size:14px;font-weight:800;text-decoration:none;transition:transform 160ms ease,background 160ms ease;}
+.primary-link:hover,.primary-link:focus-visible{background:#EAF3EF;transform:translateY(-1px);}
+.secondary-link{font-size:14px;font-weight:750;color:#C6E7DF;text-decoration:none;}
+.secondary-link:hover,.secondary-link:focus-visible{text-decoration:underline;}
+.hero-note{align-self:end;color:rgba(255,255,255,0.82);border-left:1px solid rgba(255,255,255,0.34);padding-left:18px;animation:fadeIn 900ms ease-out 160ms both;}
+.hero-note strong{display:block;color:#fff;font-size:14px;margin-bottom:6px;}
+.hero-note span{display:block;font-size:13px;line-height:1.6;max-width:330px;}
+main{width:min(1180px,100%);margin:0 auto;padding:clamp(44px,7vw,76px) clamp(18px,4vw,34px) 58px;}
+.section-top{display:grid;grid-template-columns:minmax(0,0.95fr) minmax(260px,0.55fr);gap:clamp(26px,6vw,72px);align-items:end;margin-bottom:22px;}
+.section-label{font-size:12px;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;color:var(--accent);margin-bottom:10px;}
+.section-top h2{font-size:clamp(30px,4.6vw,58px);line-height:0.98;font-weight:780;letter-spacing:0;max-width:720px;}
+.section-top p{font-size:15px;color:var(--muted);line-height:1.7;max-width:390px;}
+.app-list{border-top:1px solid var(--line);}
+.app-link{position:relative;display:grid;grid-template-columns:minmax(0,1fr) minmax(150px,220px);gap:24px;align-items:center;padding:26px 0;border-bottom:1px solid var(--line);text-decoration:none;transition:padding-left 180ms ease;}
+.app-link::before{content:"";position:absolute;left:0;top:24px;bottom:24px;width:3px;border-radius:8px;background:var(--green);opacity:0;transform:scaleY(0.5);transition:opacity 180ms ease,transform 180ms ease;}
+.app-link h3{font-size:clamp(22px,3vw,34px);line-height:1.08;font-weight:760;letter-spacing:0;margin-bottom:9px;color:var(--ink);}
+.app-link p{font-size:15px;color:var(--muted);max-width:760px;}
+.app-meta{display:flex;align-items:center;justify-content:space-between;gap:12px;color:var(--soft);font-size:12px;font-weight:750;text-transform:uppercase;letter-spacing:0.08em;}
+.open-label{color:var(--accent);font-size:13px;font-weight:800;text-transform:none;letter-spacing:0;}
+.app-link:hover,.app-link:focus-visible{padding-left:14px;}
+.app-link:hover::before,.app-link:focus-visible::before{opacity:1;transform:scaleY(1);}
 .app-link:hover h3,.app-link:focus-visible h3{color:var(--accent-dark);}
-.app-link:hover .open-label,.app-link:focus-visible .open-label{text-decoration:underline;}
-.future{max-width:720px;padding-top:4px;}
-.future p{font-size:14px;color:var(--muted);}
-footer{width:min(1080px,100%);margin:0 auto;padding:0 clamp(16px,4vw,32px) 28px;color:var(--soft);font-size:12px;}
-@media (max-width:720px){
+.studio-note{display:grid;grid-template-columns:1fr 1fr;gap:1px;margin-top:54px;background:var(--line);border:1px solid var(--line);}
+.note-panel{background:var(--surface);padding:24px;}
+.note-panel h2{font-size:18px;line-height:1.2;font-weight:760;margin-bottom:8px;}
+.note-panel p{font-size:14px;color:var(--muted);line-height:1.7;}
+footer{width:min(1180px,100%);margin:0 auto;padding:0 clamp(18px,4vw,34px) 30px;color:var(--soft);font-size:12px;}
+@keyframes riseIn{
+  from{opacity:0;transform:translateY(16px);}
+  to{opacity:1;transform:translateY(0);}
+}
+@keyframes fadeIn{
+  from{opacity:0;}
+  to{opacity:1;}
+}
+@keyframes heroDrift{
+  from{transform:scale(1.05);}
+  to{transform:scale(1);}
+}
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto;}
+  *,*::before,*::after{animation-duration:1ms!important;transition-duration:1ms!important;}
+}
+@media (max-width:780px){
   .site-header{position:static;}
-  .header-inner{flex-direction:column;gap:10px;padding:18px 16px;}
-  .intro{text-align:left;margin-top:0;}
-  .app-link{grid-template-columns:1fr;gap:10px;}
-  .open-label{justify-self:start;}
+  .header-inner{padding:14px 18px;}
+  .hero{min-height:auto;}
+  .hero-media{background-image:linear-gradient(180deg,rgba(9,30,23,0.84) 0%,rgba(9,30,23,0.72) 48%,rgba(9,30,23,0.42) 100%),url("https://images.unsplash.com/photo-1473773508845-188df298d2d1?auto=format&fit=crop&w=1100&q=82");}
+  .hero-inner{grid-template-columns:1fr;padding:48px 18px 42px;gap:34px;}
+  h1{font-size:clamp(44px,16vw,68px);}
+  .hero-copy p{font-size:16px;}
+  .hero-note{border-left:none;border-top:1px solid rgba(255,255,255,0.3);padding-left:0;padding-top:15px;}
+  .section-top{grid-template-columns:1fr;gap:14px;}
+  .app-link{grid-template-columns:1fr;gap:14px;}
+  .app-meta{justify-content:flex-start;}
+  .studio-note{grid-template-columns:1fr;}
 }
 </style>
 </head>
 <body>
 <header class="site-header">
   <div class="header-inner">
-    <div>
-      <div class="eyebrow">Jessie Ebie</div>
-      <h1>Topic Overviews</h1>
-      <div class="copyright">&copy; 2026 Jessie Ebie</div>
-    </div>
-    <p class="intro">Interactive simulations and teaching tools for exploring scientific ideas in motion.</p>
+    <a class="brand" href="index.html" aria-label="Topic Overviews home">
+      <span class="eyebrow">Jessie Ebie</span>
+      <span class="brand-title">Topic Overviews</span>
+    </a>
+    <a class="nav-link" href="#apps">Available apps</a>
   </div>
 </header>
 
+<section class="hero" aria-labelledby="page-title">
+  <div class="hero-media" aria-hidden="true"></div>
+  <div class="hero-inner">
+    <div class="hero-copy">
+      <div class="hero-kicker">Interactive science tools</div>
+      <h1 id="page-title">Topic Overviews</h1>
+      <p>Browser-based simulations for exploring scientific ideas in motion, built for classes, workshops, and curious detours.</p>
+      <div class="hero-actions">
+        <a class="primary-link" href="#apps">Browse tools</a>
+        <a class="secondary-link" href="ant_polarization_lab.html">Open ant navigation</a>
+      </div>
+    </div>
+    <aside class="hero-note" aria-label="Collection note">
+      <strong>One focused tool at a time.</strong>
+      <span>Each overview is designed to make a concept visible enough to test, tweak, and teach without extra setup.</span>
+    </aside>
+  </div>
+</section>
+
 <main>
-  <section class="lead" aria-labelledby="overview-title">
-    <h2 id="overview-title">Choose a tool and start experimenting.</h2>
-    <p>This collection will grow over time with compact, browser-based overviews for classes, workshops, and self-guided exploration.</p>
+  <section class="section-top" aria-labelledby="overview-title">
+    <div>
+      <div class="section-label" id="apps">Available apps</div>
+      <h2 id="overview-title">Choose a model and start experimenting.</h2>
+    </div>
+    <p>Small, self-contained labs for watching a mechanism change as you adjust the conditions.</p>
   </section>
 
-  <section aria-labelledby="apps-title">
-    <div class="section-label" id="apps-title">Available apps</div>
+  <section aria-label="App list">
     <div class="app-list">
       <a class="app-link" href="ant_polarization_lab.html">
         <div>
           <h3>Ant Navigation with Polarized Light Simulation</h3>
-          <p>Model how a rotated polarizing filter shifts an ant's celestial compass, then compare the predicted exit heading against the unshifted homeward route.</p>
+          <p>Rotate a polarizing filter, shift a celestial compass, and compare the predicted exit heading against the unshifted homeward route.</p>
         </div>
-        <span class="open-label">Open app</span>
+        <div class="app-meta">
+          <span>Simulation</span>
+          <span class="open-label">Open app</span>
+        </div>
       </a>
     </div>
   </section>
 
-  <section class="future" aria-labelledby="future-title">
-    <div class="section-label" id="future-title">Coming later</div>
-    <p>Add future topic overviews here as new standalone pages are published.</p>
+  <section class="studio-note" aria-label="Collection details">
+    <div class="note-panel">
+      <h2>Built for quick teaching moments.</h2>
+      <p>Open a tool, move a control, and use the visual result as the discussion point.</p>
+    </div>
+    <div class="note-panel">
+      <h2>More overviews can slot in here.</h2>
+      <p>New standalone pages will appear in this list as the collection grows.</p>
+    </div>
   </section>
 </main>
 
