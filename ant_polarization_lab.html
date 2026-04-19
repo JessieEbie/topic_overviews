@@ -63,9 +63,9 @@ canvas{border-radius:6px;display:block;max-width:100%;height:auto;}
 .canvas-wrap{position:relative;}
 #align-toast{position:absolute;top:8px;left:50%;transform:translateX(-50%);background:rgba(5,150,105,0.93);color:#fff;border-radius:7px;padding:5px 14px;font-size:12px;font-weight:500;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity 0.3s;z-index:20;}
 #align-toast.show{opacity:1;}
-.sky-schematic{margin:6px 0 8px;border:0.5px solid var(--color-border-tertiary);border-radius:8px;background:var(--color-background-secondary);padding:8px;}
-.sky-schematic svg{display:block;width:100%;height:auto;}
-.sky-schematic figcaption{font-size:10px;color:var(--color-text-secondary);line-height:1.5;margin-top:6px;}
+.sky-mini{margin:8px auto 4px;max-width:310px;}
+.sky-mini canvas{width:100%;max-width:310px;margin:0 auto;}
+.sky-mini figcaption{font-size:9px;color:var(--color-text-secondary);line-height:1.45;margin-top:4px;text-align:left;}
 .info-strip{display:flex;gap:5px;flex-wrap:wrap;margin:4px 0;}
 .ibadge{font-size:10px;padding:2px 7px;border-radius:4px;font-weight:500;}
 .ibadge.sun{background:#FEF3C7;color:#92400E;}
@@ -211,36 +211,14 @@ button.rst-btn:hover{background:var(--color-background-secondary);}
     <div class="divider"></div>
     <div class="info-strip" id="info-strip"></div>
     <div id="status-txt"></div>
-    <figure class="sky-schematic" aria-labelledby="sky-schematic-caption">
-      <svg viewBox="0 0 320 178" role="img" aria-label="Schematic sky dome showing the Sun, solar meridian, anti-solar meridian, and 90 degree polarization band">
-        <defs>
-          <marker id="arrowhead" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
-            <path d="M0,0 L6,3 L0,6 Z" fill="#64748B"></path>
-          </marker>
-        </defs>
-        <path d="M20 150 A140 110 0 0 1 300 150" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="2"></path>
-        <path d="M60 150 A100 78 0 0 1 260 150" fill="none" stroke="#DDE5EF" stroke-width="1"></path>
-        <path d="M100 150 A60 48 0 0 1 220 150" fill="none" stroke="#DDE5EF" stroke-width="1"></path>
-        <path d="M76 40 Q152 92 244 150" fill="none" stroke="#DC2626" stroke-width="2" stroke-dasharray="6 4"></path>
-        <path d="M246 36 Q168 92 86 150" fill="none" stroke="#8B5CF6" stroke-width="2" stroke-dasharray="6 4"></path>
-        <path d="M36 118 C88 86 136 72 184 76 C224 80 258 95 286 116" fill="none" stroke="#2563EB" stroke-width="2"></path>
-        <circle cx="78" cy="114" r="7" fill="#FDE047" stroke="#D97706" stroke-width="1.5"></circle>
-        <circle cx="160" cy="150" r="4" fill="#475569"></circle>
-        <text x="78" y="102" text-anchor="middle" font-size="10" fill="#92400E" font-weight="700">Sun</text>
-        <text x="18" y="40" font-size="10" fill="#991B1B">Solar meridian</text>
-        <text x="230" y="30" font-size="10" fill="#6D28D9">Anti-solar meridian</text>
-        <text x="202" y="67" font-size="10" fill="#1D4ED8">90° high-polarization band</text>
-        <text x="133" y="102" font-size="10" fill="#475569">E-vectors follow the band</text>
-        <line x1="118" y1="98" x2="160" y2="80" stroke="#64748B" stroke-width="1" marker-end="url(#arrowhead)"></line>
-        <text x="160" y="164" text-anchor="middle" font-size="10" fill="#475569">Observer</text>
-        <text x="255" y="154" text-anchor="middle" font-size="10" fill="#64748B">Horizon</text>
-      </svg>
-      <figcaption id="sky-schematic-caption">The solar meridian and anti-solar meridian rotate as the Sun moves across the Phoenix sky. The strongest polarization tends to lie in a broad band about 90° from the Sun, while local e-vectors remain perpendicular to the scattering plane.</figcaption>
-    </figure>
     <div class="canvas-wrap">
       <canvas id="sky-c" width="310" height="310" style="cursor:grab;"></canvas>
       <div id="align-toast">Filter near center alignment</div>
     </div>
+    <figure class="sky-mini" aria-labelledby="sky-mini-caption">
+      <canvas id="sky-side-c" width="310" height="128"></canvas>
+      <figcaption id="sky-mini-caption">Small Phoenix south-sky view: the gold arc is the Sun's daily path for the selected date, the yellow point is the current Sun, and the red dashed line marks local solar noon on that path.</figcaption>
+    </figure>
     <div class="legend-row" style="margin-top:5px;">
       <span><span class="ldot" style="background:#F59E0B;border:1px solid #92400E;"></span>Sun</span>
       <span><span class="ldot" style="background:#1D4ED8;"></span>Ambient E-vector</span>
@@ -431,6 +409,7 @@ button.rst-btn:hover{background:var(--color-background-secondary);}
 const SC=document.getElementById('sky-c'),sctx=SC.getContext('2d');
 const TC=document.getElementById('top-c'),tctx=TC.getContext('2d');
 const AC=document.getElementById('angle-c'),actx=AC.getContext('2d');
+const SSC=document.getElementById('sky-side-c'),ssctx=SSC.getContext('2d');
 const SW=310,SH=310,TCW=620,TCH=295;
 const SR=134; // sky dome radius in canvas px
 const SCX=SW/2,SCY=SH/2;
@@ -453,6 +432,7 @@ function setupHiDPI(){
   setupHiDPICanvas(SC,sctx,SW,SH,activeDpr);
   setupHiDPICanvas(TC,tctx,TCW,TCH,activeDpr);
   setupHiDPICanvas(AC,actx,310,90,activeDpr);
+  setupHiDPICanvas(SSC,ssctx,310,128,activeDpr);
 }
 
 setupHiDPI();
@@ -554,9 +534,18 @@ function solarPos(yr,mo,dy,hr,mn){
   const EqT=4*r2d(y2*Math.sin(2*L0r)-2*e2*Math.sin(M0)+4*e2*y2*Math.sin(M0)*Math.cos(2*L0r)-0.5*y2*y2*Math.sin(4*L0r)-1.25*e2*e2*Math.sin(2*M0));
   const TST=utc*60+4*LON+EqT,HA=d2r(TST/4-180),latR=d2r(LAT);
   const sinEl=Math.sin(latR)*Math.sin(dec)+Math.cos(latR)*Math.cos(dec)*Math.cos(HA),el=r2d(Math.asin(sinEl));
-  let az=r2d(Math.acos(Math.max(-1,Math.min(1,(Math.sin(latR)*sinEl-Math.sin(dec))/(Math.cos(latR)*Math.cos(Math.asin(sinEl)))))));
-  if(HA>0)az=360-az;
+  const az=(r2d(Math.atan2(Math.sin(HA),Math.cos(HA)*Math.sin(latR)-Math.tan(dec)*Math.cos(latR)))+180+360)%360;
   return{az:az%360,el};
+}
+
+function getDateInputs(){
+  return{
+    yr:parseInt(document.getElementById('dt-year').value,10)||2025,
+    mo:parseInt(document.getElementById('dt-month').value,10)||1,
+    dy:parseInt(document.getElementById('dt-day').value,10)||1,
+    hr:parseInt(document.getElementById('dt-hour').value,10)||12,
+    mn:parseInt(document.getElementById('dt-min').value,10)||0
+  };
 }
 
 function getV(){
@@ -690,6 +679,127 @@ function drawFilterSlits(ctx,cx,cy,r,angle,alpha){
     ctx.stroke();
   }
   ctx.restore();
+}
+
+function projectSouthSkyPoint(az,el,box){
+  const rel=d2r(az-180);
+  const x=box.cx+Math.sin(rel)*Math.cos(d2r(el))*box.rx;
+  const y=box.baseY-Math.sin(d2r(el))*box.ry;
+  return{x,y};
+}
+
+function drawSkyMini(v){
+  ssctx.clearRect(0,0,310,128);
+  const box={cx:155,baseY:96,rx:114,ry:58};
+  ssctx.save();
+  ssctx.fillStyle='#F8FAFC';
+  if(ssctx.roundRect){ssctx.beginPath();ssctx.roundRect(0.5,0.5,309,127,8);ssctx.fill();}
+  else{ssctx.fillRect(0,0,310,128);}
+  ssctx.restore();
+
+  ssctx.save();
+  ssctx.strokeStyle='rgba(148,163,184,0.4)';
+  ssctx.lineWidth=1;
+  ssctx.beginPath();
+  ssctx.ellipse(box.cx,box.baseY,box.rx,box.ry,0,Math.PI,0,true);
+  ssctx.stroke();
+  ssctx.beginPath();
+  ssctx.moveTo(box.cx-box.rx,box.baseY);
+  ssctx.lineTo(box.cx+box.rx,box.baseY);
+  ssctx.stroke();
+  ssctx.restore();
+
+  ssctx.save();
+  ssctx.font='9px var(--font-sans,sans-serif)';
+  ssctx.fillStyle='#64748B';
+  ssctx.textAlign='center';
+  ssctx.textBaseline='alphabetic';
+  ssctx.fillText('East',box.cx-box.rx+8,box.baseY+15);
+  ssctx.fillText('South',box.cx,box.baseY+15);
+  ssctx.fillText('West',box.cx+box.rx-8,box.baseY+15);
+  ssctx.textBaseline='top';
+  ssctx.fillText('Phoenix Sun path',box.cx,9);
+  ssctx.restore();
+
+  const dateIn=getDateInputs();
+  const track=[];
+  for(let mins=0;mins<=24*60;mins+=10){
+    const hr=Math.floor(mins/60),mn=mins%60;
+    const p=solarPos(dateIn.yr,dateIn.mo,dateIn.dy,hr,mn);
+    if(p.el>=0&&p.az>=60&&p.az<=300)track.push(p);
+  }
+
+  if(track.length>1){
+    ssctx.save();
+    ssctx.strokeStyle='rgba(245,158,11,0.85)';
+    ssctx.lineWidth=2;
+    ssctx.beginPath();
+    track.forEach((p,i)=>{
+      const pt=projectSouthSkyPoint(p.az,p.el,box);
+      if(i===0)ssctx.moveTo(pt.x,pt.y);else ssctx.lineTo(pt.x,pt.y);
+    });
+    ssctx.stroke();
+    ssctx.restore();
+  }
+
+  const noonTrack=track.reduce((best,p)=>{
+    if(!best)return p;
+    return Math.abs(p.az-180)<Math.abs(best.az-180)?p:best;
+  },null);
+  if(noonTrack){
+    const noonPt=projectSouthSkyPoint(noonTrack.az,noonTrack.el,box);
+    ssctx.save();
+    ssctx.setLineDash([4,3]);
+    ssctx.strokeStyle='rgba(220,38,38,0.9)';
+    ssctx.lineWidth=1.4;
+    ssctx.beginPath();
+    ssctx.moveTo(box.cx,box.baseY);
+    ssctx.lineTo(noonPt.x,noonPt.y);
+    ssctx.stroke();
+    ssctx.setLineDash([]);
+    ssctx.font='9px var(--font-sans,sans-serif)';
+    ssctx.fillStyle='rgba(185,28,28,0.9)';
+    ssctx.textAlign='center';
+    ssctx.textBaseline='bottom';
+    ssctx.fillText('Solar noon meridian',box.cx,Math.min(noonPt.y,box.baseY)-4);
+    ssctx.restore();
+  }
+
+  if(v.sunEl>=0){
+    const sunPt=projectSouthSkyPoint(v.sunAz,v.sunEl,box);
+    ssctx.save();
+    const g=ssctx.createRadialGradient(sunPt.x,sunPt.y,0,sunPt.x,sunPt.y,11);
+    g.addColorStop(0,'rgba(254,240,138,1)');
+    g.addColorStop(0.45,'rgba(250,204,21,0.9)');
+    g.addColorStop(1,'rgba(245,158,11,0)');
+    ssctx.beginPath();
+    ssctx.arc(sunPt.x,sunPt.y,11,0,Math.PI*2);
+    ssctx.fillStyle=g;
+    ssctx.fill();
+    ssctx.beginPath();
+    ssctx.arc(sunPt.x,sunPt.y,4.3,0,Math.PI*2);
+    ssctx.fillStyle='#FDE047';
+    ssctx.strokeStyle='#D97706';
+    ssctx.lineWidth=1;
+    ssctx.fill();
+    ssctx.stroke();
+    ssctx.font='bold 9px var(--font-sans,sans-serif)';
+    ssctx.fillStyle='#92400E';
+    ssctx.textAlign='left';
+    ssctx.textBaseline='middle';
+    ssctx.fillText('Sun',sunPt.x+8,sunPt.y);
+    ssctx.restore();
+  }else{
+    const horizonPt=projectSouthSkyPoint(v.sunAz,0,box);
+    ssctx.save();
+    ssctx.strokeStyle='rgba(250,204,21,0.7)';
+    ssctx.setLineDash([3,2]);
+    ssctx.lineWidth=1.2;
+    ssctx.beginPath();
+    ssctx.arc(horizonPt.x,box.baseY,4.5,0,Math.PI*2);
+    ssctx.stroke();
+    ssctx.restore();
+  }
 }
 
 function drawSky(v){
@@ -1084,6 +1194,7 @@ window.addEventListener('resize',()=>{
   if(Math.abs(nextDpr-activeDpr)>0.01){
     setupHiDPI();
     drawSky(getV());
+    drawSkyMini(getV());
     drawTopScene();
   }
 });
@@ -1096,6 +1207,7 @@ function update(){
   document.getElementById('filt-init-v').textContent=(v.filtInit>=0?'+':'')+v.filtInit+'°';
   document.getElementById('filt-op-v').textContent=Math.round(v.filtOp*100)+'%';
   drawSky(v);
+  drawSkyMini(v);
   if(A.phase==='idle'||A.phase==='done')drawTopScene();
 }
 
