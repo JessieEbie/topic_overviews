@@ -32,7 +32,7 @@ button,input,select{font:inherit;}
 .eyebrow{font-size:11px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#1D4ED8;margin-bottom:2px;}
 h1{font-size:clamp(22px,3vw,34px);line-height:1.08;font-weight:750;letter-spacing:0;color:var(--color-text-primary);}
 .copyright{font-size:11px;color:var(--color-text-tertiary);margin-top:4px;}
-.header-side{margin-top:20px;}
+.header-side{display:flex;flex-direction:column;align-items:flex-end;margin-top:20px;}
 .intro{max-width:560px;font-size:13px;color:var(--color-text-secondary);text-align:right;}
 .return-link{display:inline-flex;align-items:center;margin-top:10px;border:1px solid var(--color-border-secondary);border-radius:6px;padding:5px 9px;font-size:12px;font-weight:600;color:#1D4ED8;text-decoration:none;background:#fff;}
 .return-link:hover,.return-link:focus-visible{border-color:#1D4ED8;background:#EFF6FF;text-decoration:none;}
@@ -114,7 +114,7 @@ button.rst-btn:hover{background:var(--color-background-secondary);}
 @media (max-width:760px){
   .site-header{position:static;}
   .site-header-inner{align-items:flex-start;flex-direction:column;padding:18px 14px 14px;}
-  .header-side{margin-top:0;}
+  .header-side{align-items:flex-start;margin-top:0;}
   .intro{text-align:left;font-size:12px;}
   main{padding:10px 8px 24px;}
   #lab{border-radius:0;border-left:none;border-right:none;box-shadow:none;}
@@ -152,10 +152,10 @@ button.rst-btn:hover{background:var(--color-background-secondary);}
       <div class="eyebrow">Interactive lab</div>
       <h1>Ant Navigation with Polarized Light Simulation</h1>
       <div class="copyright">&copy; 2026 Jessie Ebie</div>
-      <a class="return-link" href="index.html">Return to list</a>
     </div>
     <div class="header-side">
       <p class="intro">Model how a rotated polarizing filter shifts an ant's celestial compass, then compare the predicted exit heading against the unshifted homeward route.</p>
+      <a class="return-link" href="index.html">Return to list</a>
     </div>
   </div>
 </header>
