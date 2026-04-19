@@ -44,7 +44,7 @@ main{width:min(1180px,100%);margin:0 auto;padding:16px clamp(10px,2.5vw,28px) 32
 .top-tab:hover:not(.active){color:var(--color-text-primary);}
 .panel-content{display:none;}
 .panel-content.active{display:block;}
-#exp-panel{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:0;}
+#exp-panel{display:grid;grid-template-columns:minmax(330px,0.8fr) minmax(0,1.2fr);gap:0;}
 .exp-col{padding:12px clamp(8px,1.6vw,16px);}
 .exp-col:first-child{border-right:0.5px solid var(--color-border-tertiary);}
 .slabel{font-size:10px;font-weight:500;color:var(--color-text-tertiary);text-transform:uppercase;letter-spacing:0.05em;margin:8px 0 3px;}
@@ -133,7 +133,7 @@ button.rst-btn:hover{background:var(--color-background-secondary);}
   .phase-indicator>span[style]{display:none;}
   .btn-row{flex-wrap:wrap;}
   .canvas-wrap,#angle-c{width:100%;max-width:310px;margin-left:auto;margin-right:auto;}
-  #top-c{width:100%;max-width:430px;margin-left:auto;margin-right:auto;}
+  #top-c{width:100%;max-width:620px;margin-left:0;margin-right:auto;}
   .legend-row{justify-content:center;}
   .guide-row{grid-template-columns:1fr;}
   #guide-panel{padding:14px 12px;max-height:none;}
@@ -257,7 +257,7 @@ button.rst-btn:hover{background:var(--color-background-secondary);}
       <button class="rst-btn" onclick="resetAnim()">Reset</button>
       <span id="phase-lbl">Ready</span>
     </div>
-    <canvas id="top-c" width="430" height="295" style="cursor:default;"></canvas>
+    <canvas id="top-c" width="620" height="295" style="cursor:default;"></canvas>
     <canvas id="angle-c" width="310" height="90" style="margin-top:4px;"></canvas>
   </div>
 </div>
@@ -366,7 +366,7 @@ button.rst-btn:hover{background:var(--color-background-secondary);}
 const SC=document.getElementById('sky-c'),sctx=SC.getContext('2d');
 const TC=document.getElementById('top-c'),tctx=TC.getContext('2d');
 const AC=document.getElementById('angle-c'),actx=AC.getContext('2d');
-const SW=310,SH=310,TCW=430,TCH=295;
+const SW=310,SH=310,TCW=620,TCH=295;
 const SR=134; // sky dome radius in canvas px
 const SCX=SW/2,SCY=SH/2;
 const LAT=33.45,LON=-112.07;
