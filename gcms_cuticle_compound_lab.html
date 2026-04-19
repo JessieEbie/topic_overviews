@@ -158,10 +158,14 @@ tr.selected{background:#EAF3EF;}
 .annotation label{font-size:11px;font-weight:800;color:var(--muted);}
 .annotation select,.annotation textarea{width:100%;border:1px solid var(--line-strong);border-radius:6px;padding:7px 8px;font-size:12px;}
 .annotation textarea{min-height:82px;resize:vertical;}
+.annotation input{width:100%;border:1px solid var(--line-strong);border-radius:6px;padding:7px 8px;font-size:12px;}
 .annotation-guide{border:1px solid var(--line);border-radius:8px;background:#F7FAF9;padding:10px;margin-top:10px;}
 .annotation-guide h3{font-size:12px;margin-bottom:4px;}
 .annotation-guide p,.annotation-guide li{font-size:12px;color:var(--muted);line-height:1.55;}
 .annotation-guide ul{padding-left:17px;margin-top:6px;}
+.ri-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;}
+.ri-output{border:1px solid var(--line);border-radius:8px;background:#FBFCFD;padding:10px;font-size:12px;color:var(--muted);}
+.ri-output strong{display:block;font-size:13px;color:var(--ink);margin-bottom:3px;}
 .export-box{border:1px solid var(--line);border-radius:8px;padding:10px;background:#FBFCFD;margin-top:12px;}
 .export-box h3{font-size:13px;margin-bottom:5px;}
 .export-box p{font-size:12px;color:var(--muted);}
@@ -496,6 +500,17 @@ tr.selected{background:#EAF3EF;}
                 </select>
                 <label for="notes">Reasoning notes</label>
                 <textarea id="notes" placeholder="Record ions, RI, library hit, standard, or why this remains unresolved."></textarea>
+                <label>Retention index calculator</label>
+                <div class="ri-grid">
+                  <input id="ri-lower-carbon" type="number" min="1" placeholder="lower alkane carbon no.">
+                  <input id="ri-lower-rt" type="number" min="0" step="0.001" placeholder="lower alkane RT">
+                  <input id="ri-upper-carbon" type="number" min="1" placeholder="upper alkane carbon no.">
+                  <input id="ri-upper-rt" type="number" min="0" step="0.001" placeholder="upper alkane RT">
+                </div>
+                <div class="file-row">
+                  <button class="btn" id="calc-ri" type="button">Calculate RI</button>
+                </div>
+                <div class="ri-output" id="ri-output"><strong>RI not calculated</strong>Enter the bracketing alkane carbon numbers and retention times to calculate a linear retention index for the selected peak.</div>
                 <button class="btn primary" id="save-annotation">Save annotation</button>
                 <div class="status" id="save-status"></div>
               </div>
@@ -512,6 +527,9 @@ tr.selected{background:#EAF3EF;}
                 <p>Download the reviewed peak list with assignments, confidence, and notes.</p>
                 <div class="file-row">
                   <button class="btn" id="export-csv">Download CSV</button>
+                  <button class="btn" id="save-project">Save project</button>
+                  <input id="load-project-file" class="hidden-input" type="file" accept=".json,.JSON">
+                  <button class="btn" id="load-project">Load project</button>
                 </div>
               </div>
             </div>
@@ -1631,6 +1649,7 @@ function renderSelected(){
   document.getElementById("assigned-class").value=peak.annotation?.class||peak.class||"unknown";
   document.getElementById("confidence").value=peak.annotation?.confidence||"unreviewed";
   document.getElementById("notes").value=peak.annotation?.notes||peak.notes||"";
+  updateRiOutput();
   const suggested=suggestedCallFor(peak);
   document.getElementById("suggested-call").textContent=suggested.call;
   document.getElementById("suggested-reason").textContent=suggested.reason;
@@ -1672,6 +1691,27 @@ function downloadCsv(){
   const rows=peaks.map(p=>[p.id,p.rt,p.area,p.name,p.formula,p.class,p.match,p.annotation?.name,p.annotation?.class,p.annotation?.confidence,p.annotation?.notes].map(esc).join(","));
   const blob=new Blob([[headers.join(","),...rows].join("\n")],{type:"text/csv"});
   const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="gcms_cuticle_annotations.csv";a.click();URL.revokeObjectURL(a.href);
+}
+function calculateLinearRI(targetRt,lowerCarbon,lowerRt,upperCarbon,upperRt){
+  if(![targetRt,lowerCarbon,lowerRt,upperCarbon,upperRt].every(Number.isFinite))return null;
+  if(upperCarbon<=lowerCarbon || upperRt<=lowerRt || targetRt<lowerRt || targetRt>upperRt)return null;
+  return 100*(lowerCarbon + ((targetRt-lowerRt)/(upperRt-lowerRt))*(upperCarbon-lowerCarbon));
+}
+function updateRiOutput(){
+  const peak=peaks.find(p=>p.id===selectedId);
+  const lowerCarbon=Number(document.getElementById("ri-lower-carbon").value);
+  const lowerRt=Number(document.getElementById("ri-lower-rt").value);
+  const upperCarbon=Number(document.getElementById("ri-upper-carbon").value);
+  const upperRt=Number(document.getElementById("ri-upper-rt").value);
+  const holder=document.getElementById("ri-output");
+  if(!peak || !holder)return null;
+  const ri=calculateLinearRI(peak.rt,lowerCarbon,lowerRt,upperCarbon,upperRt);
+  if(!Number.isFinite(ri)){
+    holder.innerHTML="<strong>RI not calculated</strong>Use bracketing n-alkanes that surround the selected peak in retention time. Upper carbon number and RT must both be greater than the lower one.";
+    return null;
+  }
+  holder.innerHTML=`<strong>Calculated RI: ${ri.toFixed(1)}</strong>Based on linear interpolation between n-C${lowerCarbon} at ${lowerRt.toFixed(3)} min and n-C${upperCarbon} at ${upperRt.toFixed(3)} min for the selected peak at ${peak.rt.toFixed(3)} min.`;
+  return ri;
 }
 function downloadCanvasPng(canvas,filename){
   const a=document.createElement("a");
@@ -1797,6 +1837,20 @@ function downloadTextFile(content,filename,type="text/plain"){
   a.download=filename;
   a.click();
   URL.revokeObjectURL(a.href);
+}
+function saveProjectFile(){
+  const project={version:1,savedAt:new Date().toISOString(),dataSourceLabel,selectedId,peaks,compareRuns};
+  downloadTextFile(JSON.stringify(project,null,2),"gcms_workstation_project.json","application/json");
+}
+async function loadProjectFile(file){
+  const parsed=JSON.parse(await file.text());
+  if(!parsed || !Array.isArray(parsed.peaks))throw new Error("Project file is missing peak data.");
+  peaks=parsed.peaks;
+  selectedId=parsed.selectedId || parsed.peaks[0]?.id;
+  dataSourceLabel=parsed.dataSourceLabel || "Loaded project";
+  compareRuns=Array.isArray(parsed.compareRuns)?parsed.compareRuns:[];
+  ticZoom=null;
+  renderSelected();
 }
 function renderCompareLegend(){
   const holder=document.getElementById("compare-legend");
@@ -1927,6 +1981,27 @@ document.getElementById("save-annotation").addEventListener("click",()=>{
   renderSelected();
 });
 document.getElementById("export-csv").addEventListener("click",downloadCsv);
+document.getElementById("calc-ri").addEventListener("click",()=>{
+  const ri=updateRiOutput();
+  if(Number.isFinite(ri)){
+    const notes=document.getElementById("notes");
+    if(!notes.value.includes("RI")){
+      notes.value=`${notes.value.trim()}${notes.value.trim()?"\n":""}RI ${ri.toFixed(1)} calculated from bracketing n-alkanes.`.trim();
+    }
+  }
+});
+["ri-lower-carbon","ri-lower-rt","ri-upper-carbon","ri-upper-rt"].forEach(id=>{
+  document.getElementById(id).addEventListener("input",updateRiOutput);
+});
+document.getElementById("save-project").addEventListener("click",saveProjectFile);
+document.getElementById("load-project").addEventListener("click",()=>document.getElementById("load-project-file").click());
+document.getElementById("load-project-file").addEventListener("change",event=>{
+  const file=event.target.files[0];
+  if(!file)return;
+  loadProjectFile(file).catch(error=>{
+    document.getElementById("save-status").textContent=error.message;
+  });
+});
 document.getElementById("compare-files").addEventListener("change",async event=>{
   const files=[...(event.target.files||[])];
   if(!files.length)return;
