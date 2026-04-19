@@ -975,10 +975,16 @@ function parseSpectrum(text){
   }).filter(p=>Number.isFinite(p.mz)&&Number.isFinite(p.intensity));
 }
 function mzIntensityToSpectrum(ions,limit=18){
-  return ions
+  const ranked=ions.slice().sort((a,b)=>b.intensity-a.intensity);
+  const topByIntensity=ranked.slice(0,limit);
+  const highMzTail=ions
     .slice()
-    .sort((a,b)=>b.intensity-a.intensity)
-    .slice(0,limit)
+    .sort((a,b)=>b.mz-a.mz)
+    .filter(ion=>ion.intensity>0)
+    .slice(0,6);
+  const keep=new Map();
+  [...topByIntensity,...highMzTail].forEach(ion=>keep.set(Math.round(ion.mz),ion));
+  return [...keep.values()]
     .sort((a,b)=>a.mz-b.mz)
     .map(ion=>`${Math.round(ion.mz)}:${Math.round(ion.intensity)}`)
     .join(" ");
@@ -1149,7 +1155,15 @@ function spectrumFromScanWindow(scans,left,right,centerIndex){
     .map(([mz,intensity])=>({mz:Number(mz),intensity}))
     .filter(ion=>ion.intensity>0)
     .sort((a,b)=>b.intensity-a.intensity);
-  const maxIons=ions.slice(0,22);
+  const topByIntensity=ions.slice(0,22);
+  const highMzTail=[...bins.entries()]
+    .map(([mz,intensity])=>({mz:Number(mz),intensity}))
+    .filter(ion=>ion.intensity>0)
+    .sort((a,b)=>b.mz-a.mz)
+    .slice(0,8);
+  const keep=new Map();
+  [...topByIntensity,...highMzTail].forEach(ion=>keep.set(Math.round(ion.mz),ion));
+  const maxIons=[...keep.values()];
   const maxIntensity=Math.max(...maxIons.map(ion=>ion.intensity),1);
   return maxIons
     .map(ion=>({mz:ion.mz,intensity:Math.max(1,Math.round((ion.intensity/maxIntensity)*100))}))
@@ -1371,11 +1385,11 @@ function inferClass(peak){
 function candidatesFor(peak){
   const cls=inferClass(peak);
   const s=parseSpectrum(peak.spectrum);
-  const highMz=s.reduce((a,p)=>p.intensity>3&&p.mz>a?p.mz:a,0);
+  const observedMz=observedMolecularIonMz(peak);
   const base=s.reduce((a,p)=>p.intensity>a.intensity?p:a,{mz:0,intensity:0});
   const items=[];
   if(cls==="alkane"){
-    items.push({tone:"",title:"Long-chain alkane",body:`Base ion m/z ${base.mz} and the repeating hydrocarbon fragment series are consistent with saturated alkane fragmentation. In long-chain CHCs, focus on the 14 u spacing and the overall envelope more than one exact peak shape. A weak ion near m/z ${highMz||"the molecular region"} can help estimate carbon number.`,points:["Check retention index against an alkane ladder.","Look for neighboring homologs spaced by one CH2 unit.","A library name is tentative until RI or standard agrees."]});
+    items.push({tone:"",title:"Long-chain alkane",body:`Base ion m/z ${base.mz} and the repeating hydrocarbon fragment series are consistent with saturated alkane fragmentation. In long-chain CHCs, focus on the 14 u spacing and the overall envelope more than one exact peak shape. ${observedMz?`A plausible molecular-ion region near m/z ${observedMz} can help estimate carbon number.`:"The molecular-ion region is weak or unclear, so carbon number should stay tentative until RI or standards agree."}`,points:["Check retention index against an alkane ladder.","Look for neighboring homologs spaced by one CH2 unit.","A library name is tentative until RI or standard agrees."]});
   }else if(cls==="methyl-branched alkane"){
     items.push({tone:"warn",title:"Methyl-branched alkane",body:"The spectrum is hydrocarbon-like, but stronger alpha-cleavage fragments suggest a methyl branch somewhere along the chain. GC-MS often narrows the branch position rather than proving one exact isomer.",points:["Compare complementary alpha-cleavage ions, not just one peak.","Use RI and published spectra together with the fragment pattern.","Report slash notation or class-level IDs when the exact branch position remains ambiguous."]});
   }else if(cls==="alkene"){
@@ -1405,6 +1419,16 @@ function methylEsterNameForTotalCarbons(c){
   const acid=alkaneNames[c-1];
   if(!acid)return null;
   return `methyl ${acid.replace(/ane$/,"anoate")}`;
+}
+function observedMolecularIonMz(peak){
+  const info=formulaInfo(peak.formula);
+  if(info)return Math.round(averageMw(info.c,info.h));
+  const ions=parseSpectrum(peak.spectrum);
+  const highMassCandidates=ions
+    .filter(ion=>ion.mz>=150 && ion.intensity>=2)
+    .sort((a,b)=>b.mz-a.mz);
+  if(!highMassCandidates.length)return 0;
+  return Math.round(highMassCandidates[0].mz);
 }
 function inferMolecularIonFamily(peak,highMz){
   const info=formulaInfo(peak.formula);
@@ -1485,13 +1509,13 @@ function peakFactsFor(peak){
   const s=parseSpectrum(peak.spectrum);
   const top=s.slice().sort((a,b)=>b.intensity-a.intensity);
   const base=top[0];
-  const highMz=s.reduce((a,p)=>p.intensity>3&&p.mz>a?p.mz:a,0);
-  const molecularFamily=inferMolecularIonFamily(peak,highMz);
+  const observedMz=observedMolecularIonMz(peak);
+  const molecularFamily=inferMolecularIonFamily(peak,observedMz);
   const facts=[
     {label:"RT",value:`${peak.rt.toFixed(2)} min`},
     {label:"Area",value:peak.area.toLocaleString()},
     {label:"Base peak",value:base?`m/z ${Math.round(base.mz)}`:"n/a"},
-    {label:"Molecular region",value:highMz?`m/z ${Math.round(highMz)}`:"not clear"}
+    {label:"Molecular region",value:observedMz?`m/z ${Math.round(observedMz)}`:"not clear"}
   ];
   if(molecularFamily)facts.push({label:"M+ family",value:`m/z ${molecularFamily.nominal} -> ${molecularFamily.label}`});
   if(Number.isFinite(peak.ri))facts.push({label:"RI",value:peak.ri.toFixed(1)});
@@ -1504,8 +1528,8 @@ function rankedCandidatesFor(peak){
   const cls=inferClass(peak);
   const rows=[];
   const primaryClass=cls==="unknown"?"other":cls;
-  const highMz=parseSpectrum(peak.spectrum).reduce((a,p)=>p.intensity>3&&p.mz>a?p.mz:a,0);
-  const molecularFamily=inferMolecularIonFamily(peak,highMz);
+  const observedMz=observedMolecularIonMz(peak);
+  const molecularFamily=inferMolecularIonFamily(peak,observedMz);
   rows.push({
     name:suggestion.call,
     className:primaryClass,
@@ -1520,7 +1544,7 @@ function rankedCandidatesFor(peak){
       reason:molecularFamily.reason
     });
   }
-  const homolog=inferHomologName(peak,cls,highMz);
+  const homolog=inferHomologName(peak,cls,observedMz);
   if(homolog && !rows.some(row=>row.name.toLowerCase().includes(homolog.toLowerCase()))){
     rows.push({
       name:homolog,
@@ -1551,13 +1575,13 @@ function suggestedCallFor(peak){
   const cls=inferClass(peak);
   const sourceName=(peak.name||"").trim();
   const formula=(peak.formula||"").trim();
-  const highMz=s.reduce((a,p)=>p.intensity>3&&p.mz>a?p.mz:a,0);
+  const observedMz=observedMolecularIonMz(peak);
   const has=(mz,threshold=25)=>s.some(p=>Math.abs(p.mz-mz)<=1&&p.intensity>=threshold);
   const evidence=[];
   const cautions=[];
   const isRawUnknown=!sourceName || /^unknown raw peak$/i.test(sourceName) || /^unknown$/i.test(sourceName);
-  const homologName=inferHomologName(peak,cls,highMz);
-  const molecularFamily=inferMolecularIonFamily(peak,highMz);
+  const homologName=inferHomologName(peak,cls,observedMz);
+  const molecularFamily=inferMolecularIonFamily(peak,observedMz);
   if(sourceName && !isRawUnknown)evidence.push(`Source table name: ${sourceName}.`);
   if(formula)evidence.push(`Reported formula: ${formula}.`);
   if(Number.isFinite(peak.ri))evidence.push(`Retention index available: ${peak.ri.toFixed(1)}.`);
@@ -1566,7 +1590,7 @@ function suggestedCallFor(peak){
   if(has(43,40) && has(58,30))evidence.push("m/z 43 and 58 suggest an oxygenated or carbonyl-like pattern.");
   if(has(55,35) && has(69,35))evidence.push("m/z 55 and 69 support an unsaturated or allylic pattern.");
   if(has(57,40) && has(71,30) && has(85,25))evidence.push("m/z 57, 71, and 85 form a hydrocarbon-like fragment series.");
-  if(highMz)evidence.push(`A higher-mass ion is visible near m/z ${highMz}.`);
+  if(observedMz)evidence.push(`A plausible molecular-ion region is visible near m/z ${observedMz}.`);
   if(molecularFamily)evidence.push(`The molecular-ion region points to ${molecularFamily.label} (${molecularFamily.reason.toLowerCase()}).`);
   if(!isRawUnknown && peak.match>=80){
     return {
@@ -1600,7 +1624,7 @@ function suggestedCallFor(peak){
     }
     return {
       call:homologName?`Likely ${homologName}`:(carbonHint?`Likely C${carbonHint} alkane`:"Likely long-chain alkane"),
-      reason:`The spectrum shows the classic alkane fragment series with strong 14 u spacing. ${molecularFamily?`The molecular-ion region is consistent with ${molecularFamily.label}.`:highMz?`A weak high-mass ion near m/z ${highMz} may help anchor carbon number.`:"Without a clear molecular ion, this is best treated as a class-level or carbon-range suggestion until RI or standards are checked."}`,
+      reason:`The spectrum shows the classic alkane fragment series with strong 14 u spacing. ${molecularFamily?`The molecular-ion region is consistent with ${molecularFamily.label}.`:observedMz?`A weak high-mass ion near m/z ${observedMz} may help anchor carbon number.`:"Without a clear molecular ion, this is best treated as a class-level or carbon-range suggestion until RI or standards are checked."}`,
       evidence:[
         ...evidence,
         ...(homologName?[`The formula or molecular-ion region is compatible with ${homologName}.`]:[]),
@@ -1686,8 +1710,8 @@ function renderPeakDetailsGrid(peak){
   const holder=document.getElementById("peak-details-grid");
   if(!holder)return;
   const info=formulaInfo(peak.formula);
-  const highMz=parseSpectrum(peak.spectrum).reduce((a,p)=>p.intensity>3&&p.mz>a?p.mz:a,0);
-  const molecularFamily=inferMolecularIonFamily(peak,highMz);
+  const observedMz=observedMolecularIonMz(peak);
+  const molecularFamily=inferMolecularIonFamily(peak,observedMz);
   const entries=[
     {label:"Run",value:currentRunMeta?.runName || null},
     {label:"Method",value:currentRunMeta?.methodName || currentRunMeta?.methodFile || null},
@@ -1711,12 +1735,11 @@ function renderMolecularFamilyPanel(peak){
   const summary=document.getElementById("molecular-family-summary");
   const notes=document.getElementById("molecular-family-notes");
   if(!grid || !summary || !notes)return;
-  const spectrum=parseSpectrum(peak.spectrum);
-  const highMz=spectrum.reduce((a,p)=>p.intensity>3&&p.mz>a?p.mz:a,0);
-  const familyInfo=inferMolecularIonFamily(peak,highMz);
+  const observedMz=observedMolecularIonMz(peak);
+  const familyInfo=inferMolecularIonFamily(peak,observedMz);
   const options=homologOptionsForFamily(familyInfo);
   grid.innerHTML=[
-    {label:"Observed M+",value:highMz?`m/z ${Math.round(highMz)}`:"not clear"},
+    {label:"Observed M+",value:observedMz?`m/z ${Math.round(observedMz)}`:"not clear"},
     {label:"Inferred family",value:familyInfo?familyInfo.label:"not resolved"},
     {label:"Possible names",value:options.length?options.join(" / "):"not enough information"},
     {label:"What to remember",value:familyInfo&&familyInfo.family==="alkane family"?"same M+ can also fit methyl-branched isomers":"use the ion series and RI to refine this family"}
