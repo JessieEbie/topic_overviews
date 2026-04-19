@@ -89,9 +89,8 @@ main{width:min(1180px,100%);margin:0 auto;padding:clamp(44px,7vw,76px) clamp(18p
 .simulations .app-type{background:var(--teal-wash);color:var(--teal);}
 .analysis .app-type{background:var(--blue-wash);color:var(--accent-dark);}
 .app-link p{font-size:15px;color:var(--muted);max-width:760px;}
-.app-meta{display:grid;gap:8px;justify-items:end;align-self:stretch;min-width:165px;}
-.sort-label{font-size:11px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:var(--navy);}
-.open-label{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:0 18px;border-radius:999px;background:var(--ink);color:#fff;font-size:13px;font-weight:800;text-transform:none;letter-spacing:0;transition:transform 180ms ease,background 180ms ease;}
+.app-meta{display:flex;align-items:flex-end;justify-content:flex-end;align-self:stretch;min-width:176px;}
+.open-label{display:inline-flex;align-items:center;justify-content:center;width:176px;min-height:46px;padding:0 18px;border-radius:999px;background:var(--ink);color:#fff;font-size:13px;font-weight:800;text-transform:none;letter-spacing:0;transition:transform 180ms ease,background 180ms ease;}
 .simulations .open-label{background:var(--teal);}
 .analysis .open-label{background:var(--accent);}
 .app-link:hover,.app-link:focus-visible{transform:translateY(-2px);box-shadow:0 18px 40px rgba(16,32,51,0.1);}
@@ -136,8 +135,8 @@ footer{width:min(1180px,100%);margin:0 auto;padding:0 clamp(18px,4vw,34px) 30px;
   .app-section-heading{grid-template-columns:1fr;align-items:flex-start;}
   .app-link{grid-template-columns:1fr;gap:16px;padding:18px;}
   .app-header{flex-direction:column;align-items:flex-start;}
-  .app-meta{justify-items:start;min-width:0;}
-  .open-label{min-height:40px;}
+  .app-meta{justify-content:flex-start;min-width:0;}
+  .open-label{width:176px;min-height:44px;}
 }
 </style>
 </head>
@@ -196,7 +195,6 @@ footer{width:min(1180px,100%);margin:0 auto;padding:0 clamp(18px,4vw,34px) 30px;
             <p>External interactive genetics resource for BIO 340 concepts and course-aligned exploration.</p>
           </div>
           <div class="app-meta">
-            <span class="sort-label">External site</span>
             <span class="open-label">Open app<span class="sr-only"> in a new tab</span></span>
           </div>
         </a>
@@ -209,7 +207,6 @@ footer{width:min(1180px,100%);margin:0 auto;padding:0 clamp(18px,4vw,34px) 30px;
             <p>Rotate a polarizing filter, shift a celestial compass, and compare the predicted exit heading against the unshifted homeward route.</p>
           </div>
           <div class="app-meta">
-            <span class="sort-label">Alphabetized</span>
             <span class="open-label">Open app</span>
           </div>
         </a>
@@ -234,7 +231,6 @@ footer{width:min(1180px,100%);margin:0 auto;padding:0 clamp(18px,4vw,34px) 30px;
             <p>Upload peak tables, inspect chromatograms and spectra, annotate compound classes, and use pattern guides for ant cuticular hydrocarbons, alkenes, methyl-branched alkanes, esters, and unknowns.</p>
           </div>
           <div class="app-meta">
-            <span class="sort-label">Alphabetized</span>
             <span class="open-label">Open app</span>
           </div>
         </a>
